@@ -15,27 +15,18 @@ fi
 
 for rev in `seq ${REV_MIN} ${REV_MAX}`; do
 
-    TOTAL_LINES=0
-    TOTAL_FILES=0
     REPO_DATE=`svn log -r $rev $REPO | grep -e'^r' | cut -d' ' -f 5,6`
 
     if [ -z "$REPO_DATE" ]; then
         continue
     fi
 
-    for file in `svn list -R ${REPO}@${rev} | grep -ve'\/$'`; do
+    FILES=`svn list -R -r$rev $REPO | wc -l`;
+    LINES=`svn list -R -r$rev $REPO         | \
+           xargs svn cat -r$rev 2>/dev/null | \
+           wc -l`;
 
-        LINES=`svn cat ${REPO}/${file}@${rev} | wc -l`
-        TOTAL_LINES=`echo $(( $TOTAL_LINES + LINES ))`
-        TOTAL_FILES=`echo $(( $TOTAL_FILES + 1 ))`
-
-        if [ $VERBOSE = 1 ]; then
-            echo "$file $LINES"
-        fi
-
-    done
-
-    echo "$rev - $REPO_DATE - $TOTAL_FILES - $TOTAL_LINES"
+    echo "$rev - $REPO_DATE - $FILES - $LINES"
 
 done
 
