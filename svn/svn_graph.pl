@@ -72,7 +72,7 @@ $graph->set(
 
     x_label          => 'Rev#',
     x_label_position => 1/2,
-    x_label_skip     => int(@x/20),
+    x_label_skip     => int(@x/5),
     x_all_ticks      => 1,
 );
 
@@ -83,10 +83,12 @@ $graph->set(
     fgclr            => "#555555",
     axislabelclr     => "#444444",
     textclr          => "#000000",
+    legendclr        => "#555555",
 );
 
 ### SET IMAGE FONTS
 $graph->set_title_font($bfont, 12);
+$graph->set_legend_font($bfont, 10);
 $graph->set_x_label_font($bfont, 11);
 $graph->set_y_label_font($bfont, 11);
 $graph->set_x_axis_font($font, 10);
@@ -94,6 +96,7 @@ $graph->set_y_axis_font($font, 10);
                   
 ### PLOT
 warn "Writing image to disk...\n";
+$graph->set_legend('Lines', 'Files');
 $graph->plot([\@x, \@lines, \@files]) or die $graph->error;
 binmode STDOUT;
 print $graph->gd->$format;
