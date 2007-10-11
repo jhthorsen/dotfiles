@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ "x$1" == "x-pm" ]; then
+    find . | grep -v "\.svn" | grep "\.pm"  | grep $2 | xargs grep $3;
+elif [ "x$1" == "x-tt2" ]; then
+    find . | grep -v "\.svn" | grep "\.tt2" | grep $2 | xargs grep $3;
+else
+    find . | grep -v "\.svn"                | grep $1 | xargs grep $2;
+fi
+
+exit 0;
