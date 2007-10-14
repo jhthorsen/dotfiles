@@ -14,10 +14,12 @@ use POSIX qw(
               EROFS     ENOENT  ENOSYS    EEXIST   EPERM
               O_RDONLY  O_RDWR  O_APPEND  O_CREAT
           );
+use threads;
+use threads::shared;
 require 'syscall.ph'; # for SYS_mknod and SYS_lchown
 
 our $VERSION   = '0.01';
-my $DEBUG      = 2;
+my $DEBUG      = 0;
 my $ROOT       = join "", map { chr $_ } 0..255;
 my $mtime      = time - 1;
 my $mode       = 0775;
@@ -50,6 +52,7 @@ Fuse::main(
     statfs     => "main::fuse_statfs",
     threaded   => 1,
     debug      => $DEBUG,
+    mountopts  => "allow_other"
 );
 
 
@@ -207,7 +210,7 @@ sub fuse_getattr { #==========================================================
                     $uid,                # user id
                     $gid,                # group id
                     0,                   # device indentifier
-                    0,                   # size
+                    4096,                # size
                     $mtime,              # last acess time
                     $mtime,              # last modified time
                     $mtime,              # last change time
