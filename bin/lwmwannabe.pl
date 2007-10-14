@@ -6,13 +6,23 @@
 
 use strict;
 use warnings;
-use Fuse;
-use Filesys::Df;
-use POSIX qw(ENOENT ENOSYS EEXIST EPERM O_RDONLY O_RDWR O_APPEND O_CREAT);
 use Fcntl qw(S_ISBLK S_ISCHR S_ISFIFO SEEK_SET);
+use File::Basename;
+use Filesys::Df;
+use Fuse;
+use POSIX qw(
+              EROFS     ENOENT  ENOSYS    EEXIST   EPERM
+              O_RDONLY  O_RDWR  O_APPEND  O_CREAT
+          );
 require 'syscall.ph'; # for SYS_mknod and SYS_lchown
 
 our $VERSION   = '0.01';
+my $DEBUG      = 2;
+my $ROOT       = join "", map { chr $_ } 0..255;
+my $mtime      = time - 1;
+my $mode       = 0775;
+my $uid        = 0;
+my $gid        = 0;
 my $READ_WRITE = argv_readwrite();
 my $target     = argv_target();
 my @sources    = argv_sources();
@@ -38,10 +48,23 @@ Fuse::main(
     read       => "main::fuse_read",
     write      => "main::fuse_write",
     statfs     => "main::fuse_statfs",
-    threaded   => 0,
-    debug      => 1,
+    threaded   => 1,
+    debug      => $DEBUG,
 );
 
+
+sub debug { #=================================================================
+
+    ### init
+    my $msg  = shift || '';
+    my $val  = shift;
+    my $time = time;
+
+    warn "$time ! $msg\n" if($DEBUG > 1);
+
+    ### the end
+    return $val;
+}
 
 sub argv_readwrite { #========================================================
 
@@ -90,6 +113,7 @@ sub argv_sources { #==========================================================
             warn "Source '$source' is not a directory!\n";
         }
         else {
+            $source =~ s"/+$"";
             push @sources, $source;
         }
     }
@@ -111,16 +135,24 @@ sub usage { #=================================================================
     print "More info: 'perldoc $0`\n";
 
     ### the end
-    exit 0;
+    exit;
 }
 
 sub find_file { #=============================================================
 
     ### init
-    my $file = shift;
+    my $file =  shift;
+       $file =~ s"^/+"";
+
+    ### root ?
+    unless(length $file) {
+        debug("Found root directory");
+        return $ROOT;
+    }
 
     ### cached file
     if($cache{$file} and -e $cache{$file}) {
+        debug("File from cache: $file => $cache{$file}");
         return $cache{$file};
     }
 
@@ -133,7 +165,8 @@ sub find_file { #=============================================================
     }
 
     ### the end
-    return $cache{$file};
+    debug("Found file: $file => " .($cache{$file} || ''));
+    return $cache{$file} || '';
 }
 
 sub find_newfile { #==========================================================
@@ -145,20 +178,46 @@ sub find_newfile { #==========================================================
     SOURCE:
     for my $source (@sources) {
         if($oldfile =~ m"^$source/"mx) {
+            debug("New file from cache: $newfile => $cache{$newfile}");
             $cache{$newfile} = "$source/$newfile";;
             last;
         }
     }
 
     ### the end
+    debug("Found new file: $newfile => $cache{$newfile}");
     return $cache{$newfile};
 }
 
 sub fuse_getattr { #==========================================================
 
     ### init
-    my $file = find_file(shift);
-    my @stat = lstat $file;
+    my $vfile = shift;
+    my $file  = find_file($vfile);
+    my @stat;
+
+    debug("Getattr $vfile");
+
+    if($file eq $ROOT) {
+        @stat = (
+                    0,                   # device number
+                    0,                   # inode number
+                    (0040 << 9) + $mode, # file mode
+                    1,                   # number of hard links
+                    $uid,                # user id
+                    $gid,                # group id
+                    0,                   # device indentifier
+                    0,                   # size
+                    $mtime,              # last acess time
+                    $mtime,              # last modified time
+                    $mtime,              # last change time
+                    1024,                # block size
+                    0,                   # blocks
+                );
+    }
+    else {
+        @stat = lstat $file;
+    }
 
     ### the end
     return -$! unless @stat;
@@ -168,12 +227,26 @@ sub fuse_getattr { #==========================================================
 sub fuse_getdir { #===========================================================
 
     ### init
-    my $dir = find_file(shift);
+    my $vdir = shift;
+    my $dir  = find_file($vdir);
     my($DH, @files);
 
+    debug("Getdir $vdir");
+
     ### open, read, close dir
-    opendir($DH, $dir) or return -ENOENT();
-    @files = readdir $DH;
+    if($dir eq $ROOT) {
+
+        SOURCE:
+        for my $source (@sources) {
+            opendir($DH, $source) or next SOURCE;
+            push @files, readdir $DH;
+            close $DH;
+        }
+    }
+    else {
+        opendir($DH, $dir) or return -ENOENT();
+        @files = readdir $DH;
+    }
 
     ### the end
     return @files, 0;
@@ -182,9 +255,12 @@ sub fuse_getdir { #===========================================================
 sub fuse_open { #=============================================================
 
     ### init
-    my $file = find_file(shift);
-    my $mode = shift;
+    my $vfile = shift;
+    my $file  = find_file($vfile); 
+    my $mode  = shift;
     my $FH;
+
+    debug("Open $vfile");
 
     ### open file
     sysopen($FH, $file, $mode) or return -$!;
@@ -194,11 +270,14 @@ sub fuse_open { #=============================================================
 sub fuse_read { #=============================================================
 
     ### init
-    my $file    = find_file(shift);
+    my $vfile   = shift;
+    my $file    = find_file($vfile);
     my $bufsize = shift;
     my $offset  = shift;
     my $size    = -s $file;
     my($FH, $read);
+
+    debug("Read $vfile");
 
     ### check for file existence
     return -ENOENT() unless(defined $size);
@@ -212,14 +291,17 @@ sub fuse_read { #=============================================================
 }
 
 sub fuse_write { #============================================================
-    return -ENOENT() unless($READ_WRITE);
+    return -EROFS() unless($READ_WRITE);
 
     ### init
-    my $file   = find_file(shift);
+    my $vfile  = shift;
+    my $file   = find_file($vfile);
     my $buffer = shift;
     my $offset = shift;
     my $size   = -s $file;
     my($FH, $ret);
+
+    debug("Write $vfile");
 
     ### check for file existence
     return -ENOENT() unless(defined $size);
@@ -233,31 +315,51 @@ sub fuse_write { #============================================================
 }
 
 sub fuse_readlink { #=========================================================
-    return readlink find_file(shift);
+
+    ### init
+    my $vfile = shift;
+    my $file  = find_file($vfile);
+
+    debug("Readlink $vfile");
+
+    ### the end
+    return readlink $file;
 }
 
 sub fuse_unlink { #===========================================================
-    return -ENOENT() unless($READ_WRITE);
-    return unlink find_file(shift) ? 0 : -$!;
+    return -EROFS() unless($READ_WRITE);
+
+    ### init
+    my $vfile = shift;
+    my $file  = find_file($vfile);
+
+    debug("Unlink $vfile");
+
+    ### the end
+    return unlink $file ? 0 : -$!;
 }
 
 sub fuse_symlink { #==========================================================
-    return -ENOENT() unless($READ_WRITE);
+    return -EROFS() unless($READ_WRITE);
 
     ### init
     my $oldfile = find_file(shift);
     my $newfile = find_newfile($oldfile, shift);
+
+    debug("Symlink $oldfile => $newfile");
 
     ### the end
     return symlink $oldfile, $newfile ? 0 : -$!;
 }
 
 sub fuse_rename { #===========================================================
-    return -ENOENT() unless($READ_WRITE);
+    return -EROFS() unless($READ_WRITE);
 
     ### init
     my $old_name = find_file(shift);
     my $new_name = find_newfile(shift, $old_name);
+
+    debug("Rename $old_name => $new_name");
 
     ### init
     my ($err) = rename($old_name, $new_name) ? 0 : -ENOENT();
@@ -265,81 +367,101 @@ sub fuse_rename { #===========================================================
 }
 
 sub fuse_link { #=============================================================
-    return -ENOENT() unless($READ_WRITE);
+    return -EROFS() unless($READ_WRITE);
 
     ### init
     my $old_name  = find_file(shift);
     my $link_name = find_newfile(shift, $old_name);
+
+    debug("Hardlink $old_name => $link_name");
 
     ### the end
     return link $old_name, $link_name ? 0 : -$!
 }
 
 sub fuse_chown { #============================================================
-    return -ENOENT() unless($READ_WRITE);
+    return -EROFS() unless($READ_WRITE);
 
     ### init
-    my $file = find_file(shift);
-    my $uid  = shift;
-    my $gid  = shift;
+    my $vfile = shift;
+    my $file  = find_file($vfile);
+    my $uid   = shift;
+    my $gid   = shift;
+
+    debug("Chown $vfile => $uid/$gid");
 
     ### the end (cannot use perl's chown)
     return syscall &SYS_lchown, $file, $uid, $gid, $file ? -$! : 0;
 }
 
 sub fuse_chmod { #============================================================
-    return -ENOENT() unless($READ_WRITE);
+    return -EROFS() unless($READ_WRITE);
 
     ### init
-    my $file = find_file(shift);
-    my $mode = shift;
+    my $vfile = shift;
+    my $file  = find_file($vfile);
+    my $mode  = shift;
+
+    debug("Chmod $vfile => $mode");
 
     ### the end
     return chmod $mode, $file ? 0 : -$!;
 }
 
 sub fuse_truncate { #=========================================================
-    return -ENOENT() unless($READ_WRITE);
+    return -EROFS() unless($READ_WRITE);
 
     ### init
-    my $file   = find_file(shift);
+    my $vfile  = shift;
+    my $file   = find_file($vfile);
     my $length = shift;
+
+    debug("Truncate $vfile => $length");
 
     ### the end
     return truncate $file, $length ? 0 : -$!;
 }
 
 sub fuse_utime { #============================================================
-    return -ENOENT() unless($READ_WRITE);
+    return -EROFS() unless($READ_WRITE);
 
     ### init
-    my $file  = find_file(shift);
+    my $vfile = shift;
+    my $file  = find_file($vfile);
     my $atime = shift;
     my $mtime = shift;
+
+    debug("Utime $vfile => $atime/$mtime");
 
     ### the end
     return utime $atime, $mtime, $file ? 0 : -$!;
 }
 
 sub fuse_mkdir { #============================================================
-    return -ENOENT() unless($READ_WRITE);
+    return -EROFS() unless($READ_WRITE);
 
     ### init
-    my $new_dir     = find_newfile(shift);
+    my $vdir        = shift;
+    my $dir         = find_newfile($vdir);
     my $permissions = shift;
 
+    debug("Make dir $vdir ($permissions)");
+
     ### make dir
-    mkdir $new_dir, $permissions or return -$!;
+    mkdir $dir, $permissions or return -$!;
 
     ### the end
     return 0;
 }
 
 sub fuse_rmdir { #============================================================
-    return -ENOENT() unless($READ_WRITE);
+    return -EROFS() unless($READ_WRITE);
 
     ### init
-    my $dir = find_file(shift);
+    my $vdir = shift;
+    my $dir  = find_file($vdir);
+
+    debug("Remove dir $vdir");
 
     ### remove dir
     rmdir $dir or return -$!;
@@ -349,21 +471,23 @@ sub fuse_rmdir { #============================================================
 }
 
 sub fuse_mknod { #============================================================
-    return -ENOENT() unless($READ_WRITE);
+    return -EROFS() unless($READ_WRITE);
 
     ### init
-    my $file  = find_file(shift);
+    my $vfile = shift;
+    my $file  = find_file($vfile);
     my $modes = shift;
     my $dev   = shift;
        $!     = 0;
+
+    debug("Make node $vfile");
 
     ### the end
     syscall &SYS_mknod, $file, $modes, $dev;
     return -$!;
 }
 
-# kludge
-sub fuse_statfs {
+sub fuse_statfs { #===========================================================
 
     ### init
     my $total = {
@@ -374,6 +498,8 @@ sub fuse_statfs {
                     ffree  => 0, # total free inodes
                     fused  => 0, # total used inodes
                 };
+
+    debug("Statfs");
 
     SOURCE:
     for my $source (@sources) {
