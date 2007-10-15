@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 
-#==============
-# lwmwannabe.pl
-#==============
+#================
+# fuse-unionfs.pl
+#================
 
 use strict;
 use warnings;
@@ -134,7 +134,7 @@ sub usage { #=================================================================
 
     ### print help
     print "Usage:\n";
-    print " lwmwannabe.pl <sources> <target>\n";
+    print " fuse-unionfs.pl <sources> <target>\n";
     print "More info: 'perldoc $0`\n";
 
     ### the end
@@ -527,7 +527,7 @@ __END__
 
 =head1 NAME
 
-lwmwannabe.pl - A fuse fs for multiple dirs inside one virtual dir
+fuse-unionfs.pl - A fuse fs for multiple dirs inside one virtual dir
 
 =head1 VERSION
 
@@ -535,13 +535,13 @@ Version 0.01
 
 =head1 SYNOPSIS
 
- lwmwannabe.pl <sources> <target>;
- lwmwannabe.pl path/to/source_1 \
-               path/to/source_2 \
-               ...              \
-               path/to/source_n \
-               /my/target       \
-               ;
+ fuse-unionfs.pl <sources> <target>;
+ fuse-unionfs.pl path/to/source_1 \
+                 path/to/source_2 \
+                 ...              \
+                 path/to/source_n \
+                 /my/target       \
+                 ;
 
 =head1 DESCRIPTION
 
