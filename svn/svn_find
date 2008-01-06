@@ -1,11 +1,17 @@
 #!/bin/bash
 
-if [ "x$1" == "x-pm" ]; then
-    find . | grep -v "\.svn" | grep "\.pm"  | grep $2 | xargs grep $3;
-elif [ "x$1" == "x-tt2" ]; then
-    find . | grep -v "\.svn" | grep "\.tt2" | grep $2 | xargs grep $3;
-else
-    find . | grep -v "\.svn"                | grep $1 | xargs grep $2;
+if [ -z $1 ]; then
+    echo "Usage:";
+    echo "$ svn_find <folder> <filename> <file content>
+    echo "Example:";
+    echo "$ svn_find . "\.pm" "^use Foo;";
+    exit 1;
 fi
 
-exit 0;
+DIR=$1;
+FILE=$2;
+$CONTENT=$3;
+
+find $DIR | grep -v "\.svn" | grep $FILE | xargs grep $CONTENT;
+
+exit $?
