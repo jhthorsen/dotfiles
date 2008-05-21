@@ -8,18 +8,16 @@ use strict;
 use warnings;
 use Term::ANSIColor;
 use Pod::Usage;
-use Getopt::Long  qw(:config auto_abbrev   bundling   pass_through
-                             auto_version  auto_help
-                    );
-use vars          qw($VERSION);
+use Getopt::Long qw(:config auto_abbrev   bundling   pass_through
+                            auto_version  auto_help
+                   );
 
-$VERSION        = 1.0;
+our $VERSION    = 1.1;
+my $color       = 'red';
 my $suppress    = 0;
 my $ignore_case = 0;
-my $color       = 'red';
+my($regex, @files);
 
-
-#== GET COMMAND LINE ARGUMENTS ===============================================
 GetOptions(
     qw'       help|h  ' => \&help,
     qw'   suppress|s  ' => \$suppress,
@@ -27,38 +25,35 @@ GetOptions(
     qw'      color|c=s' => \$color,
 );
 
-
-#== INIT =====================================================================
-my $regex = shift @ARGV or help();
-my @files = @ARGV;
-
-$regex    = ($ignore_case) ? qr{$regex}i : qr{$regex};
+$regex = shift @ARGV or help();
+$regex = $ignore_case ? qr{$regex}i : qr{$regex};
+@files = @ARGV;
 
 
-#== READ STDIN ===============================================================
-print_line($_) while(<>);
-
-
-#== LOOP FILES ===============================================================
-for my $file (@files) {
-    open(FH, $file) or warn "No such file $file ($!)";
-    print_line($_) while(<FH>);
-    close FH;
+### read from stdin
+unless(-t STDIN) {
+    print_line($_) while(readline STDIN);
 }
 
+### loop files
+else {
+    for my $file (@files) {
+        open(FH, $file) or warn "Cannot open '$file': ($!)";
+        print_line($_) while(<FH>);
+        close FH;
+    }
+}
 
-### the end
 exit 0;
 
 
 sub print_line { #============================================================
 
-    ### init
     local $_  = shift;
     my $chomp = (chomp) ? 1 : 0;
 
     ### print line that match
-    if(/(.*?)($regex)(.*)/) {
+    if(/(.*?)($regex)(.*)/g) {
         print color($color), $1;
         print color('bold'), $2;
         print color('reset');
@@ -83,11 +78,12 @@ sub help { #==================================================================
     });
 }
 
+#=============================================================================
 __END__
 
 =head1 NAME
 
- colorgrep.pl - a way to highlight certain lines - http://flodhest.net/
+colorgrep.pl - a way to highlight certain lines - http://trac.flodhest.net/
 
 =head1 SYNOPSIS
 
