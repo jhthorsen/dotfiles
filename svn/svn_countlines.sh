@@ -17,6 +17,8 @@ fi
 
 for rev in `seq ${REV_MIN} ${REV_MAX}`; do
 
+    LINES=0;
+    FILES=0;
     REPO_DATE=`svn info -r $rev $REPO | perl -ne'
                   /Last\sChanged\sDate:\s(.*)\s\(/
                   and print $1
@@ -26,11 +28,14 @@ for rev in `seq ${REV_MIN} ${REV_MAX}`; do
         continue;
     fi
 
-    FILES=`svn list -R -r$rev $REPO | wc -l`;
-    LINES=`svn list -R -r$rev $REPO         | \
-           grep -iE "\.(${OK})$"      | \
-           xargs svn cat -r$rev 2>/dev/null | \
-           wc -l`;
+    LIST=`svn list -R -r$rev $REPO`;
+
+    for f in $LIST; do
+        FILES=$(( FILES += 1 ));
+        echo $f | grep -iE "\.(${OK})$" >/dev/null || continue;
+        L=`svn cat -r$rev $f 2>/dev/null | wc -l`;
+        LINES=$(( LINES + L ));
+    done
 
     echo "$rev - $REPO_DATE - $FILES - $LINES";
 
