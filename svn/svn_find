@@ -10,7 +10,7 @@ fi
 
 DIR=$1;
 FILE=$2;
-$CONTENT=$3;
+CONTENT=$3;
 
 find $DIR | grep -v "\.svn" | grep $FILE | xargs grep $CONTENT;
 
