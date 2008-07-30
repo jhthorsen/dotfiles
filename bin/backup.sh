@@ -267,10 +267,11 @@ elif [ "$ACTION" = "cleanup" ]; then
     echo "--- Hardlinking ./incoming to ./$INTERVAL.$TIMESTAMP";
     [ -d ./incoming ]                        || mkdir ./incoming;
     cp -al ./incoming ./$INTERVAL.$TIMESTAMP || exit 246;
+    touch             ./$INTERVAL.$TIMESTAMP;
 
     ### REMOVE OLD BACKUPS
     i=0;
-    for dir in `ls -dXr $INTERVAL.*`; do
+    for dir in `ls -dt $INTERVAL.*`; do
         (( i++ ));
         if [ $i -gt $KEEP ]; then
             echo "--- Removing ./$dir";
