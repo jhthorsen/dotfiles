@@ -41,7 +41,8 @@ directory.
 =cut
 
 sub write_makefile {
-    my $get = sub {
+    my $name = $META->{name};
+    my $get  = sub {
         my($make_sub, $yaml_key) = @_;
         return unless(ref $META->{$yaml_key} eq 'HASH');
         return map {
@@ -49,12 +50,14 @@ sub write_makefile {
                } keys %{ $META->{$yaml_key} };
     };
 
+    $name =~ s/::/-/g;
+
     open(my $mkfile, ">", "Makefile.PL")
         or die "Could not write Makefile.PL: $!";
 
     for(map { "$_;\n" }
         qq(use inc::Module::Install),
-        qq(name '$META->{name}'),
+        qq(name '$name'),
         qq(abstract '$META->{abstract}'),
         qq(author '$META->{author}'),
         qq(all_from '$META->{version_from}'),
