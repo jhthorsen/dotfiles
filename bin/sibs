@@ -29,7 +29,7 @@ DESCRIPTION
     to another:
 
     ./incoming          = temporary directory where rsync put its data.
-    ./<interval>.<date> = directory that holds a backup.
+    ./<interval>-<date> = directory that holds a backup.
                           <date> = [month][dayofmonth]-[hour][minute]
 
     Number of incremental backups are controlled by $KEEP_HOUR and $KEEP_DAY.
@@ -99,6 +99,18 @@ test() {
     return 0;
 }
 
+load_config() {
+    if [ -f $1 ]; then
+        source $1;
+        return $?;
+    elif [ -f $CONFIG_DIR/$1 ]; then
+        source $CONFIG_DIR/$1;
+        return $?;
+    fi
+
+    return 1;
+}
+
 show_config() {
     if [ -n "$1" ]; then
         cat $1;
@@ -131,7 +143,7 @@ run_cmd() {
             echo "-!- Program '$PROGRAM' failed with $EXIT_CODE";
         fi
     else
-        echo "--- No program to run.";
+        echo "--- No program to run";
     fi
 
     return $EXIT_CODE;
@@ -196,13 +208,13 @@ backup() {
             exit 255;
         fi
 
-        echo "--- Done backing up.";
+        echo "--- Done backing up";
 
         ### CLEANUP BACKUPS ON REMOTE HOST
         run_cmd ssh $DST_HOST        \
                    "sibs cleanup     \
-                        $BACKUP_NAME \
                         $DST_DIR     \
+                        $BACKUP_NAME \
                         $INTERVAL    \
                         $KEEP_HOUR   \
                         $KEEP_DAY    \
@@ -222,7 +234,7 @@ cleanup() {
     INTERVAL_UC=$( echo $INTERVAL | tr a-z A-Z );
     KEEP=$( eval echo "\$KEEP_$INTERVAL_UC" );
 
-    echo "--- Cleaning up.";
+    echo "--- Cleaning up";
     check_backup_name;
     [ ! -d "$DST_DIR/$BACKUP_NAME" ] && exit 248;
 
@@ -233,14 +245,14 @@ cleanup() {
         mkdir ./incoming;
     fi
 
-    if [ ! -d ./$INTERVAL.$TIMESTAMP ]; then
-        echo "--- Hardlinking ./incoming to ./$INTERVAL.$TIMESTAMP";
-        cp -al ./incoming ./$INTERVAL.$TIMESTAMP || exit 246;
-        touch ./$INTERVAL.$TIMESTAMP;
+    if [ ! -d ./$INTERVAL-$TIMESTAMP ]; then
+        echo "--- Hardlinking ./incoming to ./$INTERVAL-$TIMESTAMP";
+        cp -al ./incoming ./$INTERVAL-$TIMESTAMP || exit 246;
+        touch ./$INTERVAL-$TIMESTAMP;
     fi
 
     i=0;
-    for dir in `ls -dt $INTERVAL.*`; do
+    for dir in `ls -dt $INTERVAL-*`; do
         (( i++ ));
         if [ $i -gt $KEEP ]; then
             echo "--- Removing ./$dir";
@@ -250,8 +262,38 @@ cleanup() {
 
     echo "--- Backup list:";
     ls -l;
-    echo "--- Done cleaning.";
+    echo "--- Done cleaning";
     return 0;
+}
+
+status() {
+    FILE=$1;
+    OLD_INODE=0;
+
+    echo "--- Status for file $FILE";
+    cd $DST_DIR/$BACKUP_NAME;
+
+    ls -tr | grep -E '(day|hour)' | while read DIR; do
+        if [ -r $DIR/$FILE ]; then
+            INODE=$(ls -i $DIR/$FILE | cut -d' ' -f1 2>/dev/null);
+            SIZE=$(ls -sh $DIR/$FILE | cut -d' ' -f1 2>/dev/null);
+        else
+            INODE=0;
+            SIZE=0;
+        fi
+
+        if [ $OLD_INODE == 0 ]; then
+            echo "new $DIR $SIZE";
+        elif [ "$SIZE" == "0" ]; then
+            echo "del $DIR $SIZE";
+        elif [ $OLD_INODE -eq $INODE ]; then
+            echo "un  $DIR $SIZE";
+        else
+            echo "ch  $DIR $SIZE";
+        fi
+
+        OLD_INODE=$INODE;
+    done
 }
 
 keygen() {
@@ -268,9 +310,15 @@ keygen() {
         "cat - >> ~/.ssh/authorized_keys" \
     ;
 
-    echo "--- Done creating ssh keys.";
+    echo "--- Done creating ssh keys";
     return 0;
 }
+
+PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:$PATH";
+RSYNC_ARGS="-az --relative --delete-after --numeric-ids";
+LOG_DIR="/var/log/sibs";
+CONFIG_DIR="/etc/sibs/";
+TIMESTAMP=`date +%m%d-%H%M`;
 
 ### CONFIG FILE SAMPLE START
 BACKUP_NAME="";      # the name of the backup
@@ -285,32 +333,36 @@ RUN_AFTER="";        # program to run, after every backup
 MAILTO="";           # email adress to post report to
 ### CONFIG FILE SAMPLE END
 
-PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:$PATH";
-RSYNC_ARGS="-az --relative --delete-after --numeric-ids";
-LOG_DIR="/var/log/sibs";
-TIMESTAMP=`date +%m%d-%H%M`;
-
 case $1 in
     day | hour)
         INTERVAL=$1;
-        source $2 || exit 255;
+        load_config $2 || exit 255;
         backup;
     ;;
     keygen)
-        source $2 || exit 255;
+        load_config $2 || exit 255;
         keygen;
     ;;
     test)
-        source $2 || exit 255;
+        load_config $2 || exit 255;
         test;
     ;;
     cleanup)
-        BACKUP_NAME=$2;
-        DST_DIR=$3;
+        DST_DIR=$2;
+        BACKUP_NAME=$3;
         INTERVAL=$4;
         KEEP_HOUR=$5;
         KEEP_DAY=$6;
         cleanup;
+    ;;
+    status)
+        if load_config $2; then
+            ssh $DST_HOST "sibs status $DST_DIR $BACKUP_NAME $3";
+        else
+            DST_DIR=$2;
+            BACKUP_NAME=$3;
+            status $4;
+        fi
     ;;
     config)
         show_config $2;
