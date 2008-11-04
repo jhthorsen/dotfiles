@@ -10,8 +10,8 @@ SYNOPSIS
     $ sibs <hour|day|keygen|test> <config-file>
     $ sibs <config> [config-file]
 
-    Sibs must be initiated on the computer that is taken backup from, but must
-    exist on both computers.
+    Sibs must be initiated on the computer that is taken backup from, and must
+    exist in $PATH on the host that is taken backup to.
 
     * help    this help message.
     * man     the inline manual
@@ -50,8 +50,7 @@ AUTOMATED BACKUPS
     0  2   */1 * * /path/to/sibs day  /path/to/backup.conf
  
 REQUIREMENTS
-    The backup-script must be in $PATH on both computers.
-    It relies on "ssh", "rsync" and generic commandline tools.
+    ssh, rsync, bash, sendmail, cat and perl.
 
 AUTHOR
     Written by Jan Henning Thorsen - http://trac.flodhest.net/snippets/
@@ -72,23 +71,8 @@ LICENSE
 MAN
 }
 
-
-### CONFIG FILE SAMPLE START
-BACKUP_NAME="";      # the name of the backup
-SRC_DIR="";          # where to take backup from
-DST_HOST="";         # destination host (can be user@host)
-DST_DIR="";          # $DST_DIR must exist on $DST_HOST
-RSYNC_USER_ARGS="";  # ex: '--include foo --exclude bah'
-KEEP_HOUR=0;         # how many hourly backups to backtrack
-KEEP_DAY=0;          # how many daily backups to backtrack
-RUN_BEFORE="";       # program to run, before every backup
-RUN_AFTER="";        # program to run, after every backup
-MAILTO="";           # email adress to post report to
-### CONFIG FILE SAMPLE END
-
-
 help() {
-    man | perl -nle'$p and /^\w/ and exit; print if $p; /SYNOPSIS/ and $p=1';
+    man | perl -nle'/^\w/&&exit if $p;$p&&print;$p=1 if /SYNOPSIS/';
 }
 
 mail_report() {
@@ -119,12 +103,12 @@ show_config() {
     if [ -n "$1" ]; then
         cat $1;
     else
-        sed -n '/^###\sCONFIG/,/^###\sCONFIG/p' $0;
+        perl -nle'/^###/&&exit if $p;$p&&print;$p=1 if /###\sCONFIG\s/' $0;
     fi
 }
 
 check_backup_name() {
-    if echo $BACKUP_NAME | grep -e '[/.]' &>/dev/null; then
+    if ! perl -e'$ARGV[0]=~m"[/.]"&&exit 255' $BACKUP_NAME; then
         echo "-!- BACKUP_NAME cannot contain '.' or '/'";
         exit 1;
     elif [ -z "$BACKUP_NAME" ]; then
@@ -288,7 +272,19 @@ keygen() {
     return 0;
 }
 
-#=============================================================================
+### CONFIG FILE SAMPLE START
+BACKUP_NAME="";      # the name of the backup
+SRC_DIR="";          # where to take backup from
+DST_HOST="";         # destination host (can be user@host)
+DST_DIR="";          # $DST_DIR must exist on $DST_HOST
+RSYNC_USER_ARGS="";  # ex: '--include foo --exclude bah'
+KEEP_HOUR=0;         # how many hourly backups to backtrack
+KEEP_DAY=0;          # how many daily backups to backtrack
+RUN_BEFORE="";       # program to run, before every backup
+RUN_AFTER="";        # program to run, after every backup
+MAILTO="";           # email adress to post report to
+### CONFIG FILE SAMPLE END
+
 PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:$PATH";
 RSYNC_ARGS="-az --relative --delete-after --numeric-ids";
 LOG_DIR="/var/log/sibs";
