@@ -1,0 +1,333 @@
+#!/bin/bash
+
+man() {
+    cat <<'MAN'
+NAME
+    Sibs - Simple incremental backup script - version 0.95
+
+SYNOPSIS
+    $ sibs <man|help>
+    $ sibs <hour|day|keygen|test> <config-file>
+    $ sibs <config> [config-file]
+
+    Sibs must be initiated on the computer that is taken backup from, but must
+    exist on both computers.
+
+    * help    this help message.
+    * man     the inline manual
+    * hour    do backup, with 'hour' interval
+    * day     do backup, with 'day' interval
+    * keygen  create ssh-sertificates, for automated backups.
+    * test    checks config-file and send a test mail.
+    * config  print either sample config, or content of config-file
+ 
+DESCRIPTION
+    This script is a wrapper around "rsync", and takes backups from one host
+    to another. In addition to doing backups, it can also keep track of
+    history and changes of files and folders, by doing incremental backups.
+    The incremental backups works by hardlinking the files from one folder
+    to another:
+
+    ./incoming          = temporary directory where rsync put its data.
+    ./<interval>.<date> = directory that holds a backup.
+                          <date> = [month][dayofmonth]-[hour][minute]
+
+    Number of incremental backups are controlled by $KEEP_HOUR and $KEEP_DAY.
+
+    The backup is stored in this path: $DST_DIR/$BACKUP_NAME/ on $DST_HOST.
+    See "CONFIG FILE SAMPLE" later in this script.
+
+AUTOMATED BACKUPS
+    If you want to do automated backups, you would have to install
+    ssh-certificates: This can be done by running Sibs from the on the
+    computer that is taken backup from:
+    
+    $ sibs keygen <config-file>
+
+    Here are some sample crontab lines:
+
+    30 */4 *   * * /path/to/sibs hour /path/to/backup.conf
+    0  2   */1 * * /path/to/sibs day  /path/to/backup.conf
+ 
+REQUIREMENTS
+    The backup-script must be in $PATH on both computers.
+    It relies on "ssh", "rsync" and generic commandline tools.
+
+AUTHOR
+    Written by Jan Henning Thorsen - http://trac.flodhest.net/snippets/
+
+LICENSE
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+MAN
+}
+
+
+### CONFIG FILE SAMPLE START
+BACKUP_NAME="";      # the name of the backup
+SRC_DIR="";          # where to take backup from
+DST_HOST="";         # destination host (can be user@host)
+DST_DIR="";          # $DST_DIR must exist on $DST_HOST
+RSYNC_USER_ARGS="";  # ex: '--include foo --exclude bah'
+KEEP_HOUR=0;         # how many hourly backups to backtrack
+KEEP_DAY=0;          # how many daily backups to backtrack
+RUN_BEFORE="";       # program to run, before every backup
+RUN_AFTER="";        # program to run, after every backup
+MAILTO="";           # email adress to post report to
+### CONFIG FILE SAMPLE END
+
+
+help() {
+    man | perl -nle'$p and /^\w/ and exit; print if $p; /SYNOPSIS/ and $p=1';
+}
+
+mail_report() {
+    [ -z "$MAILTO" ] && return 254;
+
+    VALUE="$1";
+    MESSAGE="$2";
+
+    ### SEND MAIL
+    {
+        echo "From: sibs@${HOSTNAME}";
+        echo "To: $MAILTO";
+        echo "Subject: $BACKUP_NAME ($VALUE)";
+        echo "Content-type: text/plain";
+        echo;
+        echo "$MESSAGE";
+    } | sendmail -t;
+
+    return $?;
+}
+
+test() {
+    mail_report 0 "Hello World!";
+    return 0;
+}
+
+show_config() {
+    if [ -n "$1" ]; then
+        cat $1;
+    else
+        sed -n '/^###\sCONFIG/,/^###\sCONFIG/p' $0;
+    fi
+}
+
+check_backup_name() {
+    if echo $BACKUP_NAME | grep -e '[/.]' &>/dev/null; then
+        echo "-!- BACKUP_NAME cannot contain '.' or '/'";
+        exit 1;
+    elif [ -z "$BACKUP_NAME" ]; then
+        echo "-!- You have to define BACKUP_NAME";
+        exit 2;
+    else
+        return 0;
+    fi
+}
+
+run_cmd() {
+    PROGRAM=$@;
+    EXIT_CODE=-1;
+
+    if [ -n "$PROGRAM" ]; then
+        $PROGRAM;
+        EXIT_CODE=$?;
+
+        if [ $EXIT_CODE -ne 0 ]; then
+            echo "-!- Program '$PROGRAM' failed with $EXIT_CODE";
+        fi
+    else
+        echo "--- No program to run.";
+    fi
+
+    return $EXIT_CODE;
+}
+
+logfile() {
+    LOG_FILE="${LOG_DIR}/${BACKUP_NAME}-${TIMESTAMP}.log";
+
+    if [ ! -d $LOG_DIR ]; then
+        mkdir $LOG_DIR || exit 255;
+    fi
+    if ! touch $LOG_FILE 2>/dev/null; then
+        echo "Could not touch \$LOG_FILE ($LOG_FILE)";
+        exit 255;
+    fi
+
+    export LOG_FILE;
+    return 0;
+}
+
+backup() {
+    check_backup_name;
+    logfile;
+
+    LOCK_FILE="/tmp/backup-$BACKUP_NAME";
+
+    ### TRAP SIGNALS
+    trap "{                                             \
+              rm -f $LOCK_FILE;                         \
+              mail_report $EXIT_CODE 'Backup Failed!';  \
+          }" SIGINT SIGTERM;
+    trap "{                                             \
+              rm -f $LOCK_FILE;                         \
+          }" EXIT;
+
+    { # send output to tee and logfil
+
+        echo -n "--- Creating backup: "; date;
+
+        ### BACKUP DATA
+        if ln -s /dev/null $LOCK_FILE &>/dev/null; then
+
+            run_cmd $RUN_BEFORE;
+
+            rsync $RSYNC_ARGS $RSYNC_USER_ARGS              \
+                  $SRC_DIR                                  \
+                  $DST_HOST:$DST_DIR/$BACKUP_NAME/incoming  \
+            ; EXIT_CODE=$?;
+
+            if [ $EXIT_CODE -gt 0 ]; then 
+                echo "Problem with rsync: $EXIT_CODE";
+                exit $EXIT_CODE;
+            fi
+
+            run_cmd $RUN_AFTER;
+            rm $LOCK_FILE;
+
+        ### BACKUP ALLREADY IN PROGRESS
+        else
+            echo "--- LOCK_FILE ($LOCK_FILE) exists: Backup in progress...";
+            mail_report '255' 'LOCK_FILE ($LOCK_FILE) exists!';
+            exit 255;
+        fi
+
+        echo "--- Done backing up.";
+
+        ### CLEANUP BACKUPS ON REMOTE HOST
+        run_cmd ssh $DST_HOST        \
+                   "sibs cleanup     \
+                        $BACKUP_NAME \
+                        $DST_DIR     \
+                        $INTERVAL    \
+                        $KEEP_HOUR   \
+                        $KEEP_DAY    \
+                   "                 \
+        ; EXIT_CODE=$?;
+
+    if [ "$INTERVAL" = "day" ]; then
+        mail_report "0" "`cat $LOG_FILE`";
+    fi
+
+    } | tee $LOG_FILE
+
+    return 0;
+}
+
+cleanup() {
+    INTERVAL_UC=$( echo $INTERVAL | tr a-z A-Z );
+    KEEP=$( eval echo "\$KEEP_$INTERVAL_UC" );
+
+    echo "--- Cleaning up.";
+    check_backup_name;
+    [ ! -d "$DST_DIR/$BACKUP_NAME" ] && exit 248;
+
+    echo "--- Changing directory to $DST_DIR/$BACKUP_NAME";
+    cd "$DST_DIR/$BACKUP_NAME" || exit 247;
+
+    if [ ! -d ./incoming ]; then
+        mkdir ./incoming;
+    fi
+
+    if [ ! -d ./$INTERVAL.$TIMESTAMP ]; then
+        echo "--- Hardlinking ./incoming to ./$INTERVAL.$TIMESTAMP";
+        cp -al ./incoming ./$INTERVAL.$TIMESTAMP || exit 246;
+        touch ./$INTERVAL.$TIMESTAMP;
+    fi
+
+    i=0;
+    for dir in `ls -dt $INTERVAL.*`; do
+        (( i++ ));
+        if [ $i -gt $KEEP ]; then
+            echo "--- Removing ./$dir";
+            rm -r ./$dir || exit 245;
+        fi
+    done
+
+    echo "--- Backup list:";
+    ls -l;
+    echo "--- Done cleaning.";
+    return 0;
+}
+
+keygen() {
+    echo "--- Create ssh keys...";
+
+    if [ ! -e ~/.ssh/id_dsa.pub ]; then
+        ssh-keygen -t dsa; # creates ~/.ssh/id_dsa.pub and ~/.ssh/id_dsa
+    else
+        echo '-!- Certificate ~/.ssh/id_dsa.pub exists';
+    fi
+
+    cat ~/.ssh/id_dsa.pub |               \
+    ssh $DST_HOST                         \
+        "cat - >> ~/.ssh/authorized_keys" \
+    ;
+
+    echo "--- Done creating ssh keys.";
+    return 0;
+}
+
+#=============================================================================
+PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:$PATH";
+RSYNC_ARGS="-az --relative --delete-after --numeric-ids";
+LOG_DIR="/var/log/sibs";
+TIMESTAMP=`date +%m%d-%H%M`;
+
+case $1 in
+    day | hour)
+        INTERVAL=$1;
+        source $2 || exit 255;
+        backup;
+    ;;
+    keygen)
+        source $2 || exit 255;
+        keygen;
+    ;;
+    test)
+        source $2 || exit 255;
+        test;
+    ;;
+    cleanup)
+        BACKUP_NAME=$2;
+        DST_DIR=$3;
+        INTERVAL=$4;
+        KEEP_HOUR=$5;
+        KEEP_DAY=$6;
+        cleanup;
+    ;;
+    config)
+        show_config $2;
+    ;;
+    man)
+        man | less;
+    ;;
+    help)
+        help;
+    ;;
+    *)
+        help;
+    ;;
+esac
+
+exit $?;
