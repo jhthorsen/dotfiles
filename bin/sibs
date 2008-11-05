@@ -42,10 +42,13 @@ DESCRIPTION
 STATUS EXAMPLE
     $ sibs status myconfig.env path/to/file
     --- Status for file path/to/file
-    new day-1104-2249 312K
-    del day-1104-2332 0
-    new day-1104-2355 312K
-    un  day-1105-0012 312K
+    A day-1104-2249 312K
+    D day-1104-2332 0
+    A day-1104-2355 350K
+    - day-1105-0012 350K
+    M day-1105-0012 310K
+
+    "A" = added, "D" = deleted, "M" = modified, "-" = no change.
 
     "path/to/file" is translated into "$DST_DIR/$BACKUP_NAME/path/to/file" on
     the remote machine. "path/to/file" cannot contain any form for wildcards.
@@ -299,13 +302,13 @@ status() {
         fi
 
         if [ $OLD_INODE -eq 0 -a $SIZE != 0 ]; then
-            echo "new $DIR $SIZE";
+            echo "A $DIR $SIZE";
         elif [ $SIZE == 0 ]; then
-            echo "del $DIR $SIZE";
+            echo "D $DIR $SIZE";
         elif [ $OLD_INODE -eq $INODE ]; then
-            echo "un  $DIR $SIZE";
+            echo "- $DIR $SIZE";
         else
-            echo "ch  $DIR $SIZE";
+            echo "M $DIR $SIZE";
         fi
 
         OLD_INODE=$INODE;
