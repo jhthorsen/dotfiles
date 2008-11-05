@@ -261,14 +261,14 @@ cleanup() {
         mkdir ./incoming;
     fi
 
-    if [ ! -d ./$INTERVAL-$TIMESTAMP ]; then
-        echo "--- Hardlinking ./incoming to ./$INTERVAL-$TIMESTAMP";
-        cp -al ./incoming ./$INTERVAL-$TIMESTAMP || exit 246;
-        touch ./$INTERVAL-$TIMESTAMP;
+    if [ ! -d ./$INTERVAL.$TIMESTAMP ]; then
+        echo "--- Hardlinking ./incoming to ./$INTERVAL.$TIMESTAMP";
+        cp -al ./incoming ./$INTERVAL.$TIMESTAMP || exit 246;
+        touch ./$INTERVAL.$TIMESTAMP;
     fi
 
     i=0;
-    for dir in `ls -dt $INTERVAL-*`; do
+    for dir in `ls -dt $INTERVAL.*`; do
         (( i++ ));
         if [ $i -gt $KEEP ]; then
             echo "--- Removing ./$dir";
