@@ -31,7 +31,7 @@ DESCRIPTION
     to another:
 
     ./incoming          = temporary directory where rsync put its data.
-    ./<interval>-<time> = directory that holds a backup.
+    ./<interval>.<time> = directory that holds a backup.
                           <date> = [month][date]-[hour][minute]
 
     Number of incremental backups are controlled by $KEEP_HOUR and $KEEP_DAY.
@@ -42,11 +42,11 @@ DESCRIPTION
 STATUS EXAMPLE
     $ sibs status myconfig.env path/to/file
     --- Status for file path/to/file
-    A day-1104-2249 312K
-    D day-1104-2332 0
-    A day-1104-2355 350K
-    - day-1105-0012 350K
-    M day-1105-0012 310K
+    A day.1104-2249 312K
+    D day.1104-2332 0
+    A day.1104-2355 350K
+    - day.1105-0012 350K
+    M day.1105-0012 310K
 
     "A" = added, "D" = deleted, "M" = modified, "-" = no change.
 
@@ -120,10 +120,10 @@ test() {
 
 load_config() {
     if [ -f $1 ]; then
-        source $1;
+        . $1;
         return $?;
     elif [ -f $CONFIG_DIR/$1 ]; then
-        source $CONFIG_DIR/$1;
+        . $CONFIG_DIR/$1;
         return $?;
     fi
 
@@ -139,7 +139,7 @@ show_config() {
 }
 
 check_backup_name() {
-    if ! perl -e'$ARGV[0]=~m"[/.]"&&exit 255' $BACKUP_NAME; then
+    if ! perl -e'shift=~m"[/.]"&&exit 255' $BACKUP_NAME; then
         echo "-!- BACKUP_NAME cannot contain '.' or '/'";
         exit 1;
     elif [ -z "$BACKUP_NAME" ]; then
@@ -293,7 +293,7 @@ status() {
     cd $DST_DIR/$BACKUP_NAME;
 
     ls -tr | grep -E '(day|hour)' | while read DIR; do
-        if [ -r "$DIR/$FILE" ]; then
+        if [ -f "$DIR/$FILE" ]; then
             INODE=$(stat --printf %i $DIR/$FILE);
             SIZE=$(ls -sh $DIR/$FILE | cut -d' ' -f1 2>/dev/null);
         else
@@ -303,7 +303,7 @@ status() {
 
         if [ $OLD_INODE -eq 0 -a $SIZE != 0 ]; then
             echo "A $DIR $SIZE";
-        elif [ $SIZE == 0 ]; then
+        elif [ $SIZE -eq 0 ]; then
             echo "D $DIR $SIZE";
         elif [ $OLD_INODE -eq $INODE ]; then
             echo "- $DIR $SIZE";
