@@ -23,14 +23,12 @@ etc/gdm.conf
 etc/init.d/iptables
 etc/init.d/route
 
-network/apache2
 network/forward.pl
 network/snmptraf.pl
 network/tcpdump2wireshark.sh
 network/wifi_daemon.pl
 
 media/burnmusic.sh
-media/convert2mp3.sh
 media/create_m3u.pl
 media/filename2id3.pl
 media/m4a2mp3.sh
