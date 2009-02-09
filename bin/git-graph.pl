@@ -14,10 +14,13 @@ Version 0.01
 
 =head2 OPTIONS
 
- --outfile  : 
- --height   : 
- --width    : 
- --format   : 
+ --outfile     : 
+ --title       : 
+ --height      : 
+ --width       : 
+ --format      : 
+ --skip        :
+ --skip-other  :
 
 =cut
 
@@ -29,18 +32,22 @@ use Getopt::Long qw/:config auto_version auto_help/;
 my @GIT_LOG  = (qw(git-log --reverse --numstat -b), q(--pretty=format:---));
 my $FONT_DIR = q(/usr/share/fonts/truetype/ttf-bitstream-vera);
 my $ARGS = {
+    title    => q(Lines in project),
     height   => 500,
     width    => 700,
     max      => 0,
-    title    => q(Lines in project),
     bfont    => [ "$FONT_DIR/VeraBd.ttf" ],
     font     => [ "$FONT_DIR/Vera.ttf"   ],
-    outfile  => undef,
 };
 
 GetOptions($ARGS, qw/
-    height|h=i width|w=i format|f outfile|o=s debug
+    height|h=i width|w=i format|f outfile|o=s
+    title|t=s debug skip-other skip=s
 /) or exit Getopt::Long::HelpMessage();
+
+if(my $skip = $ARGS->{'skip'}) {
+    $ARGS->{'skip'} = qr{$skip};
+}
 
 if($ARGS->{'outfile'}) {
     exit main();
@@ -66,6 +73,7 @@ sub main {
 
     warn "Running: @GIT_LOG\n";
 
+    LOG_ENTRY:
     while(readline $GITLOG) {
         if(/$re_stats/) {
             my($added, $deleted, $name) = ($1, $2, $3);
@@ -73,6 +81,10 @@ sub main {
 
             if($type eq 'other') {
                 warn "Unknown file: $name\n" if $ARGS->{'debug'};
+                next LOG_ENTRY if($ARGS->{'skip-other'});
+            }
+            if($ARGS->{'skip'} and $name =~ $ARGS->{'skip'}) {
+                next LOG_ENTRY;
             }
 
             $tmp{$type} ||= 0;
@@ -105,17 +117,17 @@ sub main {
 sub _category {
     my $name = shift || q();
     my %cat  = (
-        qr{js$}     => 'web',
-        qr{css$}    => 'web',
-        qr{tt$}     => 'web',
-        qr{formfu}  => 'web',
-        qr{t$}      => 'test',
-        qr{yml$}    => 'config',
-        qr{yaml$}   => 'config',
-        qr{conf$}   => 'config',
-        qr{sh$}     => 'script',
-        qr{pl$}i    => 'script',
-        qr{pm$}     => 'pm',
+        qr{\.js$}     => 'web',
+        qr{\.css$}    => 'web',
+        qr{\.tt$}     => 'web',
+        qr{formfu}    => 'web',
+        qr{\.t$}      => 'test',
+        qr{\.yml$}    => 'config',
+        qr{yaml$}     => 'config',
+        qr{conf$}     => 'config',
+        qr{\.sh$}     => 'script',
+        qr{\.pl$}i    => 'script',
+        qr{\.pm$}     => 'pm',
     );
 
     for(keys %cat) {
@@ -152,10 +164,10 @@ sub graph {
        #two_axes         => 1,
 
         x_label          => q(Time),
-        x_all_ticks      => 1,
+        x_all_ticks      => 0,
+        x_label_skip     => int(@$x/10),
        #x_label_position => 1,
-       #x_label_skip     => int(@$x/12),
-        x_tick_number    => 'auto',
+       #x_tick_number    => 'auto',
 
         boxclr           => q(#f7f7f7),
         labelclr         => q(#333333),
@@ -179,7 +191,7 @@ sub graph {
 
     my($format) = $ARGS->{'outfile'} =~ /\.(\w+)$/;
 
-    print STDERR "Writing $ARGS->{'outfile'}\n" if $ARGS->{'debug'};
+    print STDERR "Writing $ARGS->{'outfile'}\n";
     open(my $IMG, ">", $ARGS->{'outfile'}) or die "Cannot write image: $!\n";
     print $IMG $img->gd->$format;
     close $IMG;
