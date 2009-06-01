@@ -1,104 +1,135 @@
 #!/usr/bin/perl
 
-#=====
-# copy
-#=====
+=head1 NAME
+
+copy.pl
+
+=head1 SYNOPSIS
+
+ $ copy.pl srcfile.1 srcfile.2 destination/folder;
+
+=cut
 
 use strict;
 use warnings;
+use sigtrap 'handler' => \&signalled, 'normal-signals';
 use File::Basename;
-use sigtrap 'handler' => \&end, 'normal-signals';
 use Term::ReadKey;
 use Time::HiRes qw/gettimeofday tv_interval/;
 
+our $VERSION = 0.01;
 
-### CHECK ARGS
-if(@ARGV > 2 and !-d $ARGV[-1]) {
-    die "Cannot copy more than one file, unless destination is a directory\n";
-}
-
-### INIT PROGRAM
 my $COLS         = (GetTerminalSize())[0];
-my $BUFFER       = 2048;
+my $BUFFER       = $ENV{'COPY_BUFFER'} || 2048;
 my $PROGBAR_SIZE = $COLS - 40;
 my $LINE         = "\r %-" .($COLS - 2) .'s';
 my $CURRENT_FILE;
 my $ALARM_SET;
 my $t0;
-$|++;
 
-### COPY FILE
-loop_files(@ARGV);
+exit(@ARGV ? run(@ARGV) : help());
 
-### THE END
-exit 0;
+=head1 FUNCTIONS
 
+=head2 run
 
-sub loop_files { #============================================================
+ $exit_value = run(@files, $destination);
 
-    ### init
-    my $dst = pop;
+Will copy files files to destination.
 
-    SRC:
-    for my $src (@_) {
+=cut
 
-        ### dig deeper into the rabit hole
-        if(-d $src) {
+sub run {
+    my $destination = pop;
+    my @files       = @_;
 
-            ### read directory
-            opendir(DIR, $src);
-            my @files  = map { "$src/$_" } grep { !/^\.{1,2}$/ } readdir DIR;
-            my $dst    = "$dst/" .(split m{/}, $src)[-1];
-            closedir DIR;
-
-            if(-d $dst and -w _) {
-                loop_files(@files, $dst);
-            }
-            elsif(mkdir $dst) {
-                loop_files(@files, $dst);
-            }
-            else {
-                warn "! Could not write destination directory: $!\n";
-            }
-
-            ### next file
-            next SRC;
-        }
-
-        ### other kind of file
-        unless(-f $src) {
-            warn "! File ($src) is not a plain file\n";
-            next SRC;
-        }
-    
-        ### copy file
-        copy_file($src, $dst);
+    if(@files > 1 and !-d $destination) {
+        die "Cannot copy more than one file, "
+           ."unless destination is a directory\n";
     }
+
+    $|++;
+
+    FILE:
+    for my $file (@files) {
+        unless(-f $file) {
+            warn "! File ($file) is not a plain file\n";
+            next FILE;
+        }
+ 
+        if(-d $file) {
+            directory_copy($file, $destination);
+            next FILE;
+        }
+
+        copy_file($file, $destination);
+    }
+
+    return 0;
 }
 
-sub copy_file { #=============================================================
-    
-    ### init
-    my $src            = shift;
-    my $dst            = shift;
-    my $data_copied    = 0;
-    my $src_size       = (stat $src)[7] || 0;
-    my $chunk;
-       $t0             = [ gettimeofday ];
+=head2 directory_copy
 
-    ### fix destination
-    $dst =  join "/", $dst, basename($src) if(-d $dst);
-    $dst =~ s/\/{2}/\//g;
+ $bool = directory_copy($from_dir, $to_dir); 
 
-    ### check src and dst file size
-    if(-e $dst) {
-        $data_copied = (stat $dst)[7];
-        if($src_size == $data_copied) {
-            warn "> File $src has the same size as destination\n";
+Will loop all files in a directory and copy the files inside, using L<run()>.
+
+=cut
+
+sub directory_copy {
+    my $from_dir = shift;
+    my $to_dir   = shift;
+    my(@files, $destination);
+
+    opendir(my $DH, $from_dir);
+
+    @files       = map { "$from_dir/$_" } grep { !/^\.{1,2}$/ } readdir $DH;
+    $destination = "$to_dir/" .basename($from_dir);
+
+    closedir $DH;
+
+    if(-d $destination and -w _) {
+        return !run(@files, $destination);
+    }
+    elsif(mkdir $destination) {
+        return !run(@files, $destination);
+    }
+
+    warn "! Could not write destination directory: $!\n";
+    return;
+}
+
+=head2 copy_file
+
+ $bool = copy_file($source, $destination);
+
+Will copy one file from one location to another.
+
+=cut
+
+sub copy_file {
+    my $source      = shift;
+    my $destination = shift;
+    my $source_size = (stat $source)[7] || 0;
+    my $data_copied = 0;
+    my($SRC, $DST, $chunk);
+
+    $t0 = [ gettimeofday ]; # global
+
+    if(-d $destination) {
+        $destination = join "/", $destination, basename($source) 
+    }
+
+    $destination =~ s,/+,/,g;
+
+    if(-e $destination) {
+        $data_copied = (stat $destination)[7];
+        if($source_size == $data_copied) {
+            warn "> File $source has the same size as destination\n";
             return 0;
         }
         elsif($data_copied) {
-            #print "? $dst exists, but contains less data than $src.\n";
+            #print "? $destination exists, but contains less data than $source.\n";
             #print "  Do you want to resume/overwrite/skip? (r/o/s) ";
             #my $answer    = <STDIN>;
             #$data_copied  = 0 unless($answer =~ /^r/i);
@@ -106,76 +137,86 @@ sub copy_file { #=============================================================
         }
     }
 
-    ### open files
-    unless(open(SRC,  '<', $src))  {
+    unless(open($SRC,  '<', $source))  {
         warn "! Could not read file: $!\n";
         return 255;
     }
-    unless(open(DST, '>', $dst)) {
+    unless(open($DST, '>', $destination)) {
         warn "! Could not write file: $!\n";
         return 254;
     }
 
-    ### init copy
-    binmode SRC;
-    binmode DST;
-    sysseek SRC, $data_copied, 0;
-    sysseek DST, $data_copied, 0;
-    print "Copying $src to $dst\n"; 
-    $CURRENT_FILE = $dst;
-    
-    READ:
-    while(my $read = sysread SRC, $chunk, $BUFFER) {
+    binmode $SRC;
+    binmode $DST;
+    sysseek $SRC, $data_copied, 0;
+    sysseek $DST, $data_copied, 0;
+    print "Copying $source to $destination\n"; 
 
-        my $written   = syswrite(DST, $chunk);
+    $CURRENT_FILE = $destination;
+    
+    while(my $read = sysread $SRC, $chunk, $BUFFER) {
+
+        my $written   = syswrite($DST, $chunk);
         $data_copied += $written;
 
         if(!$written or $written != $read) {
             die "\n! IO error: $!\n";
         }
 
-
         unless($ALARM_SET++) {
-            $SIG{'ALRM'}  = sub { copy_status($src_size, $data_copied) };
+            $SIG{'ALRM'}  = sub { copy_status($source_size, $data_copied) };
             alarm 1;
         }
    }
 
-    ### loop end
     alarm 0;
+
     $CURRENT_FILE = 0;
     $ALARM_SET    = 0;
+
     print "\n";
-    close SRC;
-    close DST;
+    close $SRC;
+    close $DST;
+
+    return 1;
 }
 
-sub copy_status { #===========================================================
+=head2 copy_status
 
-    ### init
-    my $src_size       = shift;
-    my $data_copied    = shift;
-    my $progress_pos   = int($data_copied / $src_size * $PROGBAR_SIZE);
-    my $src_size_print = human_number($src_size),
-    my $Bps            = $data_copied / tv_interval($t0);
+ copy_status($size, $copied);
+
+Display a progress bar.
+
+=cut
+
+sub copy_status {
+    my $size         = shift;
+    my $data_copied  = shift;
+    my $progress_pos = int($data_copied / $size * $PROGBAR_SIZE);
+    my $size_print   = human_number($size),
+    my $Bps          = $data_copied / tv_interval($t0);
    
-    ### print status
     printf $LINE, sprintf("|%s>%s|%s|%s|%sBps|%is",
         '=' x (                $progress_pos),
         ' ' x ($PROGBAR_SIZE - $progress_pos),
         human_number($data_copied),
-        $src_size_print,
+        $size_print,
         human_number($Bps),
-        ($src_size - $data_copied) / $Bps,
+        ($size - $data_copied) / $Bps,
     );
  
-    ### the end
     $ALARM_SET = 0;
 }
 
-sub human_number { #==========================================================
-    
-    ### init
+=head2 human_number
+
+ $str = human_number($int);
+
+Takes an int, and turns it into a human-readable number.
+
+=cut
+
+sub human_number {
     my $number = shift || 0;
     my $format = "%.1f%s";
     my %suffix = (
@@ -186,7 +227,6 @@ sub human_number { #==========================================================
                      0   => ' ',
                  );
 
-    ### fix number
     for my $exp (sort { $b <=> $a } keys %suffix) {
         if($number >= 10 ** $exp) {
             $number /= 10 ** $exp;
@@ -195,20 +235,22 @@ sub human_number { #==========================================================
         }
     }
 
-    ### the end
     return($number || sprintf $format, 0, $suffix{0});
 }
 
-sub end { #===================================================================
+=head2 signalled
 
-    ### init
+Will be called when a *normal* signal is received.
+
+=cut
+
+sub signalled {
     print "\n";
     alarm 0;
 
-    ### unlink file
     if($CURRENT_FILE) {
-        print STDERR "\n? Didn't complete copy of $CURRENT_FILE !\n";
-        print STDERR "  Do you want to delete the file? (y/N) ";
+        print STDERR "\n# Aborted copy of '$CURRENT_FILE'\n";
+        print STDERR "# Do you want to delete the destination file? (y/N) ";
 
         my $answer = <STDIN>;
 
@@ -217,7 +259,30 @@ sub end { #===================================================================
         }
     }
 
-    ### the end
     exit 0;
 }
 
+=head2 help
+
+ help()
+
+Display usage.
+
+=cut
+
+sub help {
+    print <<'USAGE';
+Usage:
+ $ copy.pl src-file-1 src-file-2 destination/folder;
+ $ copy.pl src-file dest-file
+
+USAGE
+
+    return 0;
+}
+
+=head1 AUTHOR
+
+Jan Henning Thorsen
+
+=cut
