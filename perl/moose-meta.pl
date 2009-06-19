@@ -8,6 +8,7 @@ moose-meta.pl - Print meta information about Moose class
 
  $ moose-meta.pl My::Class
  $ moose-meta.pl /path/to/My/Class.pm
+ $ moose-meta.pl -I path/to/lib ...;
 
 =head1 DESCRIPTION
 
@@ -42,16 +43,27 @@ by a superclass.
 
 use strict;
 use warnings;
+use Getopt::Long;
 use List::Util qw/first/;
 
-our $VERSION = "0.1";
+my(%ARGS, %cache);
 
-my(%cache, $class);
+{
+    my($file, $class);
 
-exec perldoc => $0 unless(@ARGV);
-$class = get_class_name(shift @ARGV);
-$class->can('meta') or die "Class $class has no 'meta' attribute\n";
-print_attribute_and_methods($class);
+    GetOptions(\%ARGS, qw/I=s@/);
+
+    unshift @INC, @{ $ARGS{'I'} } if($ARGS{'I'});
+
+    $file  = shift @ARGV or exec perldoc => $0;
+    $class = get_class_name($file);
+
+    $class->can('meta') or die "Class $class has no 'meta' attribute\n";
+
+    print_attribute_and_methods($class);
+
+    exit 0;
+}
 
 =head1 FUNCTIONS
 
@@ -68,7 +80,7 @@ sub print_attribute_and_methods  {
         my $meta = $p->meta;
         my $file = $p;
 
-        $file   =~ s,::,/,;
+        $file   =~ s,::,/,g;
         $file  .=  ".pm";
         $file   =  first { /$file/ } values %INC;
         $file ||=  q(/dev/null);
@@ -130,13 +142,26 @@ sub get_class_name {
     my $class;
 
     if(-e $file) { # file
+        my $name;
+
         open(my $CLASS, "<", $file) or die $!;
         while(<$CLASS>) {
             next unless(/package\s+([^;]+)/);
             $class = $1;
             last;
         }
+
+        unless($class) {
+            die "Could not find class name from $file\n";
+        }
+
         do $file or die $@;
+
+        $name =  $class;
+        $name =~ s,::,/,g;
+        $name .= ".pm";
+
+        $INC{$name} = $file;
     }
     else { # if($file =~ /::/) { # classname
         $class = $file;
