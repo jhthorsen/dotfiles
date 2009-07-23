@@ -76,58 +76,85 @@ my(%ARGS, %cache);
 sub print_attribute_and_methods  {
     my $class = shift;
 
+    print "\n";
+    printf "  %-24s  %-24s  %-24s\n", qw/method obj-attr class-attr/;
+    print "-" x 77, "\n";
+
     for my $p ($class->meta->class_precedence_list) {
         my $meta = $p->meta;
         my $file = $p;
+        my %res  = ('obj-attr' => [], 'class-attr' => [], 'method' => []);
 
         $file   =~ s,::,/,g;
         $file  .=  ".pm";
         $file   =  first { /$file/ } values %INC;
-        $file ||=  q(/dev/null);
-
-        print "=head1 NAME\n\n$p - $file\n\n";
+        $file ||=  q(/?);
 
         if(my @attr = $meta->get_attribute_list) {
-            print_list(object_attributes => \@attr);
+            $res{'obj-attr'} = gen_list(obj_attr => \@attr);
         }
 
         if($meta->can('get_class_attribute_list')) {
             if(my @class_attr = $meta->get_class_attribute_list) {
-                print_list(class_attributes => \@class_attr);
+                $res{'class-attr'} = gen_list(class_attr => \@class_attr);
             }
         }
 
-        if(my @methods = $meta->get_method_list) {
-            print_list(methods => \@methods);
+        if(my @method = $meta->get_method_list) {
+            $res{'method'} = gen_list(method => \@method);
         }
+
+        print map { "$_\n" }
+            "$p - $file",
+            "-" x 77,
+            ;
+
+        while(1) {
+            my @cols = map { pop @{ $res{$_} } || ["",""] } qw/method obj-attr class-attr/;
+            last unless(grep { length $_->[0] } @cols);
+            printf "%-26s%-26s%-26s\n", map { "@$_" } @cols;
+        }
+
+        print "-" x 77, "\n";
     }
 }
 
-=head2 print_list
+=head2 gen_list
 
- print_list($list_type => [...]);
+ gen_list($list_type => [...]);
 
 =cut
 
-sub print_list {
+sub gen_list {
     my $type = shift;
     my $list = shift;
-    my $id   = uc $type;
+    my @res;
 
-    $id =~ s/_/ /g;
-
-    print "=head1 $id\n\n";
-
+    NAME:
     for my $name (sort @$list) {
+
+        if($type eq 'method') {
+            for my $t (qw/obj_attr class_attr/) {
+                next NAME if($cache{$t}->{$name});
+            }
+        }
+
+        for my $t (qw/obj_attr class_attr method/) {
+            next if($t eq $name);
+            next if(!$cache{$t}->{$name});
+            push @res, ["*", $name];
+            next NAME;
+        }
+
         if($cache{$type}->{$name}++) {
-            print "* $name\n";
+            push @res, ["^", $name];
+            next NAME;
         }
-        else {
-            print "  $name\n";
-        }
+
+        push @res, [" ", $name];
     }
 
-    print "\n";
+    return [ sort { $b->[1] cmp $a->[1] } @res ];
 }
 
 =head2 get_class_name
