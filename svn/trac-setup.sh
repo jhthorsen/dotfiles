@@ -1,5 +1,4 @@
-#!/bin/bash
-
+#!/bin/sh
 
 function usage {
     echo "$0 <trac_dir> <username>";
