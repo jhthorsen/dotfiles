@@ -79,6 +79,6 @@ it under the same terms as Perl itself.
 
 =head1 AUTHOR
 
-Jan Henning Thorsen jhthorsen -at- cpan.org
+Jan Henning Thorsen - jhthorsen -at- cpan.org
 
 =cut
