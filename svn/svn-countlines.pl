@@ -1,12 +1,8 @@
 #!/usr/bin/perl
 
-use strict;
-use warnings;
-use Getopt::Long;
-
 =head1 NAME
 
-svn_countlines.pl
+svn-countlines.pl
 
 =head1 SYNOPSIS
 
@@ -37,6 +33,10 @@ Print removed/added lines to STDERR.
 =back
 
 =cut
+
+use strict;
+use warnings;
+use Getopt::Long;
 
 my %arg = (
     dir    => q(.),

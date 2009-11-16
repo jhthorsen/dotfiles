@@ -198,8 +198,13 @@ sub get_class_name {
     return $class;
 }
 
+=head1 LICENSE
+
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
+
 =head1 AUTHOR
 
-Jan Henning Thorsen
+Jan Henning Thorsen - jhthorsen -at- cpan.org
 
 =cut
