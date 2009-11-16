@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-git-graph.pl
+git-graph.pl - Make a GD graph from git repo history
 
 =head1 VERSION
 
@@ -21,6 +21,11 @@ Version 0.01
  --format      : 
  --skip        :
  --skip-other  :
+
+=head1 INSTALL DEPENDENCIES
+
+ cpan -i GD::Graph::mixed;
+ cpan -i Getopt::Long;
 
 =cut
 
@@ -199,8 +204,13 @@ sub graph {
     return;
 }
 
+=head1 LICENSE
+
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
+
 =head1 AUTHOR
 
-Jan Henning Thorsen C< git at flodhest.net >;
+Jan Henning Thorsen - jhthorsen -at- cpan.org
 
 =cut
