@@ -12,7 +12,6 @@ NO_IPCALC_RETURN=1;
 
 [ -f $IPCALC ] || $IPCALC="";
 
-
 check_NET() {
     if [ $IPCALC ]; then
 
@@ -134,6 +133,4 @@ case "$1" in
     ;;
 esac
 
-
-### THE END
 exit 0;
