@@ -1,16 +1,9 @@
 #!/bin/sh
 
-#===========
-# m4a2mp3.sh
-#===========
-
 MPLAYER="mplayer";
-LAME="lame;
+LAME="lame";
 
-
-### convert
 for m4a in *.m4a; do
-
     mp3=`echo "$m4a" | sed -e 's/m4a$/mp3/'`;
     wav="$m4a.wav";
 
@@ -23,5 +16,4 @@ for m4a in *.m4a; do
     fi
 done
 
-### the end
 exit 0;
