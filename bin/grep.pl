@@ -1,12 +1,5 @@
 #!/usr/bin/env perl
 
-use strict;
-use warnings;
-use File::Find;
-use Getopt::Long qw(:config auto_help auto_version);
-
-our $VERSION = "0.03";
-
 =head1 NAME
 
 grep.pl - Does recursive search/grepping in text-files
@@ -72,6 +65,13 @@ and on_white
 =back
 
 =cut
+
+use strict;
+use warnings;
+use File::Find;
+use Getopt::Long qw(:config auto_help auto_version);
+
+our $VERSION = "0.03";
 
 my $dir       = q(.);
 my $name      = q(pm$);
@@ -157,8 +157,13 @@ if($summary) {
 
 exit !$found;
 
+=head1 LICENSE
+
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
+
 =head1 AUTHOR
 
-Jan Henning Thorsen
+Jan Henning Thorsen - jhthorsen -at- cpan.org
 
 =cut
