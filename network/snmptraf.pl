@@ -1,15 +1,35 @@
 #!/usr/bin/perl
 
-#============
-# snmptraf.pl
-#============
+=head1 NAME
+
+snmptraf.pl
+
+=head1 SYNOPSIS 
+
+ snmptraf [-l|-v|-d|-t <float>|-m] <modem1> <modem2> ... <modem10>
+
+  -l|--long     use 64 bit counters
+  -v|--verbose  more information
+  -d|--debug    debug info
+  -t|--timeout  how long to wait for an answer
+  -m|--modem    get information from a cable modem
+ 
+=head2 Example
+
+ snmptraf 10.0.0.3 10.30.2.6 10.34.6.100
+
+=head1 INSTALL DEPENDENCIES
+
+ cpan -i Getopt::Long;
+ cpan -i SNMP::Effective;
+
+=cut
 
 use strict;
 use warnings;
 use Getopt::Long;
 use SNMP::Effective;
 use Time::HiRes qw/gettimeofday tv_interval usleep/;
-
 
 my $VERBOSE  = 0;
 my $DEBUG    = 0;
@@ -42,7 +62,6 @@ my %old_data;
 $|++;
 
 
-### test
 unless(@HOSTS) {
     print <<"USAGE";
  USAGE:
@@ -60,49 +79,48 @@ USAGE
  exit 255;
 }
 
-PROGRAM_LOOP:
 while(1) {
-
-    ### init
-    my $t0   = [gettimeofday];
+    my $t0 = [gettimeofday];
     my $snmp = SNMP::Effective->new(
-                   max_sessions   => 10,
+                   max_sessions => 10,
                    master_timeout => 1,
-                   callback       => \&calculate,
-                   dest_host      => \@HOSTS,
-                   walk           => [ keys %getnext ],
+                   callback => \&calculate,
+                   dest_host => \@HOSTS,
+                   walk => [ keys %getnext ],
                );
 
-    ### get data
     $snmp->execute;
 
-    ### loop ended badly
     if(tv_interval($t0) > $INTERVAL) {
         warn "Interval Overflow!\n\n";
         %old_data = ();
         next;
     }
 
-    ### loop end
     usleep 1e3 while(tv_interval($t0) < $INTERVAL);
 }
 
-sub calculate { #=============================================================
+=head1 FUNCTIONS
 
-    ### init
-    my $host     = shift;
-    my $error    = shift;
-    my $data     = $host->data;
-    my %new_data = (total => {
-                       in  => 0,
-                       out => 0,
-                   });
+=head2 calculate
+
+ calculate($host_obj, $error);
+
+Callback for L<SNMP::Effective>. Will calculate the data run through the
+device, and print the result to STDOUT.
+
+=cut
+
+sub calculate {
+    my $host = shift;
+    my $error = shift;
+    my $data = $host->data;
+    my %new_data = ( total => { in => 0, out => 0 } );
     my %com_data = $old_data{"$host"} ? %{ $old_data{"$host"} } : ();
-    my $amp      = 8 / $INTERVAL;
+    my $amp = 8 / $INTERVAL;
 
     debug("Calculating data from $host");
 
-    ### error
     if($error) {
         warn "$host : $error";
         return;
@@ -110,7 +128,6 @@ sub calculate { #=============================================================
 
     SNMP_DATA:
     for my $oid (keys %$data) {
-
         my $oid_name = $getnext{$oid} or next SNMP_DATA;
 
         IID:
@@ -123,7 +140,6 @@ sub calculate { #=============================================================
             $new_data{$iid}{$oid_name}     = $data->{$oid}{$iid} || 0;
             $new_data{$iid}{'name'}        = $data->{$ifDescr_oid}{$iid} || '';
 
-            ### debug
             debug(sprintf "%14s-%5s/%-5s-%s",
                 $host,
                 $oid_name,
@@ -133,61 +149,68 @@ sub calculate { #=============================================================
         }
     }
 
-    ### calculate
     for my $k (sort keys %com_data) {
         next unless($k eq 'total' or $VERBOSE);
 
-        my $new      = $new_data{$k};
-        my $com      = $com_data{$k};
+        my $new = $new_data{$k};
+        my $com = $com_data{$k};
         my $diff_in  = ($new->{'in'} >= $com->{'in'})
                      ?              $new->{'in'} - $com->{'in'}
                      : 0xffffffff - $new->{'in'} + $com->{'in'};
         my $diff_out = ($new->{'out'} >= $com->{'out'})
                      ?              $new->{'out'} - $com->{'out'}
                      : 0xffffffff - $new->{'out'} + $com->{'out'};
-        my $in       = human_number($diff_in  * $amp);
-        my $out      = human_number($diff_out * $amp);
-        my $descr    = ($k eq 'total') ? "$host" : $new->{'name'};
+        my $in = human_number($diff_in  * $amp);
+        my $out = human_number($diff_out * $amp);
+        my $descr = ($k eq 'total') ? "$host" : $new->{'name'};
 
         next unless($diff_in || $diff_out);
 
         printf "%-14s In %8s       Out %8s  bps\n", $descr, $in, $out;
     }
 
-    print("-" x 50, "\n") if($VERBOSE);
+    print "-" x 50, "\n" if($VERBOSE);
 
-    ### the end
     $old_data{"$host"} = \%new_data;
 }
 
-sub debug { #=================================================================
+=head2 debug
+
+ debug($msg);
+
+Prints C<$msg> to STDERR if C<$DEBUG> is set.
+
+=cut
+
+sub debug {
     return unless($DEBUG);
     print "$_[0]\n";
 }
 
-sub human_number { #==========================================================
+=head2 human_number
 
-    ### test for object
-    my $self     = shift;
-    unshift @_, $self unless(ref $self);
+ $str = human_number($int);
 
-    ### init
-    my $number   = shift || 0;
+Returns a human readable number, with k, M or G suffix.
+
+=cut
+
+sub human_number {
+    my $number = shift || 0;
     my $decimals = shift || 1;
-    my $format   = shift || "%.${decimals}f%s";
-    my %suffix   = (
-                       12  => 'T',
-                       9   => 'G',
-                       6   => 'M',
-                       3   => 'k',
-                       0   => '',
-                       -3  => 'm',
-                       -6  => 'u',
-                       -9  => 'p',
-                       -12 => 'n',
-                   );
+    my $format = shift || "%.${decimals}f%s";
+    my %suffix = (
+                      12 => 'T',
+                      9  => 'G',
+                      6  => 'M',
+                      3  => 'k',
+                      0  => '',
+                     -3  => 'm',
+                     -6  => 'u',
+                     -9  => 'p',
+                     -12 => 'n',
+                 );
     
-    ### fix number
     for my $exp (sort { $b <=> $a } keys %suffix) {
         if($number >= 10 ** $exp) {
             $number /= 10 ** $exp;
@@ -196,8 +219,16 @@ sub human_number { #==========================================================
         }
     }
 
-    ### the end
     return($number || sprintf $format, 0, "");
 }
 
-#=============================================================================
+=head1 LICENSE
+
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+Jan Henning Thorsen jhthorsen -at- cpan.org
+
+=cut
