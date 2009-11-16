@@ -2,11 +2,16 @@
 
 =head1 NAME
 
-copy.pl
+copy.pl - cp, but with status printed while copying
 
 =head1 SYNOPSIS
 
  $ copy.pl srcfile.1 srcfile.2 destination/folder;
+ $ copy.pl srcfile.1 dstfile.1;
+
+=head1 INSTALL DEPENDENCIES
+
+ cpan -i Term::ReadKey;
 
 =cut
 
@@ -281,8 +286,13 @@ USAGE
     return 0;
 }
 
+=head1 LICENSE
+
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
+
 =head1 AUTHOR
 
-Jan Henning Thorsen
+Jan Henning Thorsen - jhthorsen -at- cpan.org
 
 =cut
