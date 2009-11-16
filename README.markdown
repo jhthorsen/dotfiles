@@ -13,7 +13,7 @@
 * [bin/hdtemp.sh](snippets/blob/master/bin/hdtemp.sh) -
   Example output: /dev/sdb: 34 C.
 * [bin/passwd-expect.sh](snippets/blob/master/bin/passwd-expect.sh) -
-  use expect to write password information from STDIN
+  use expect to write password information from STDIN.
 * [bin/pid-by-name.pl](snippets/blob/master/bin/pid-by-name.pl) -
   Print PID by program name.
 * [bin/rename-latin-files.pl](snippets/blob/master/bin/rename-latin-files.pl) -
@@ -21,11 +21,11 @@
 * [bin/sibs](snippets/blob/master/bin/sibs) -
   Simple incremental backup script.
 * [bin/toshiba-fn2action.pl](snippets/blob/master/bin/toshiba-fn2action.pl) -
-  Reads Fn+X keypress and run execute actions
+  Reads Fn+X keypress and run execute actions.
 * [etc/asound.conf](snippets/blob/master/etc/asound.conf) -
-  Original config from [phaeronix.net](http://phaeronix.net/asoundrc) -
+  Original config from [phaeronix.net](http://phaeronix.net/asoundrc).
 * [etc/default/routes](snippets/blob/master/etc/default/routes) -
-  Empty.
+  Empty file.
 * [etc/init.d/route](snippets/blob/master/etc/init.d/route) -
   Init script to set up IP routes.
 * [media/burnmusic.sh](snippets/blob/master/media/burnmusic.sh) -
