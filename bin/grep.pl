@@ -8,7 +8,7 @@ grep.pl - Does recursive search/grepping in text-files
 
 =head2 Why? 
 
- Why do grep-regex, when you can do perl-regex?
+Why do grep-regex, when you can do perl-regex?
 
  Why run...
  $ find . | grep -v ".svn" | \

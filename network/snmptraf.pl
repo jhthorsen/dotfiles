@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-snmptraf.pl
+snmptraf.pl - Print network traffic using SNMP
 
 =head1 SYNOPSIS 
 
