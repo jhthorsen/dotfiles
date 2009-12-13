@@ -19,7 +19,7 @@ SYNOPSIS
     location bar in your browser, after locating the show.
 
 DESCRIPTION
-    This script use vlc (cvlc) to download streams from
+    This script use vlc to download streams from
     http://www1.nrk.no/nett-tv/.
 
 REQUIREMENTS
@@ -55,7 +55,10 @@ download () {
     fi
 
     echo "# Streaming $mms_file";
-    cvlc $mms_file --sout file/avi:$out_file --quiet &
+    vlc $mms_file vlc://quit \
+        --sout file/avi:$out_file \
+        --quiet -I dummy &
+
     VLC_PID=$!
 
     while kill -0 $VLC_PID; do
