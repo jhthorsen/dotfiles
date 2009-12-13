@@ -32,6 +32,8 @@
   Shell script to burn music.
 * [media/convert-to-mp3.sh](snippets/blob/master/media/convert-to-mp3.sh) -
   Convert *any* audio to mp3.
+* [media/nrk-downloader.sh](snippets/blob/master/media/nrk-downloader.sh) -
+  Download streams from [NRK](http://www1.nrk.no/nett-tv/)
 * [network/apache2.sh](snippets/blob/master/network/apache2.sh) -
   Not sure what this does :S
 * [network/snmptraf.pl](snippets/blob/master/network/snmptraf.pl) -
