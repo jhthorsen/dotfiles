@@ -27,7 +27,9 @@ seperated by "," and special characters will be replaced with "_".
 
 To generate image from statistics:
 
- $ process-stats-to-rrd.pl some_file.rrd
+ $ process-stats-to-rrd.pl -g some_file.rrd
+
+NOTE: The output image format will be changed.
 
 =head1 REQUIREMENTS
 
@@ -39,7 +41,13 @@ To generate image from statistics:
 use strict;
 use warnings;
 use BSD::Resource;
-use constant DEBUG => $ENV{'DEBUG'} || 0;
+
+BEGIN {
+    no warnings;
+    *DEBUG = $ENV{'DEBUG'} ? sub { print STDERR "$$> @_\n" }
+           :                 sub {}
+           ;
+}
 
 my $STEP = 300;
 my @COLORS = qw/
@@ -55,17 +63,17 @@ my @KEYS = qw/
 my $t0 = time;
 
 
-if(@ARGV == 1 and -e $ARGV[0]) {
-    exit generate_graph($ARGV[0]);
+if(@ARGV == 2 and $ARGV[0] eq '-g') {
+    exit generate_graph($ARGV[1]);
 }
 elsif(@ARGV) {
-    local $SIG{'CHLD'} = \&reaper;
     my $pid = fork;
 
     # parent process
     if($pid) {
-        warn "D> Waiting for $pid: '@ARGV'\n" if DEBUG;
-        waitpid $pid, 1;
+        DEBUG "Waiting for $pid: '@ARGV'";
+        local $SIG{'CHLD'} = \&reaper;
+        waitpid $pid, 0;
         exit $?;
     }
 
@@ -95,9 +103,9 @@ Will print statistics to rrdfile, when child has completed its task.
 =cut
 
 sub reaper {
-    my $i = 0;
     my @stats = getrusage(RUSAGE_CHILDREN);
     my $file = rrdfile();
+    my $i = 0;
 
     # don't want to run reaper() again
     local $SIG{'CHLD'} = 'IGNORE';
@@ -105,13 +113,20 @@ sub reaper {
     # wait for child to exit
     wait; 
 
-    warn "D> Child process reaped\n" if DEBUG;
+    # add stats
+    push @stats, time - $t0;
+
+    DEBUG "Child process reaped";
+
+    for my $key (@KEYS) {
+        DEBUG sprintf "%-10s %s", $key, $stats[$i++];
+    }
 
     # update rrd file
     run(
         rrdtool => update => $file =>
         '--template' => join(':', @KEYS),
-        'N:' .join(':', @stats, time - $t0),
+        'N:' .join(':', @stats),
     );
 }
 
@@ -149,7 +164,7 @@ Same as C<system()>, but will also log when in debug mode.
 =cut
 
 sub run {
-    warn "D> system(@_)\n" if DEBUG;
+    DEBUG "system(@_)";
     return system @_;
 }
 
@@ -173,7 +188,15 @@ sub generate_graph {
             map {
                 my $name = $_->[0];
                 my $color = $_->[1];
-                "LINE2:$name#$color:$name";
+                (
+                    "VDEF:avg_$name=$name,AVERAGE",
+                    "VDEF:max_$name=$name,MAXIMUM",
+                    "VDEF:last_$name=$name,LAST",
+                    "LINE2:$name#$color:$name",
+                    "GPRINT:avg_$name:avg=%le ",
+                    "GPRINT:max_$name:max=%le ",
+                    "GPRINT:last_$name:last=%le\\n",
+                )
             } grep {
                 $_->[1] ne 'ffffff';
             } map {
