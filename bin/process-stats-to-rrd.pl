@@ -4,9 +4,35 @@
 
 process-stats-to-rrd.pl - Will start a process and print stats to rrd file
 
-=head1 INSTALL / REQUIREMENTS
+=head1 DESCRIPTION
+
+This script will start a given program and wait for it to end. When the
+program ends, this script will print statistics to an RRD file. The RRD
+file will have these data sources:
+
+usertime, systemtime, maxrss, ixrss, idrss, isrss, minflt, majflt, nswap
+inblock, oublock, msgsnd, msgrcv, nsignals, nvcsw, nivcsw and time.
+
+All of these names are defined in the L<BSD::Resource> perl module, except
+from "time" which is the actual time spent running the application.
+
+=head1 USAGE
+
+To generate statistics:
+
+ $ process-stats-to-rrd.pl <program> [arguments];
+
+The filename of the output RRD will be all of the arguments combined,
+seperated by "," and special characters will be replaced with "_".
+
+To generate image from statistics:
+
+ $ process-stats-to-rrd.pl some_file.rrd
+
+=head1 REQUIREMENTS
 
  $ cpan -i BSD::Resource;
+ $ aptitude install rrdtool;
 
 =cut
 
