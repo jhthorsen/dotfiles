@@ -39,7 +39,7 @@ To generate image from statistics:
 use strict;
 use warnings;
 use BSD::Resource;
-use constant DEBUG => 1;
+use constant DEBUG => $ENV{'DEBUG'} || 0;
 
 my $STEP = 300;
 my @COLORS = qw/
@@ -111,7 +111,7 @@ sub reaper {
     run(
         rrdtool => update => $file =>
         '--template' => join(':', @KEYS),
-        'N:' .join(':', @stats), (time - $t0),
+        'N:' .join(':', @stats, time - $t0),
     );
 }
 
