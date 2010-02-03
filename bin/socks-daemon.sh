@@ -12,7 +12,7 @@ SOCKS_PID=0;
 IFCONFIG_CACHE="";
 
 # kill child when this script ends
-trap "{ kill $SOCKS_PID; }" SIGINT SIGTERM;
+trap "{ kill $SOCKS_PID; }" 2 3 15; # INT QUIT TERM
 
 start_socks () {
     if is_socks_running; then
