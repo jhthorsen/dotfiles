@@ -1,7 +1,29 @@
 #!/bin/sh
 
+man() {
+    cat <<'MAN'
+NAME
+    Socks daemon - Keep connected with Socks/SSH
+
+SYNOPSIS
+    $ socks-daemon.sh;
+    $ socks-daemon.sh <host> <port>
+
+DESCRIPTION
+   This script will start SSH as a SOCKS daemon and will periodically
+   check for a changed IP-adresse and reconnect to the endpoint so you
+   don't have to.
+
+REQUIREMENTS
+   ssh, sort, perl
+
+AUTHOR
+    Written by Jan Henning Thorsen - jhthorsen -at- cpan.org
+MAN
+}
+
 if [ -z $2 ]; then
-    echo "Usage: $0 <host> <port>";
+    man;
     exit 1;
 fi
 
