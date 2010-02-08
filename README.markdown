@@ -38,10 +38,10 @@
   Not sure what this does :S
 * [network/snmptraf.pl](snippets/blob/master/network/snmptraf.pl) -
   Print network traffic using SNMP.
+* [network/socks-daemon.sh](snippets/blob/master/network/socks-daemon.sh) -
+  Make sure the socks connection is up and running after suspend/change of IP
 * [network/tcpdump2wireshark.sh](snippets/blob/master/network/tcpdump2wireshark.sh) -
   Make tcpdump write wireshark dump + sugar on top.
-* [network/socks-daemon.sh](snippets/blob/master/network/socks-daemon.sh)
-  Make sure the socks connection is up and running after suspend/change of IP
 * [perl/moose-meta.pl](snippets/blob/master/perl/moose-meta.pl) -
   Print meta information about Moose class.
 * [svn/svn-countlines.pl](snippets/blob/master/svn/svn-countlines.pl)
