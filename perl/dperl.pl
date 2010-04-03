@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 
-use feature qw/switch/;
 use strict;
 use warnings;
 use Cwd;
