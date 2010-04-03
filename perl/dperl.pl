@@ -363,7 +363,7 @@ sub t_compile {
     print $USE_OK t_header();
     printf $USE_OK "plan tests => %i;\n", int @modules;
 
-    for my $module (sort { length $a <=> length $b } @modules) {
+    for my $module (sort { $a cmp $b } @modules) {
         printf $USE_OK "use_ok('%s');\n", $module;
     }
 
