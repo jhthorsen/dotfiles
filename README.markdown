@@ -44,6 +44,8 @@
   Make tcpdump write wireshark dump + sugar on top.
 * [perl/moose-meta.pl](snippets/blob/master/perl/moose-meta.pl) -
   Print meta information about Moose class.
+* [perl/dperl.pl](snippets/blob/master/perl/dperl.pl)
+  Helps maintaining your perl project
 * [svn/svn-countlines.pl](snippets/blob/master/svn/svn-countlines.pl)
 * [svn/svn-diff.sh](snippets/blob/master/svn/svn-diff.sh)
 * [svn/svn-find.sh](snippets/blob/master/svn/svn-find.sh)
