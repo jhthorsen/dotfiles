@@ -429,9 +429,6 @@ anything, so 1) it just works 2) it might not work as you want it to.
     homepage: http://mary.github.com/foobar
     repository: http://github.com/mary/foo-bar
 
-=cut
-
-
 =head1 SEE ALSO
 
 L<App::Cpanminus>,
