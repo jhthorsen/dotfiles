@@ -8,7 +8,9 @@ use File::Basename;
 use File::Find;
 use YAML::Tiny;
 
-our $CONFIG = YAML::Tiny->read('./dperl.yml');
+help() unless @ARGV;
+
+our $CONFIG = YAML::Tiny->read('dperl.yml');
 our $NAME = $CONFIG->[0]{'name'} || basename getcwd;
 our $TOP_MODULE;
 our $VERSION;
@@ -16,10 +18,6 @@ our $VERSION;
 my $version_re = qr/\d+ \. \w+/x;
 
 name_to_module();
-
-die "'$NAME' is not a valid repo name\n" unless $TOP_MODULE;
-die "require './lib' directory\n" unless -d './lib';
-die "require './t' directory\n" unless -d './t';
 
 if(@ARGV ~~ /-+update/) {
     clean();
@@ -79,6 +77,13 @@ DPERL
     exit 1;
 }
 else {
+    help();
+}
+
+exit 0;
+
+#=============================================================================
+sub help {
     print <<"HELP";
 Usage $0 [option]
 
@@ -108,14 +113,7 @@ HELP
     exit 1;
 }
 
-exit 0;
-
-#=============================================================================
 sub name_to_module {
-    my $check_dir = sub {
-        opendir my $DH, $_[0] or die $!;
-    };
-
     my @path = split /-/, $NAME;
     my $path = 'lib';
     my $file;
@@ -123,7 +121,7 @@ sub name_to_module {
     $path[-1] .= ".pm";
 
     for my $p (@path) {
-        opendir my $DH, $path or die $!;
+        opendir my $DH, $path or die "Cannot find top module from project name '$NAME': $!\n";
         for my $f (readdir $DH) {
             if(lc $f eq lc $p) {
                 $path = "$path/$f";
@@ -133,7 +131,7 @@ sub name_to_module {
     }
     
     unless(-f $path) {
-        die "'$path' is not a file\n";
+        die "Cannot find top module from project name '$NAME': $path is not a plain file\n";
     }
 
     $NAME = $path;
@@ -146,7 +144,7 @@ sub name_to_module {
 sub release {
     my $commit_msg;
 
-    open my $CHANGES, '<', 'Changes' or die $!;
+    open my $CHANGES, '<', 'Changes' or die "Read 'Changes': $!\n";
 
     while(<$CHANGES>) {
         if($commit_msg) {
@@ -167,7 +165,7 @@ sub release {
         die "Could not find \$VERSION from Changes\n";
     }
     unless(-e "$NAME-$VERSION.tar.gz") {
-        die "Need to run -build first\n";
+        die "Need to run with -build first\n";
     }
 
     system git => commit => -a => -m => $commit_msg;
@@ -180,7 +178,7 @@ sub changes {
 
     chomp $date;
 
-    open my $CHANGES, '+<', 'Changes' or die $!;
+    open my $CHANGES, '+<', 'Changes' or die "Read/write 'Changes': $!\n";
     { local $/; $changes = <$CHANGES> };
 
     if($_[0] and $changes =~ s/\n($version_re)\s*$/{ sprintf "\n%-7s  %s", $1, $date }/em) {
@@ -196,7 +194,7 @@ sub changes {
     seek $CHANGES, 0, 0;
     print $CHANGES $changes;
 
-    open my $PM, '+<', $TOP_MODULE or die $!;
+    open my $PM, '+<', $TOP_MODULE or die "Read/write '$TOP_MODULE': $!\n";
     { local $/; $pm = <$PM> };
     $pm =~ s/=head1 VERSION.*?\n=/=head1 VERSION\n\n$VERSION\n\n=/s;
     $pm =~ s/\$VERSION\s*=.*$/\$VERSION = '$VERSION';/m;
@@ -219,7 +217,7 @@ sub test {
 }
 
 sub makefile {
-    open my $MAKEFILE, '>', 'Makefile.PL' or die $!;
+    open my $MAKEFILE, '>', 'Makefile.PL' or die "Write 'Makefile.PL': $!\n";
     printf $MAKEFILE "use inc::Module::Install;\n";
     printf $MAKEFILE "name q(%s);\n", $NAME;
     printf $MAKEFILE "all_from q(%s);\n", $TOP_MODULE;
@@ -243,7 +241,7 @@ sub makefile {
 }
 
 sub manifest {
-    open my $SKIP, '>', 'MANIFEST.SKIP' or die $!;
+    open my $SKIP, '>', 'MANIFEST.SKIP' or die "Write 'MANIFEST.SKIP': $!\n";
     print $SKIP "$_\n" for qw(
                            ^dperl.yml
                            .git
@@ -255,12 +253,12 @@ sub manifest {
                            ^MANIFEST.*
                        ), $NAME;
 
-    system "make manifest" and die "make manifest: $!";
+    system "make manifest" and die "Execute 'make manifest': $!\n";
 }
 
 sub dist {
     system "rm $NAME* 2>/dev/null";
-    system "make dist" and die "make dist: $!";
+    system "make dist" and die "Execute 'make dist': $!";
 }
 
 sub meta_yml {
@@ -284,14 +282,14 @@ HEADER
 }
 
 sub t_pod {
-    open my $POD_COVERAGE, '>', 't/99-pod-coverage.t' or die $!;
+    open my $POD_COVERAGE, '>', 't/99-pod-coverage.t' or die "Write 't/99-pod-coverage.t': $!\n";
     print $POD_COVERAGE t_header();
     print $POD_COVERAGE <<'TEST';
 eval 'use Test::Pod::Coverage; 1' or plan skip_all => 'Test::Pod::Coverage required';
 all_pod_coverage_ok();
 TEST
 
-    open my $POD, '>', 't/99-pod.t' or die $!;
+    open my $POD, '>', 't/99-pod.t' or die "Write 't/99-pod.t': $!\n";
     print $POD t_header();
     print $POD <<'TEST';
 eval 'use Test::Pod; 1' or plan skip_all => 'Test::Pod required';
@@ -310,7 +308,7 @@ sub t_compile {
         push @modules, $File::Find::name;
     }, 'lib');
 
-    open my $USE_OK, '>', 't/00-load.t' or die $!;
+    open my $USE_OK, '>', 't/00-load.t' or die "Write 't/00-load.t': $!\n";
 
     print $USE_OK t_header();
     printf $USE_OK "plan tests => %i;\n", int @modules;
