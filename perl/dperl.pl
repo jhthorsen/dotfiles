@@ -16,6 +16,7 @@ elsif(@ARGV ~~ /dperl.yml/) {
     exit 0;
 }
 elsif(@ARGV ~~ /man/) {
+    die "Read manual online: http://jhthorsen.github.com/snippets/dperl\n" if($0 eq '-');
     system perldoc => $0;
     exit $?;
 }
@@ -105,21 +106,41 @@ DPERL
 }
 
 sub help {
-    my $do_print;
+    # this message needs to be duped from POD since parsing POD
+    # is no good when running this over a pipe
+    print <<"HELP";
+Usage dperl.pl [option]
 
-    open my $MAN, '<', $0 or die "Read '$0': $!";
+ -update
+  * Create/update t/00-load.t and t/99-pod*t
+  * Create/update README
 
-    while(<$MAN>) {
-        if($do_print and /^=/) {
-            last;
-        }
-        elsif($do_print) {
-            print;
-        }
-        elsif(/^=head1 SYNOPSIS/) {
-            $do_print = 1;
-        }
-    }
+ -build
+  * Same as -update
+  * Update Changes with release date
+  * Create Makefile.PL, MANIFEST and META.yml
+  * Create a distribution (.tar.gz)
+
+ -release
+  * Will create a new git commit and tag
+
+ -share (experimental)
+  * Will upload the disted file to CPAN
+  * Will push commit and tag to "origin"
+
+ -test
+  * Will test the project
+
+ -clean
+  * Will remove files and directories
+
+ -dperl.yml
+  * Prints an example dperl.yml config file
+
+ -man
+  * Display manual for dperl.pl
+
+HELP
 }
 
 sub name_to_module {
@@ -414,6 +435,9 @@ anything, so 1) it just works 2) it might not work as you want it to.
 
  -dperl.yml
   * Prints an example dperl.yml config file
+
+ -man
+  * Display manual for dperl.pm
 
 =head1 SAMPLE dperl.yml
 
