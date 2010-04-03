@@ -48,6 +48,11 @@ elsif(@ARGV ~~ /-+build/) {
 elsif(@ARGV ~~ /-+release/) {
     release();
 }
+elsif(@ARGV ~~ /-+share/) {
+    changes();
+    share();
+    print "* $NAME got uploaded to CPAN\n";
+}
 elsif(@ARGV ~~ /-+test/) {
     clean();
     t_compile();
@@ -170,6 +175,40 @@ sub release {
 
     system git => commit => -a => -m => $commit_msg;
     system git => tag => $VERSION;
+}
+
+sub share {
+    eval "use CPAN::Uploader; 1" or die "This feature requires 'CPAN::Uploader' to be installed";
+
+    my $file = "$NAME-$VERSION.tar.gz";
+    my $pause = get_pause_info();
+
+    unless(-e $file) {
+        die "Need to run with -build first\n";
+    }
+
+    # might die...
+    CPAN::Uploader->new($file, {
+        user => $pause->{'user'},
+        password => $pause->{'password'},
+    });
+}
+
+sub get_pause_info {
+    my $info;
+
+    open my $PAUSE, '<', $ENV{'HOME'} .'/.vimrc' or die "Read ~/.pause: $!\n";
+
+    while(<$PAUSE>) {
+        my($k, $v) = split /\s+/, $_, 2;
+        chomp $v;
+        $info->{$k} = $v;
+    }
+
+    die "'user <name>' is not set in ~/.pause\n" unless $info->{'user'};
+    die "'password <mysecret>' is not set in ~/.pause\n" unless $info->{'password'};
+
+    return $info;
 }
 
 sub changes {
