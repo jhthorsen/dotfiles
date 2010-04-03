@@ -50,6 +50,13 @@ elsif(@ARGV ~~ /-+build/) {
 elsif(@ARGV ~~ /-+release/) {
     release();
 }
+elsif(@ARGV ~~ /-+test/) {
+    clean();
+    t_compile();
+    t_pod();
+    makefile();
+    test();
+}
 elsif(@ARGV ~~ /-+clean/) {
     clean();
     print "$NAME got cleaned\n";
@@ -117,6 +124,10 @@ sub name_to_module {
                 last;
             }
         }
+    }
+    
+    unless(-f $path) {
+        die "'$path' is not a file\n";
     }
 
     $NAME = $path;
@@ -195,6 +206,10 @@ sub readme {
 sub clean {
     system "make clean 2>/dev/null";
     system "rm -r $NAME* META.yml MANIFEST* Makefile* blib/ inc/ 2>/dev/null";
+}
+
+sub test {
+    system make => 'test';
 }
 
 sub makefile {
