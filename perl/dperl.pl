@@ -453,7 +453,8 @@ anything, so 1) it just works 2) it might not work as you want it to.
 =head1 SEE ALSO
 
 L<App::Cpanminus>,
-L<Dist::Zilla>
+L<Dist::Zilla>,
+L<http://jhthorsen.github.com/snippets/dperl>.
 
 =head1 BUGS
 
