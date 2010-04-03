@@ -234,7 +234,7 @@ sub makefile {
         }
     }
 
-    print $MAKEFILE "auto_insall;\n";
+    print $MAKEFILE "auto_install;\n";
     print $MAKEFILE "WriteAll;\n";
 
     system "perl Makefile.PL";
