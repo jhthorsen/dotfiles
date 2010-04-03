@@ -92,6 +92,12 @@ Usage $0 [option]
   * Create Makefile.PL, MANIFEST and META.yml
   * Create a distribution (.tar.gz)
 
+ -release
+  * Will create a new git commit and tag
+
+ -test
+  * Will test the project
+
  -clean
   * Will remove files and directories
 
@@ -281,14 +287,14 @@ sub t_pod {
     open my $POD_COVERAGE, '>', 't/99-pod-coverage.t' or die $!;
     print $POD_COVERAGE t_header();
     print $POD_COVERAGE <<'TEST';
-eval 'use Test::Pod::Coverage' or plan skip_all => 'Test::Pod::Coverage required';
+eval 'use Test::Pod::Coverage; 1' or plan skip_all => 'Test::Pod::Coverage required';
 all_pod_coverage_ok();
 TEST
 
     open my $POD, '>', 't/99-pod.t' or die $!;
     print $POD t_header();
     print $POD <<'TEST';
-eval 'use Test::Pod or plan skip_all => 'Test::Pod required';
+eval 'use Test::Pod; 1' or plan skip_all => 'Test::Pod required';
 all_pod_files_ok();
 TEST
 }
