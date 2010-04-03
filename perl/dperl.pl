@@ -76,6 +76,7 @@ elsif(@ARGV ~~ /clean/) {
 }
 else {
     help();
+    exit 1;
 }
 
 exit 0;
@@ -104,40 +105,21 @@ DPERL
 }
 
 sub help {
-    print <<"HELP";
-Usage $0 [option]
+    my $do_print;
 
- -update
-  * Create/update t/00-load.t and t/99-pod*t
-  * Create/update README
+    open my $MAN, '<', $0 or die "Read '$0': $!";
 
- -build
-  * Same as -update
-  * Update Changes with release date
-  * Create Makefile.PL, MANIFEST and META.yml
-  * Create a distribution (.tar.gz)
-
- -release
-  * Will create a new git commit and tag
-
- -share (experimental)
-  * Will upload the disted file to CPAN
-  * Will push commit and tag to "origin"
-
- -test
-  * Will test the project
-
- -clean
-  * Will remove files and directories
-
- -dperl.yml
-  * Prints an example dperl.yml config file
-
- -man
-  * Display manual for $0
-
-HELP
-    exit 1;
+    while(<$MAN>) {
+        if($do_print and /^=/) {
+            last;
+        }
+        elsif($do_print) {
+            print;
+        }
+        elsif(/^=head1 SYNOPSIS/) {
+            $do_print = 1;
+        }
+    }
 }
 
 sub name_to_module {
