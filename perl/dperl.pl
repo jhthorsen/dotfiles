@@ -26,7 +26,7 @@ if(@ARGV ~~ /-+update/) {
     print "* Create/update t/00-load.t and t/99-pod*t\n";
     t_compile();
     t_pod();
-    changes(0);
+    changes();
     print "* Create/update README\n";
     readme();
     print "* Repository got updated\n";
@@ -37,7 +37,7 @@ elsif(@ARGV ~~ /-+build/) {
     t_compile();
     t_pod();
     print "* Update Changes\n";
-    changes(1);
+    changes('update');
     print "* Create/update README\n";
     readme();
     print "* Build $NAME\n";
@@ -161,10 +161,12 @@ sub changes {
     my $date = qx/date/;
     my($changes, $pm);
 
+    chomp $date;
+
     open my $CHANGES, '+<', 'Changes' or die $!;
     { local $/; $changes = <$CHANGES> };
 
-    if(!$_[0] and $changes =~ s/\n($version_re)\s*$/\n$1 $date/m) {
+    if($_[0] and $changes =~ s/\n($version_re)\s*$/{ sprintf "\n%-7s  %s", $1, $date }/em) {
         $VERSION = $1;
     }
     elsif($changes =~ /\n($version_re)\s+/) {
