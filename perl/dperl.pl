@@ -7,7 +7,18 @@ use File::Basename;
 use File::Find;
 use YAML::Tiny;
 
-help() unless @ARGV;
+if(@ARGV == 0) {
+    help();
+    exit 1;
+}
+elsif(@ARGV ~~ /dperl.yml/) {
+    dperl_yml();
+    exit 0;
+}
+elsif(@ARGV ~~ /man/) {
+    system perldoc => $0;
+    exit $?;
+}
 
 our $CONFIG = YAML::Tiny->read('dperl.yml');
 our $NAME = $CONFIG->[0]{'name'} || basename getcwd;
@@ -18,7 +29,7 @@ my $version_re = qr/\d+ \. \w+/x;
 
 name_to_module();
 
-if(@ARGV ~~ /-+update/) {
+if(@ARGV ~~ /update/) {
     clean();
     print "* Create/update t/00-load.t and t/99-pod*t\n";
     t_compile();
@@ -28,7 +39,7 @@ if(@ARGV ~~ /-+update/) {
     readme();
     print "* Repository got updated\n";
 }
-elsif(@ARGV ~~ /-+build/) {
+elsif(@ARGV ~~ /build/) {
     clean();
     print "* Create/update t/00-load.t and t/99-pod*t\n";
     t_compile();
@@ -44,26 +55,38 @@ elsif(@ARGV ~~ /-+build/) {
     dist();
     print "* $NAME got built\n";
 }
-elsif(@ARGV ~~ /-+release/) {
+elsif(@ARGV ~~ /release/) {
     release();
 }
-elsif(@ARGV ~~ /-+share/) {
+elsif(@ARGV ~~ /share/) {
     changes();
     share();
     print "* $NAME got shared\n";
 }
-elsif(@ARGV ~~ /-+test/) {
+elsif(@ARGV ~~ /test/) {
     clean();
     t_compile();
     t_pod();
     makefile();
     test();
 }
-elsif(@ARGV ~~ /-+clean/) {
+elsif(@ARGV ~~ /clean/) {
     clean();
     print "$NAME got cleaned\n";
 }
-elsif(@ARGV ~~ /dperl.yml/) {
+else {
+    help();
+}
+
+exit 0;
+
+#=============================================================================
+sub vsystem {
+    print "$ @_\n";
+    system @_;
+}
+
+sub dperl_yml {
     print <<"DPERL";
 # Example dperl.yml:
 ---
@@ -78,18 +101,6 @@ resources:
   repository: http://github.com/wall-e/foo-bar
 
 DPERL
-    exit 1;
-}
-else {
-    help();
-}
-
-exit 0;
-
-#=============================================================================
-sub vsystem {
-    print "$ @_\n";
-    system @_;
 }
 
 sub help {
@@ -121,6 +132,9 @@ Usage $0 [option]
 
  -dperl.yml
   * Prints an example dperl.yml config file
+
+ -man
+  * Display manual for $0
 
 HELP
     exit 1;
@@ -373,3 +387,87 @@ sub t_compile {
 
     close $USE_OK;
 }
+
+__END__
+
+=head1 NAME
+
+dperl.pl - Helps maintaining your perl project
+
+=head1 DESCRIPTION
+
+dperl is a result of me getting tired of doing the same stuff - or
+rather forgetting to do the same stuff for each of my perl projects.
+dperl does not feature the same things as Dist::Zilla, but I would
+like to think of dperl VS dzil as CPAN  vs cpanm - or at least that
+is what I'm aming for. (!) What I don't want to do, is to configure
+anything, so 1) it just works 2) it might not work as you want it to.
+
+=head1 SYNOPSIS
+
+ dperl.pl [option]
+
+ -update
+  * Create/update t/00-load.t and t/99-pod*t
+  * Create/update README
+
+ -build
+  * Same as -update
+  * Update Changes with release date
+  * Create Makefile.PL, MANIFEST and META.yml
+  * Create a distribution (.tar.gz)
+
+ -release
+  * Will create a new git commit and tag
+
+ -share (experimental)
+  * Will upload the disted file to CPAN
+  * Will push commit and tag to "origin"
+
+ -test
+  * Will test the project
+
+ -clean
+  * Will remove files and directories
+
+ -dperl.yml
+  * Prints an example dperl.yml config file
+
+=head1 SAMPLE dperl.yml
+
+  ---
+  # http://jhthorsen.github.com/snippets/dperl
+  requires:
+    namespace::autoclean: 0.09
+    Data::Dumper: 2.0
+  test_requires:
+    Test::More: 0.9
+  resources:
+    bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Foo-Bar
+    homepage: http://mary.github.com/foobar
+    repository: http://github.com/mary/foo-bar
+
+=cut
+
+
+=head1 SEE ALSO
+
+L<App::Cpanminus>,
+L<Dist::Zilla>
+
+=head1 BUGS
+
+Report bugs and issues at L<http://github.com/jhthorsen/snippets/issues>.
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2007 Jan Henning Thorsen, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself. 
+
+=head1 AUTHOR
+
+Jan Henning Thorsen, C<jhthorsen at cpan.org>
+
+=cut
