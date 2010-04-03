@@ -51,7 +51,7 @@ elsif(@ARGV ~~ /-+release/) {
 elsif(@ARGV ~~ /-+share/) {
     changes();
     share();
-    print "* $NAME got uploaded to CPAN\n";
+    print "* $NAME got shared\n";
 }
 elsif(@ARGV ~~ /-+test/) {
     clean();
@@ -88,6 +88,11 @@ else {
 exit 0;
 
 #=============================================================================
+sub vsystem {
+    print "$ @_\n";
+    system @_;
+}
+
 sub help {
     print <<"HELP";
 Usage $0 [option]
@@ -104,6 +109,10 @@ Usage $0 [option]
 
  -release
   * Will create a new git commit and tag
+
+ -share (experimental)
+  * Will upload the disted file to CPAN
+  * Will push commit and tag to "origin"
 
  -test
   * Will test the project
@@ -173,8 +182,8 @@ sub release {
         die "Need to run with -build first\n";
     }
 
-    system git => commit => -a => -m => $commit_msg;
-    system git => tag => $VERSION;
+    vsystem git => commit => -a => -m => $commit_msg;
+    vsystem git => tag => $VERSION;
 }
 
 sub share {
@@ -182,10 +191,17 @@ sub share {
 
     my $file = "$NAME-$VERSION.tar.gz";
     my $pause = get_pause_info();
+    my $branch = qx/git branch|grep "^*"|cut -d' ' -f2/;
+
+    chomp $branch;
 
     unless(-e $file) {
         die "Need to run with -build first\n";
     }
+
+    vsystem git => push => origin => $branch;
+    vsystem git => push => '--tags' => 'origin';
+    return;
 
     # might die...
     CPAN::Uploader->new($file, {
@@ -197,7 +213,7 @@ sub share {
 sub get_pause_info {
     my $info;
 
-    open my $PAUSE, '<', $ENV{'HOME'} .'/.vimrc' or die "Read ~/.pause: $!\n";
+    open my $PAUSE, '<', $ENV{'HOME'} .'/.pause' or die "Read ~/.pause: $!\n";
 
     while(<$PAUSE>) {
         my($k, $v) = split /\s+/, $_, 2;
@@ -243,16 +259,16 @@ sub changes {
 }
 
 sub readme {
-    system "perldoc -tT $TOP_MODULE > README";
+    vsystem "perldoc -tT $TOP_MODULE > README";
 }
 
 sub clean {
-    system "make clean 2>/dev/null";
-    system "rm -r $NAME* META.yml MANIFEST* Makefile* blib/ inc/ 2>/dev/null";
+    vsystem "make clean 2>/dev/null";
+    vsystem "rm -r $NAME* META.yml MANIFEST* Makefile* blib/ inc/ 2>/dev/null";
 }
 
 sub test {
-    system make => 'test';
+    vsystem make => 'test';
 }
 
 sub makefile {
@@ -276,7 +292,7 @@ sub makefile {
     print $MAKEFILE "auto_install;\n";
     print $MAKEFILE "WriteAll;\n";
 
-    system "perl Makefile.PL";
+    vsystem "perl Makefile.PL";
 }
 
 sub manifest {
@@ -292,12 +308,12 @@ sub manifest {
                            ^MANIFEST.*
                        ), $NAME;
 
-    system "make manifest" and die "Execute 'make manifest': $!\n";
+    vsystem "make manifest" and die "Execute 'make manifest': $!\n";
 }
 
 sub dist {
-    system "rm $NAME* 2>/dev/null";
-    system "make dist" and die "Execute 'make dist': $!";
+    vsystem "rm $NAME* 2>/dev/null";
+    vsystem "make dist" and die "Execute 'make dist': $!";
 }
 
 sub meta_yml {
