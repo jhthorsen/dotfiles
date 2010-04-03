@@ -13,6 +13,8 @@ our $NAME = $CONFIG->[0]{'name'} || basename getcwd;
 our $TOP_MODULE;
 our $VERSION;
 
+my $version_re = qr/\d+ \. \w+/x;
+
 name_to_module();
 
 die "'$NAME' is not a valid repo name\n" unless $TOP_MODULE;
@@ -20,28 +22,37 @@ die "require './lib' directory\n" unless -d './lib';
 die "require './t' directory\n" unless -d './t';
 
 if(@ARGV ~~ /-+update/) {
+    clean();
+    print "* Create/update t/00-load.t and t/99-pod*t\n";
     t_compile();
     t_pod();
     changes(0);
+    print "* Create/update README\n";
     readme();
-    clean();
-    print "Repository is clean and updated\n";
+    print "* Repository got updated\n";
 }
 elsif(@ARGV ~~ /-+build/) {
     clean();
+    print "* Create/update t/00-load.t and t/99-pod*t\n";
     t_compile();
     t_pod();
+    print "* Update Changes\n";
     changes(1);
+    print "* Create/update README\n";
     readme();
+    print "* Build $NAME\n";
     makefile();
     manifest();
     meta_yml();
     dist();
-    print "$NAME is built\n";
+    print "* $NAME got built\n";
+}
+elsif(@ARGV ~~ /-+release/) {
+    release();
 }
 elsif(@ARGV ~~ /-+clean/) {
     clean();
-    print "$NAME is clean\n";
+    print "$NAME got cleaned\n";
 }
 elsif(@ARGV ~~ /dperl.yml/) {
     print <<"DPERL";
@@ -115,6 +126,37 @@ sub name_to_module {
     $TOP_MODULE = $path;
 }
 
+sub release {
+    my $commit_msg;
+
+    open my $CHANGES, '<', 'Changes' or die $!;
+
+    while(<$CHANGES>) {
+        if($commit_msg) {
+            if(/^$/) {
+                last;
+            }
+            else {
+                $commit_msg .= $_;
+            }
+        }
+        elsif(/^($version_re)\s+\w+.*$/) {
+            $VERSION = $1;
+            $commit_msg = $_;
+        }
+    }
+
+    unless($VERSION) {
+        die "Could not find \$VERSION from Changes\n";
+    }
+    unless(-e "$NAME-$VERSION.tar.gz") {
+        die "Need to run -build first\n";
+    }
+
+    system git => commit => -a => -m => $commit_msg;
+    system git => tag => $VERSION;
+}
+
 sub changes {
     my $date = qx/date/;
     my($changes, $pm);
@@ -122,10 +164,10 @@ sub changes {
     open my $CHANGES, '+<', 'Changes' or die $!;
     { local $/; $changes = <$CHANGES> };
 
-    if(!$_[0] and $changes =~ s/\n(\d+\.\d+)\s*$/\n$1 $date/m) {
+    if(!$_[0] and $changes =~ s/\n($version_re)\s*$/\n$1 $date/m) {
         $VERSION = $1;
     }
-    elsif($changes =~ /\n(\d+\.\d+)\s+/) {
+    elsif($changes =~ /\n($version_re)\s+/) {
         $VERSION = $1;
     }
     else {
@@ -150,7 +192,7 @@ sub readme {
 
 sub clean {
     system "make clean 2>/dev/null";
-    system "rm -r META.yml MANIFEST* Makefile* blib/ inc/ 2>/dev/null";
+    system "rm -r $NAME* META.yml MANIFEST* Makefile* blib/ inc/ 2>/dev/null";
 }
 
 sub makefile {
@@ -189,7 +231,7 @@ sub manifest {
                            ^Makefile$
                            ^MANIFEST.*
                        ), $NAME;
-    "\.git\n";
+
     system "make manifest" and die "make manifest: $!";
 }
 
