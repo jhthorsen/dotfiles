@@ -16,7 +16,7 @@ my $self = bless {}, __PACKAGE__;
 
 # $hash = $self->config;
 sub config {
-    return $self->{'config'} ||= YAML::Tiny->read('dperl.yml');
+    return $self->{'config'} ||= YAML::Tiny->read('dperl.yml') || [];
 }
 
 # $hash = $self->pause_info
@@ -205,7 +205,7 @@ sub update_version_info {
     seek $PM, 0, 0;
     print $PM $pm;
 
-    print "Updated version in '$top_module' to $version\n";
+    print "Update version in '$top_module' to $version\n";
 
     return 1;
 }
@@ -235,19 +235,9 @@ sub clean {
     return 1;
 }
 
-# will test the project
-sub test {
-    $self->vsystem(perl => 'Makefile.PL') unless(-e 'Makefile');
-    $self->vsystem(make => 'test');
-
-    return 1;
-}
-
 # will create MANIFEST and MANIFEST.SKIP
 sub manifest {
-    unless(-e 'Makefile') {
-        $self->vsystem(perl => 'Makefile.PL') and return;
-    }
+    $self->make('manifest') and die "Execute 'make manifest' failed\n";
 
     open my $SKIP, '>', 'MANIFEST.SKIP' or die "Write 'MANIFEST.SKIP': $!\n";
     print $SKIP "$_\n" for qw(
@@ -261,8 +251,6 @@ sub manifest {
                            ^MANIFEST.*
                        ), $self->name;
 
-    $self->vsystem(make => 'manifest') and die "Execute 'make manifest': $!\n";
-
     return 1;
 }
 
@@ -270,29 +258,38 @@ sub manifest {
 sub makefile {
     my $makefile = 'Makefile.PL';
     my $name = $self->name;
-    my $repo;
+    my(@requires, $repo);
 
     die "$makefile does already exist." if(-e $makefile);
 
     open my $MAKEFILE, '>', $makefile or die "Write '$makefile': $!\n";
-    printf $MAKEFILE "use inc::Module::Install;\n";
+
+    printf $MAKEFILE "use inc::Module::Install;\n\n";
     printf $MAKEFILE "name q(%s);\n", $self->name;
     printf $MAKEFILE "all_from q(%s);\n", $self->top_module;
 
-    for my $e ($self->find_requires('lib')) {
+    if(@requires = $self->find_requires('lib')) {
+        print $MAKEFILE "\n";
+    }
+    for my $e (@requires) {
         printf $MAKEFILE "requires q(%s) => %s;\n", $e->{'name'}, $e->{'version'};
     }
 
+    if(@requires = $self->find_requires('lib')) {
+        print $MAKEFILE "\n";
+    }
     for my $e ($self->find_requires('t')) {
         printf $MAKEFILE "test_requires q(%s) => %s;\n", $e->{'name'}, $e->{'version'};
     }
 
     $repo = (qx/git remote show -n origin/ =~ /URL: (.*)$/m)[0] || 'git://github.com/';
-    $repo =~ s,^[^:]+:,git://github.com,;
+    $repo =~ s#^[^:]+:#git://github.com/#;
 
+    print $MAKEFILE "\n";
     print $MAKEFILE "bugtracker 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=$name';\n";
     print $MAKEFILE "homepage 'http://search.cpan.org/dist/$name';\n";
     print $MAKEFILE "repository '$repo';\n";
+    print $MAKEFILE "\n";
     print $MAKEFILE "auto_install;\n";
     print $MAKEFILE "WriteAll;\n";
     
@@ -301,14 +298,13 @@ sub makefile {
     return 1;
 }
 
-# to be written...
+# will load the modules and build a list of modules they require
 sub find_requires {
-    return;
     my $self = shift;
     my $dir = shift or return;
     my $name = $self->name;
     my $type = $dir eq 'lib' ? qr{\.pm} : qr{\.t};
-    my %modules;
+    my @modules;
 
     local @INC = (
         sub {
@@ -316,7 +312,10 @@ sub find_requires {
             my $caller = caller(0);
             $caller =~ s/::/-/g;
             if($caller =~ /^$name/) {
-                $modules{ filename_to_module($file) } = 0;
+                push @modules, {
+                    name => $self->_filename_to_module($file),
+                    version => 0,
+                };
             }
         },
         @INC,
@@ -324,27 +323,39 @@ sub find_requires {
 
     finddepth(sub {
         return unless($File::Find::name =~ $type);
-        eval "require '$_'";
+        my $module = $self->_filename_to_module($File::Find::name);
+        eval "use $module";
     }, $dir);
 
-    return [ keys %modules ];
+    for my $e (@modules) {
+        my $name = $e->{'name'};
+        my $version;
+        while($name) {
+            $version = eval "\$$name\::VERSION" and last;
+            $name =~ s/:*\w+$// or last;
+        }
+        $e->{'version'} = $version || 0;
+        $e->{'name'} = $name if($name);
+    }
+
+    @modules = sort { $a->{'name'} cmp $b->{'name'} } @modules;
+
+    return @modules if(wantarray);
+    return \@modules;
 }
 
-# ^^^^^^^^^^^^^^see above
-sub filename_to_module {
-    local $_ = shift;
+sub _filename_to_module {
+    local $_ = $_[1];
     s,\.pm,,;
     s,^/?lib/,,g;
     s,/,::,g;
     return $_;
 }
 
-# creates a dist file
-sub dist {
-    my $name = $self->name;
-    $self->vsystem("rm $name* 2>/dev/null");
-    $self->vsystem(make => 'dist') and die "Execute 'make dist': $!";
-    return 1;
+sub make {
+    $self->makefile unless(-e 'Makefile.PL');
+    $self->vsystem('perl Makefile.PL') unless(-e 'Makefile');
+    $self->vsystem(make => $_[1]);
 }
 
 sub t_pod {
@@ -406,7 +417,7 @@ HEADER
 sub vsystem {
     shift; # shift off class/object
     print "\$ @_\n";
-    return system @_;
+    system @_;
 }
 
 # prints a help text
@@ -417,29 +428,31 @@ sub help {
 Usage dperl.pl [option]
 
  -update
+  * Update version information in main module
   * Create/update t/00-load.t and t/99-pod*t
   * Create/update README
 
  -build
   * Same as -update
   * Update Changes with release date
-  * Create MANIFEST and META.yml
+  * Create MANIFEST* and META.yml
   * Tag and commit the changes (locally)
-  * Build a distribution file (.tar.gz)
+  * Build a distribution (.tar.gz)
 
  -share (experimental)
-  * Will upload the disted file to CPAN
   * Will push commit and tag to "origin"
+  * Will upload the disted file to CPAN
 
  -test
-  * Will test the project
+  * Create/update t/00-load.t and t/99-pod*t
+  * Test the project
 
  -clean
   * Will remove files and directories which should not be included
     in the project repo
 
  -makefile
-  * Builds a Makefile.PL from template
+  * Builds a Makefile.PL from plain guesswork
 
  -man
   * Display manual for dperl.pl
@@ -465,9 +478,9 @@ $method =~ s/-/_/g;
 
 if($action =~ /update/) {
     dPerl->clean;
+    dPerl->update_version_info;
     dPerl->t_compile;
     dPerl->t_pod;
-    dPerl->update_version_info;
     dPerl->generate_readme;
 }
 elsif($action =~ /build/) {
@@ -478,13 +491,15 @@ elsif($action =~ /build/) {
     dPerl->update_version_info;
     dPerl->generate_readme;
     dPerl->manifest;
-    dPerl->dist;
+    dPerl->vsystem('rm ' .$self->name .'* 2>/dev/null');
+    dPerl->tag_and_commit;
+    dPerl->make('dist');
 }
 elsif(@ARGV ~~ /test/) {
     dPerl->clean;
     dPerl->t_compile;
     dPerl->t_pod;
-    dPerl->test;
+    dPerl->make('test');
 }
 elsif(dPerl->can($method)) {
     if(my $res = dPerl->$method(@ARGV)) {
