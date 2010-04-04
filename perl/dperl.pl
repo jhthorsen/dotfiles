@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 
-#==============================================================================
 package dPerl;
 
 use strict;
@@ -475,19 +474,19 @@ Usage dperl.pl [option]
   * Build a distribution (.tar.gz)
 
  -share (experimental)
-  * Will push commit and tag to "origin"
-  * Will upload the disted file to CPAN
+  * Push commit and tag to "origin"
+  * Upload the disted file to CPAN
 
  -test
   * Create/update t/00-load.t and t/99-pod*t
   * Test the project
 
  -clean
-  * Will remove files and directories which should not be included
+  * Remove files and directories which should not be included
     in the project repo
 
  -makefile
-  * Builds a Makefile.PL from plain guesswork
+  * Create a Makefile.PL from plain guesswork
 
  -man
   * Display manual for dperl.pl
@@ -588,33 +587,37 @@ anything, so 1) it just works 2) it might not work as you want it to.
 
 =head1 SYNOPSIS
 
- dperl.pl [option]
+ Usage dperl.pl [option]
 
  -update
+  * Update version information in main module
   * Create/update t/00-load.t and t/99-pod*t
   * Create/update README
 
  -build
   * Same as -update
   * Update Changes with release date
-  * Create Makefile.PL, MANIFEST and META.yml
-  * Create a distribution (.tar.gz)
-
- -release
-  * Will create a new git commit and tag
+  * Create MANIFEST* and META.yml
+  * Tag and commit the changes (locally)
+  * Build a distribution (.tar.gz)
 
  -share (experimental)
-  * Will upload the disted file to CPAN
-  * Will push commit and tag to "origin"
+  * Push commit and tag to "origin"
+  * Upload the disted file to CPAN
 
  -test
-  * Will test the project
+  * Create/update t/00-load.t and t/99-pod*t
+  * Test the project
 
  -clean
-  * Will remove files and directories
+  * Remove files and directories which should not be included
+    in the project repo
+
+ -makefile
+  * Create a Makefile.PL from plain guesswork
 
  -man
-  * Display manual for dperl.pm
+  * Display manual for dperl.pl
 
 =head1 SEE ALSO
 
