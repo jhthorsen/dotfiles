@@ -73,7 +73,11 @@ elsif(@ARGV ~~ /test/) {
 }
 elsif(@ARGV ~~ /clean/) {
     clean();
-    print "$NAME got cleaned\n";
+    print "* $NAME got cleaned\n";
+}
+elsif(@ARGV ~~ /makefile/) {
+    makefile();
+    print "* Built Makefile.PL for $NAME\n";
 }
 else {
     help();
@@ -118,7 +122,7 @@ Usage dperl.pl [option]
  -build
   * Same as -update
   * Update Changes with release date
-  * Create Makefile.PL, MANIFEST and META.yml
+  * Create MANIFEST and META.yml
   * Create a distribution (.tar.gz)
 
  -release
@@ -133,6 +137,9 @@ Usage dperl.pl [option]
 
  -clean
   * Will remove files and directories
+
+ -makefile
+  * Builds a template Makefile.PL
 
  -dperl.yml
   * Prints an example dperl.yml config file
@@ -164,10 +171,8 @@ sub name_to_module {
         die "Cannot find top module from project name '$NAME': $path is not a plain file\n";
     }
 
-    $NAME = $path;
-    $NAME =~ s,lib/,,;
-    $NAME =~ s,\.pm,,;
-    $NAME =~ s,/,-,g;
+    $NAME = filename_to_module($path);
+    $NAME =~ s,::,-,g;
     $TOP_MODULE = $path;
 }
 
@@ -280,7 +285,7 @@ sub readme {
 
 sub clean {
     vsystem "make clean 2>/dev/null";
-    vsystem "rm -r $NAME* META.yml MANIFEST* Makefile* blib/ inc/ 2>/dev/null";
+    vsystem "rm -r $NAME* META.yml MANIFEST* Makefile.old Makefile blib/ inc/ 2>/dev/null";
 }
 
 sub test {
@@ -293,22 +298,55 @@ sub makefile {
     printf $MAKEFILE "name q(%s);\n", $NAME;
     printf $MAKEFILE "all_from q(%s);\n", $TOP_MODULE;
 
-    if(my $req = $CONFIG->[0]{'requires'}) {
-        for my $name (sort keys %$req) {
-            printf $MAKEFILE "requires q(%s) => %s;\n", $name, $req->{$name} || 0;
-        }
+    for my $e (find_use('lib')) {
+        printf $MAKEFILE "requires q(%s) => %s;\n", $e->{'name'}, $e->{'version'};
     }
 
-    if(my $req = $CONFIG->[0]{'test_requires'}) {
-        for my $name (sort keys %$req) {
-            printf $MAKEFILE "test_requires q(%s) => %s;\n", $name, $req->{$name} || 0;
-        }
+    for my $e (find_use('t')) {
+        printf $MAKEFILE "test_requires q(%s) => %s;\n", $e->{'name'}, $e->{'version'};
     }
 
     print $MAKEFILE "auto_install;\n";
     print $MAKEFILE "WriteAll;\n";
 
     vsystem "perl Makefile.PL";
+}
+
+sub find_use {
+    my $dir = shift or return;
+    my $type = $dir eq 'lib' ? qr{\.pm} : qr{\.t};
+    my %OLD_INC = %INC;
+    my %modules;
+
+    local @INC = (
+        sub {
+            my $file = $_[1];
+            my $caller = caller(0);
+            $caller =~ s/::/-/g;
+            if($caller =~ /^$NAME/) {
+                $modules{ filename_to_module($file) } = 0;
+            }
+        },
+        @INC,
+    );
+
+    finddepth(sub {
+        return unless($File::Find::name =~ $type);
+        eval "require '$_'";
+    }, $dir);
+
+    %INC = %OLD_INC;
+    die;
+
+    return [ keys %modules ];
+}
+
+sub filename_to_module {
+    local $_ = shift;
+    s,\.pm,,;
+    s,^/?lib/,,g;
+    s,/,::,g;
+    return $_;
 }
 
 sub manifest {
