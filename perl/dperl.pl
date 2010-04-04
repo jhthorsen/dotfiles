@@ -529,7 +529,7 @@ elsif($action =~ /build/) {
     dPerl->tag_and_commit;
     dPerl->make('dist');
 }
-elsif(@ARGV ~~ /test/) {
+elsif($action =~ /test/) {
     dPerl->clean;
     dPerl->t_compile;
     dPerl->t_pod;
