@@ -91,6 +91,11 @@ sub _build_top_module {
     return $path;
 }
 
+sub top_module_name {
+    return $self->{'top_module_name'}
+       ||= $self->_filename_to_module($self->top_module);
+}
+
 sub changes {
     return $self->{'changes'} ||= $self->_build_changes;
 }
@@ -260,7 +265,7 @@ sub makefile {
     my $name = $self->name;
     my(@requires, $repo);
 
-    die "$makefile does already exist." if(-e $makefile);
+    die "$makefile already exist\n" if(-e $makefile);
 
     open my $MAKEFILE, '>', $makefile or die "Write '$makefile': $!\n";
 
@@ -300,10 +305,57 @@ sub makefile {
 
 # will load the modules and build a list of modules they require
 sub find_requires {
-    my $self = shift;
-    my $dir = shift or return;
+    my $dir = $_[1] or return;
+    my @modules;
+
+    if($dir eq 'lib') {
+        @modules = $self->_find_requires_from_lib;
+    }
+    else {
+        @modules = $self->_find_requires_by_guess($dir);
+    }
+
+    for my $e (@modules) {
+        my $name = $e;
+        my $version;
+        while($name) {
+            no warnings;
+            $version = eval "\$$name\::VERSION" and last;
+            $name =~ s/:*\w+$// or last;
+        }
+        $e = { name => $name || $e, version => $version || 0 };
+    }
+
+    @modules = sort { $a->{'name'} cmp $b->{'name'} } @modules;
+
+    return @modules if(wantarray);
+    return \@modules;
+}
+
+sub _find_requires_by_guess {
+    my $dir = $_[1];
+    my $top_module_name = $self->top_module_name;
+    my(%requires, %skip);
+
+    finddepth(sub {
+        return unless(-f $_);
+        open my $FH, '<', $_ or return;
+        while(<$FH>) {
+            if(/^\s*use \s (?:base\s)? ([A-Z]\S+) .* ;/x) {
+                $requires{$1}++;
+                eval "use $1 ()"; # load module to get version number :S
+            }
+            elsif(/^\s*package \s (\S+) .* ;/x) {
+                $skip{$1}++;
+            }
+        }
+    }, $dir);
+
+    return grep { ! /$top_module_name/ } grep { ! $skip{$_} } keys %requires;
+}
+
+sub _find_requires_from_lib {
     my $name = $self->name;
-    my $type = $dir eq 'lib' ? qr{\.pm} : qr{\.t};
     my @modules;
 
     local @INC = (
@@ -312,36 +364,19 @@ sub find_requires {
             my $caller = caller(0);
             $caller =~ s/::/-/g;
             if($caller =~ /^$name/) {
-                push @modules, {
-                    name => $self->_filename_to_module($file),
-                    version => 0,
-                };
+                push @modules, $self->_filename_to_module($file);
             }
         },
         @INC,
     );
 
     finddepth(sub {
-        return unless($File::Find::name =~ $type);
+        return unless($File::Find::name =~ /\.pm/);
         my $module = $self->_filename_to_module($File::Find::name);
-        eval "use $module";
-    }, $dir);
+        eval "use $module ()";
+    }, 'lib');
 
-    for my $e (@modules) {
-        my $name = $e->{'name'};
-        my $version;
-        while($name) {
-            $version = eval "\$$name\::VERSION" and last;
-            $name =~ s/:*\w+$// or last;
-        }
-        $e->{'version'} = $version || 0;
-        $e->{'name'} = $name if($name);
-    }
-
-    @modules = sort { $a->{'name'} cmp $b->{'name'} } @modules;
-
-    return @modules if(wantarray);
-    return \@modules;
+    return @modules;
 }
 
 sub _filename_to_module {
