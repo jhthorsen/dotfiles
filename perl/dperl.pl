@@ -12,7 +12,7 @@ use YAML::Tiny;
 
 # singleton
 my $version_re = qr/\d+ \. [\d_]+/x;
-our $self = bless {}, __PACKAGE__;
+my $self = bless {}, __PACKAGE__;
 
 # $hash = $self->config;
 sub config {
@@ -180,9 +180,9 @@ sub timestamp_to_changes {
     { local $/; $changes = <$CHANGES> };
 
     if($changes =~ s/\n($version_re)\s*$/{ sprintf "\n%-7s  %s", $1, $date }/em) {
-        print "Add timestamp '$date' to Changes\n";
         seek $CHANGES, 0, 0;
         print $CHANGES $changes;
+        print "Add timestamp '$date' to Changes\n";
         return 1;
     }
     else {
@@ -204,6 +204,8 @@ sub update_version_info {
 
     seek $PM, 0, 0;
     print $PM $pm;
+
+    print "Updated version in '$top_module' to $version\n";
 
     return 1;
 }
@@ -293,8 +295,10 @@ sub makefile {
     print $MAKEFILE "repository '$repo';\n";
     print $MAKEFILE "auto_install;\n";
     print $MAKEFILE "WriteAll;\n";
+    
+    print "Wrote Makefile.PL\n";
 
-    # return value from last print()
+    return 1;
 }
 
 # to be written...
@@ -351,6 +355,8 @@ eval 'use Test::Pod::Coverage; 1' or plan skip_all => 'Test::Pod::Coverage requi
 all_pod_coverage_ok();
 TEST
 
+    print "Wrote t/99-pod-coverage.t\n";
+
     open my $POD, '>', 't/99-pod.t' or die "Write 't/99-pod.t': $!\n";
     print $POD $self->_t_header;
     print $POD <<'TEST';
@@ -358,7 +364,9 @@ eval 'use Test::Pod; 1' or plan skip_all => 'Test::Pod required';
 all_pod_files_ok();
 TEST
 
-    # return value from last print()
+    print "Wrote t/99-pod.t\n";
+
+    return 1;
 }
 
 sub t_compile {
@@ -381,7 +389,9 @@ sub t_compile {
         printf $USE_OK "use_ok('%s');\n", $module;
     }
 
-    # return value from last print()
+    print "Wrote t/00-load.t\n";
+
+    return 1;
 }
 
 sub _t_header {
@@ -436,7 +446,7 @@ Usage dperl.pl [option]
 
 HELP
 
-    # return value from last print()
+    return 0;
 }
 
 #==============================================================================
@@ -458,7 +468,7 @@ if($action =~ /update/) {
     dPerl->t_compile;
     dPerl->t_pod;
     dPerl->update_version_info;
-    dPerl->readme;
+    dPerl->generate_readme;
 }
 elsif($action =~ /build/) {
     dPerl->clean;
@@ -466,7 +476,7 @@ elsif($action =~ /build/) {
     dPerl->t_pod;
     dPerl->timestamp_to_changes;
     dPerl->update_version_info;
-    dPerl->readme;
+    dPerl->generate_readme;
     dPerl->manifest;
     dPerl->dist;
 }
