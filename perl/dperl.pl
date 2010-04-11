@@ -304,33 +304,50 @@ sub makefile {
 
 # will load the modules and build a list of modules they require
 sub find_requires {
-    my $dir = $_[1] or return;
+    my $self = shift;
+    my $dir = shift or return;
     my $top_module_name = $self->top_module_name;
     my(%requires, %skip);
+
+    eval 'package EVAL;
+        no warnings "redefine";
+        our @requires;
+        sub _use { push @requires, @_ }
+        sub _require { push @requires, @_ }
+        sub _base { push @requires, @_ }
+        sub _extends { push @requires, @_ }
+        sub _with { push @requires, @_ }
+        1;
+    ' or die $@;
 
     finddepth(sub {
         return unless(-f $_);
         open my $FH, '<', $_ or return;
         while(<$FH>) {
-            if(/^\s*use \s (?:base\s)? ([A-Z]\S+) .* ;/x) {
-                my $module = $1;
-                my $name = $1;
-                my $version;
-
-                while($name) {
-                    # load module to get version number :S
-                    if(eval "use $name (); 1") {
-                        no warnings;
-                        $version = eval "\$$name\::VERSION" and last;
-                    }
-                    $name =~ s/:*\w+$// or last;
-                }
-
-                $requires{$name} = $version || 0 if($name);
-            }
-            elsif(/^\s*package \s (\S+) .* ;/x) {
+            if(/^\s*package \s (\S+) .* ;/x) {
                 $skip{$1}++;
+                next;
             }
+
+            local @EVAL::requires = ();
+
+            if(/^\s*use \s ([A-Z]\S+)/x) {
+                eval "package EVAL; _use('$1');" or warn "$1 => $@";
+            }
+            elsif(/^\s*require \s ([A-Z]\S+)/x) {
+                eval "package EVAL; _require('$1');" or warn "$1 => $@";
+            }
+            elsif(/^\s*use \s (base .*)/x) {
+                eval "package EVAL; _$1;" or warn "$1 => $@";
+            }
+            elsif(/^\s*(extends [\(\s] .*)/x) {
+                eval "package EVAL; _$1;" or warn "$1 => $@";
+            }
+            elsif(/^\s*(with [\(\s] .*)/x) {
+                eval "package EVAL; _$1;" or warn "$1 => $@";
+            }
+
+            $self->_require_version_and_name($_, \%requires) for @EVAL::requires;
         }
     }, $dir);
 
@@ -338,6 +355,26 @@ sub find_requires {
 
     return %requires if(wantarray);
     return \%requires;
+}
+
+sub _require_version_and_name {
+    my $module = $_[1];
+    my $req = $_[2];
+    my($name, $version);
+
+    $module =~ s/[^\w:]//;
+    $name = $module;
+
+    while($name) {
+        # load module to get version number :S
+        if(eval "use $name (); 1") {
+            no warnings;
+            $version = eval "\$$name\::VERSION" and last;
+        }
+        $name =~ s/:*\w+$// or last;
+    }
+
+    $req->{$name} = $version || 0 if$name;
 }
 
 sub _filename_to_module {
