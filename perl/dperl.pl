@@ -290,9 +290,9 @@ sub makefile {
     $repo =~ s#^[^:]+:#git://github.com/#;
 
     print $MAKEFILE "\n";
-    print $MAKEFILE "bugtracker 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=$name';\n";
-    print $MAKEFILE "homepage 'http://search.cpan.org/dist/$name';\n";
-    print $MAKEFILE "repository '$repo';\n";
+    print $MAKEFILE "bugtracker q(http://rt.cpan.org/NoAuth/Bugs.html?Dist=$name);\n";
+    print $MAKEFILE "homepage q(http://search.cpan.org/dist/$name);\n";
+    print $MAKEFILE "repository q($repo);\n";
     print $MAKEFILE "\n";
     print $MAKEFILE "auto_install;\n";
     print $MAKEFILE "WriteAll;\n";
