@@ -262,7 +262,7 @@ sub manifest {
 sub makefile {
     my $makefile = 'Makefile.PL';
     my $name = $self->name;
-    my(@requires, $repo);
+    my(%requires, $repo);
 
     die "$makefile already exist\n" if(-e $makefile);
 
@@ -272,18 +272,18 @@ sub makefile {
     printf $MAKEFILE "name q(%s);\n", $self->name;
     printf $MAKEFILE "all_from q(%s);\n", $self->top_module;
 
-    if(@requires = $self->find_requires('lib')) {
+    if(%requires = $self->find_requires('lib')) {
         print $MAKEFILE "\n";
     }
-    for my $e (@requires) {
-        printf $MAKEFILE "requires q(%s) => %s;\n", $e->{'name'}, $e->{'version'};
+    for my $name (sort keys %requires) {
+        printf $MAKEFILE "requires q(%s) => %s;\n", $name, $requires{$name};
     }
 
-    if(@requires = $self->find_requires('lib')) {
+    if(%requires = $self->find_requires('t')) {
         print $MAKEFILE "\n";
     }
-    for my $e ($self->find_requires('t')) {
-        printf $MAKEFILE "test_requires q(%s) => %s;\n", $e->{'name'}, $e->{'version'};
+    for my $name (sort keys %requires) {
+        printf $MAKEFILE "test_requires q(%s) => %s;\n", $name, $requires{$name};
     }
 
     $repo = (qx/git remote show -n origin/ =~ /URL: (.*)$/m)[0] || 'git://github.com/';
@@ -305,34 +305,6 @@ sub makefile {
 # will load the modules and build a list of modules they require
 sub find_requires {
     my $dir = $_[1] or return;
-    my @modules;
-
-    if($dir eq 'lib') {
-        @modules = $self->_find_requires_from_lib;
-    }
-    else {
-        @modules = $self->_find_requires_by_guess($dir);
-    }
-
-    for my $e (@modules) {
-        my $name = $e;
-        my $version;
-        while($name) {
-            no warnings;
-            $version = eval "\$$name\::VERSION" and last;
-            $name =~ s/:*\w+$// or last;
-        }
-        $e = { name => $name || $e, version => $version || 0 };
-    }
-
-    @modules = sort { $a->{'name'} cmp $b->{'name'} } @modules;
-
-    return @modules if(wantarray);
-    return \@modules;
-}
-
-sub _find_requires_by_guess {
-    my $dir = $_[1];
     my $top_module_name = $self->top_module_name;
     my(%requires, %skip);
 
@@ -341,8 +313,20 @@ sub _find_requires_by_guess {
         open my $FH, '<', $_ or return;
         while(<$FH>) {
             if(/^\s*use \s (?:base\s)? ([A-Z]\S+) .* ;/x) {
-                $requires{$1}++;
-                eval "use $1 ()"; # load module to get version number :S
+                my $module = $1;
+                my $name = $1;
+                my $version;
+
+                while($name) {
+                    # load module to get version number :S
+                    if(eval "use $name (); 1") {
+                        no warnings;
+                        $version = eval "\$$name\::VERSION" and last;
+                    }
+                    $name =~ s/:*\w+$// or last;
+                }
+
+                $requires{$name} = $version || 0 if($name);
             }
             elsif(/^\s*package \s (\S+) .* ;/x) {
                 $skip{$1}++;
@@ -350,32 +334,10 @@ sub _find_requires_by_guess {
         }
     }, $dir);
 
-    return grep { ! /$top_module_name/ } grep { ! $skip{$_} } keys %requires;
-}
+    delete $requires{$_} for keys %skip;
 
-sub _find_requires_from_lib {
-    my $name = $self->name;
-    my @modules;
-
-    local @INC = (
-        sub {
-            my $file = $_[1];
-            my $caller = caller(0);
-            $caller =~ s/::/-/g;
-            if($caller =~ /^$name/) {
-                push @modules, $self->_filename_to_module($file);
-            }
-        },
-        @INC,
-    );
-
-    finddepth(sub {
-        return unless($File::Find::name =~ /\.pm/);
-        my $module = $self->_filename_to_module($File::Find::name);
-        eval "use $module ()";
-    }, 'lib');
-
-    return @modules;
+    return %requires if(wantarray);
+    return \%requires;
 }
 
 sub _filename_to_module {
