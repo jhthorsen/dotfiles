@@ -163,13 +163,12 @@ sub share {
     $self->vsystem(git => push => '--tags' => 'origin');
 
     # might die...
-    die "CPAN::Uploader has been disabled";
     CPAN::Uploader->upload_file($file, {
         user => $pause->{'user'},
         password => $pause->{'password'},
     });
 
-    return;
+    return 1;
 }
 
 # will insert a timestamp at a line looking like this:
