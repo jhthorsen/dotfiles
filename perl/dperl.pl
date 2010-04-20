@@ -650,6 +650,15 @@ anything, so 1) it just works 2) it might not work as you want it to.
  -man
   * Display manual for dperl.pl
 
+=head1 OTHER METHODS
+
+Dump internal attributes: config, share_extension, pause_info, share_params,
+name, top_module, top_module_name, changes, dist_file,
+
+Run internal steps: tag_and_commit, share_via_git, share_via_extension,
+timestamp_to_changes, update_version_info, generate_readme, manifest,
+find_requires, make
+
 =head1 SEE ALSO
 
 L<App::Cpanminus>,
