@@ -537,14 +537,14 @@ $action =~ s/^-+//;
 $method =~ s/^-+//;
 $method =~ s/-/_/g;
 
-if($action =~ /update/) {
+if($action =~ /^-*update(?!-)/i) {
     dPerl->clean;
     dPerl->update_version_info;
     dPerl->t_compile;
     dPerl->t_pod;
     dPerl->generate_readme;
 }
-elsif($action =~ /build/) {
+elsif($action =~ /^-*build(?!-)/i) {
     dPerl->clean;
     dPerl->t_compile;
     dPerl->t_pod;
@@ -556,13 +556,13 @@ elsif($action =~ /build/) {
     dPerl->tag_and_commit;
     dPerl->make('dist');
 }
-elsif($action =~ /test/) {
+elsif($action =~ /^-*test(?!-)/i) {
     dPerl->clean;
     dPerl->t_compile;
     dPerl->t_pod;
     dPerl->make('test');
 }
-elsif($action =~ /share(?!-)/) {
+elsif($action =~ /^-*share(?!-)/i) {
     dPerl->share_via_extension;
     dPerl->share_via_git;
 }
@@ -585,7 +585,7 @@ elsif(dPerl->can($method)) {
         die "Failed to execute dPerl->$method\n";
     }
 }
-elsif($action =~ /man/) {
+elsif($action =~ /^-*man$/i) {
     if($0 eq '-') {
         print "Read manual online: http://jhthorsen.github.com/snippets/dperl\n"
     }
