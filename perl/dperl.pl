@@ -500,7 +500,7 @@ Usage dperl.pl [option]
   * Tag and commit the changes (locally)
   * Build a distribution (.tar.gz)
 
- -share (experimental)
+ -share
   * Push commit and tag to "origin"
   * Upload the disted file to CPAN
 
@@ -632,7 +632,7 @@ anything, so 1) it just works 2) it might not work as you want it to.
   * Tag and commit the changes (locally)
   * Build a distribution (.tar.gz)
 
- -share (experimental)
+ -share
   * Push commit and tag to "origin"
   * Upload the disted file to CPAN
 
