@@ -650,7 +650,7 @@ anything, so 1) it just works 2) it might not work as you want it to.
  -man
   * Display manual for dperl.pl
 
-=head1 OTHER METHODS
+=head2 OTHER METHODS
 
 Dump internal attributes: --config, --share-extension, --pause-info, --share-params,
 --name, --top-module, --top-module-name, --changes, --dist-file.
@@ -658,6 +658,67 @@ Dump internal attributes: --config, --share-extension, --pause-info, --share-par
 Run internal steps: --tag-and-commit, --share-via-git, --share-via-extension,
 --timestamp-to-changes, --update-version-info, --generate-readme, --manifest,
 --find-requires, --make.
+
+=head1 SAMPLE CONFIG FILE
+
+ ---
+ # Default to a converted version of top_module
+ name: Foo-Bar
+ 
+ # Default to a converted version of the project folder
+ # Example: ./foo-bar/lib/Foo/Bar.pm, were "foo-bar" is the
+ # project folder.
+ top_module: lib/Foo/Bar.pm 
+ 
+ # Default to a converted version of top_module.
+ top_module_name: Foo::Bar 
+ 
+ # Default to CPAN::Uploader. Can also be set through
+ # DPERL_SHARE_MODULE environment variable.
+ share_extension: AnyModuleName
+ 
+ # Not in use if share_extension == CPAN::Uploader. Usage:
+ # share_extension->upload_file($dist_file, share_params);
+ share_params: { answer: 42 }
+
+All config params are optional, since dperl.pl will probably figure out the
+information for you.
+
+=head1 SHARING THE MODULE
+
+By default the L<CPAN::Uploader> module is used to upload the module to CPAN.
+This module will use the information from C<$HOME/.pause> to find login
+information:
+
+ user your_pause_username
+ password your_secret_pause_password
+
+It will also use git to push changes and tag a new release:
+
+ git commit -a -m "$message_from_changes_file"
+ git tag "$latest_version_in_changes_file"
+ git push origin $current_branch
+ git push --tags origin
+
+The commit and tag is done when on C<-dist>, while pushing the changes to
+origin is done on C<-share>.
+
+=head1 Changes
+
+The expected format in C<Changes> is:
+
+ Some random header, for Example:
+ Revision history for Foo-Bar
+
+ 0.02
+  * Fix something
+  * Add something else
+
+ 0.01 Tue Apr 20 19:34:15 CEST 2010
+  * First release
+  * Add some feature
+
+C<dperl.pl> will automatically add the date before creating a dist.
 
 =head1 SEE ALSO
 
