@@ -562,7 +562,7 @@ elsif($action =~ /test/) {
     dPerl->t_pod;
     dPerl->make('test');
 }
-elsif($action =~ /share/) {
+elsif($action =~ /share(?!-)/) {
     dPerl->share_via_extension;
     dPerl->share_via_git;
 }
