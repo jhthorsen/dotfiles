@@ -9,13 +9,20 @@ use File::Basename;
 use File::Find;
 use YAML::Tiny;
 
-# singleton
 my $version_re = qr/\d+ \. [\d_]+/x;
-my $self = bless {}, __PACKAGE__;
+my $self = bless {}, __PACKAGE__; # singleton
 
 # $hash = $self->config;
 sub config {
     return $self->{'config'} ||= YAML::Tiny->read('dperl.yml') || [];
+}
+
+# $str = $self->share_extension
+sub share_extension {
+    return $self->{'share_extension'}
+       ||= $ENV{'DPERL_SHARE_MODULE'}
+       ||  $self->config->[0]{'share_extension'}
+       ||  'CPAN::Uploader';
 }
 
 # $hash = $self->pause_info
@@ -40,29 +47,36 @@ sub _build_pause_info {
     return $info;
 }
 
+# $hash = $self->share_params;
+sub share_params {
+    return $self->config->[0]{'share_params'} if($self->config->[0]{'share_params'});
+    return;
+}
+
 # returns the project name
 # can be set in config: "name: foo-bar"
 # example: foo-bar
 sub name {
-    return $self->{'name'} ||= $self->_build_name;
+    return $self->{'name'}
+       ||= $self->config->[0]{'name'}
+       ||  $self->_build_name;
 }
 
 sub _build_name {
-    my $name;
+    my $name = join '-', split '/', $self->top_module;
 
-    $name = $self->config->[0]{'name'};
-    return $name if $name;
-
-    $name = join '-', split '/', $self->top_module;
     $name =~ s,^.?lib-,,;
     $name =~ s,\.pm$,,;
+
     return $name;
 }
 
 # returns the top module location
 # example: lib/Foo/Bar.pm
 sub top_module {
-    return $self->{'top_module'} ||= $self->_build_top_module;
+    return $self->{'top_module'}
+       ||= $self->config->[0]{'top_module'}
+       ||  $self->_build_top_module;
 }
 
 sub _build_top_module {
@@ -92,7 +106,8 @@ sub _build_top_module {
 
 sub top_module_name {
     return $self->{'top_module_name'}
-       ||= $self->_filename_to_module($self->top_module);
+       ||= $self->config->[0]{'top_module_name'}
+       ||  $self->_filename_to_module($self->top_module);
 }
 
 sub changes {
@@ -116,6 +131,9 @@ sub _build_changes {
         elsif(/^($version_re)\s+\w+.*$/) {
             $version = $1;
             $latest = $_;
+        }
+        elsif(/^($version_re)/) {
+            die "Found version info, but no date. Changes need to be updated\n";
         }
     }
 
@@ -144,34 +162,45 @@ sub tag_and_commit {
     return;
 }
 
-# will use CPAN::Uploader to upload the dist to cpan
-# and push tag/branch to git origin
-sub share {
-    eval 'use CPAN::Uploader; 1' or die "This feature requires 'CPAN::Uploader' to be installed";
-
-    my $file = $self->dist_file;
-    my $pause = $self->pause_info;
+# Will push tag/branch to git origin
+sub share_via_git {
     my $branch = (qx/git branch/ =~ /\* (.*)$/m)[0];
 
     chomp $branch;
+
+    $self->vsystem(git => push => origin => $branch);
+    $self->vsystem(git => push => '--tags' => 'origin');
+
+    return 1;
+}
+
+# will use CPAN::Uploader to upload the dist to cpan
+sub share_via_extension {
+    my $file = $self->dist_file;
+    my $share_extension = $self->share_extension;
+
+    eval "use $share_extension; 1" or die "This feature requires $share_extension to be installed";
 
     unless(-e $file) {
         die "Need to run with -build first\n";
     }
 
-    $self->vsystem(git => push => origin => $branch);
-    $self->vsystem(git => push => '--tags' => 'origin');
-
     # might die...
-    CPAN::Uploader->upload_file($file, {
-        user => $pause->{'user'},
-        password => $pause->{'password'},
-    });
+    if($share_extension eq 'CPAN::Uploader') {
+        my $pause = $self->pause_info;
+        $share_extension->upload_file($file, {
+            user => $pause->{'user'},
+            password => $pause->{'password'},
+        });
+    }
+    else {
+        $share_extension->upload_file($file, $self->share_params);
+    }
 
     return 1;
 }
 
-# will insert a timestamp at a line looking like this:
+# will insert a timestamp in Changes on a line looking like this:
 # ^\d+\.[\d_]+\s*$
 sub timestamp_to_changes {
     my $date = qx/date/;
@@ -532,6 +561,10 @@ elsif($action =~ /test/) {
     dPerl->t_compile;
     dPerl->t_pod;
     dPerl->make('test');
+}
+elsif($action =~ /share/) {
+    dPerl->share_via_extension;
+    dPerl->share_via_git;
 }
 elsif(dPerl->can($method)) {
     if(my $res = dPerl->$method(@ARGV)) {
