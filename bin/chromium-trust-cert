@@ -1,0 +1,27 @@
+#!/bin/sh
+
+if [ -z $1 ]; then
+    certutil -d sql:$HOME/.pki/nssdb -L;
+    exit $?;
+fi
+
+NICK=$1;
+HOST=$(perl -le'$ARGV[0] =~ s/\*.//; print $ARGV[0]' $NICK);
+CERT=$(tempfile);
+
+echo $HOST;
+
+echo "Receiving certificate...";
+echo QUIT \
+    | openssl s_client -connect $HOST:443 \
+    | sed -ne '/BEGIN CERT/,/END CERT/p' \
+    > $CERT;
+
+if [ -s $CERT ]; then
+    certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n $NICK -i $CERT;
+    echo "Please restart chromium/google chrome to reload the certificate";
+else
+    echo "Failed to receive certificate from $HOST";
+fi
+
+rm $CERT;
