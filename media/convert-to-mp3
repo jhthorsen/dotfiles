@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+
+use feature qw/say/;
+use autodie qw/:all/;
+use strict;
+use warnings;
+
+$ENV{'CONVERT_MPLAYER'} ||= '/usr/bin/mplayer';
+$ENV{'CONVERT_LAME'} ||= '/usr/bin/lame';
+
+eval "use File::Find::Rule; 1" or die "File::Find::Rule is required\n";
+eval "use File::Temp; 1" or die "File::Temp is required\n";
+-x $ENV{'CONVERT_MPLAYER'} or die 'CONVERT_MPLAYER does not hold an executable path';
+-x $ENV{'CONVERT_LAME'} or die 'CONVERT_LAME does not hold an executable path';
+$ENV{'MAX_CHILDREN'} ||= 4;
+
+my $children = $ENV{'MAX_CHILDREN'};
+my $ext = shift;
+my $rule = File::Find::Rule
+            ->file
+            ->name("*\.$ext")
+            ->start('.');
+
+while(my $file = $rule->match) {
+    my $tmp = File::Temp->new( unlink_on_destroy => 0 );
+    my $mp3 = $file;
+    my $log = $file;
+    
+    $mp3 =~ s/\.$ext/.mp3/;
+    $log =~ s/\.$ext/.log/;
+
+    if($mp3 ne $file and $log ne $file) {
+        say "mplayer '$file' -ao pcm:file='$tmp'";
+        say "lame '$tmp' '$mp3'";
+        say "less '$log'";
+
+        open my $LOG, '>', $log;
+
+        if(my $pid = fork) {
+            say "Child: $pid";
+            $children--;
+        }
+        else {
+            open STDERR, '>&', $LOG;
+            open STDOUT, '>&', $LOG;
+            system $ENV{'CONVERT_MPLAYER'} => $file => -ao => qq(pcm:file="$tmp");
+            system $ENV{'CONVERT_LAME'} => $tmp => $mp3;
+            unlink $tmp;
+            exit 0;
+        }
+    }
+
+    # don't want more than MAX_CHILDREN
+    if($children == 0) {
+        $children = $ENV{'MAX_CHILDREN'};
+        wait; # wait for a child to exit
+    }
+}
+
+while(-1 < wait) {
+    1; # wait for children to exit...
+}
