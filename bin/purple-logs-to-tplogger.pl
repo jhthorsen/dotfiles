@@ -262,7 +262,7 @@ sub _save_tp_log {
     $target_log_file = join '/', $target_log_dir, join('', @$source_date{qw/ year month day /}, '.log');
     @stat = eval { stat $target_log_file };
 
-    if(@stat and $stat[2] & 0777 == 0600) {
+    if(-e $target_log_file) {
         #__log "Logfile exists ($target_log_file)";
         return;
     }
