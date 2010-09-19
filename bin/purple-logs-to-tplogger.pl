@@ -219,7 +219,7 @@ sub _parse_html {
                 time => $time,
                 name => $name,
                 message => $message,
-                me => $line =~ /#16569E/i ? 1 : 0,
+                isuser => $line =~ /#16569E/i ? 1 : 0,
             };
         }
     }
@@ -269,10 +269,10 @@ sub _save_tp_log {
                 join(':', @$message_time{qw/ hour minute second /}),
             ), # time
             '', # TODO cm_id
-            $message->{'me'} ? $args->{'me'} : $args->{'partner'}, # id
+            $message->{'isuser'} ? $args->{'me'} : $args->{'partner'}, # id
             $message->{'name'}, # name
-            '', # token
-            'false', # isuser
+            '', # avatar token
+            $message->{'isuser'} ? 'true' : 'false', # isuser
             'normal', # type
             $message->{'message'}, # message
         );
