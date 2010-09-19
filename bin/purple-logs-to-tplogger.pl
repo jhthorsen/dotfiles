@@ -119,10 +119,25 @@ sub _convert_log_type {
         my $target_account;
 
         TARGET_ACCOUNT:
-        for(keys %$accounts) {
-            if($accounts->{$_}{'param-account'} eq $source_account) {
-                __log "Found account $_ from telepathy config";
-                $target_account = $_;
+        for my $name (keys %$accounts) {
+            my $protocol = $type eq 'facebook' ? 'jabber' : $type;
+
+            if($accounts->{$name}{'protocol'} !~ /$protocol/) {
+                next TARGET_ACCOUNT;
+            }
+
+            my $server = $accounts->{$name}{'param-server'} || '';
+            my $account = $accounts->{$name}{'param-account'} || '';
+
+            # need to remove param-server from param-account
+            $account =~ s/\@.*//;
+
+            $target_account = $source_account eq $account            ? $name
+                            : $source_account eq "$account\@$server" ? $name
+                            :                                          undef;
+
+            if($target_account) {
+                __log "Found account $name from telepathy config";
                 $target_account =~ s,/,_,g;
                 last TARGET_ACCOUNT;
             }
@@ -174,6 +189,8 @@ sub _convert_log_dir {
             __log "Cannot convert $source_log";
             next LOG_FILE;
         }
+
+        local $/;
 
         $self->_save_tp_log({
             target_account => $args->{'target_account'},
