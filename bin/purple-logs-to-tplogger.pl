@@ -47,6 +47,8 @@ sub __log { warn '[LOG] ', @_, "\n" }
 
 =head2 purple_log_dir
 
+    --purple-log-dir $HOME/.purple/logs
+
 =cut
 
 has purple_log_dir => (
@@ -57,6 +59,8 @@ has purple_log_dir => (
 
 =head2 tp_log_dir
 
+    --tp-log-dir $HOME/.local/share/TpLogger/logs
+
 =cut
 
 has tp_log_dir => (
@@ -66,6 +70,8 @@ has tp_log_dir => (
 );
 
 =head2 tp_accounts
+
+    --tp-accounts $HOME/.mission-control/accounts/accounts.cfg
 
 =cut
 
@@ -234,7 +240,7 @@ sub _save_tp_log {
     my $args = shift;
     my $target_log_dir = join '/', $self->tp_log_dir, @$args{qw/ target_account partner /};
     my $source_date = $args->{'source_date'};
-    my $message_format = "<message time='%s' cm_id='%s' id='%s' name='%s' token='%s' isuser='%s' type='%s'>%s</log>";
+    my $message_format = "<message time='%s' cm_id='%s' id='%s' name='%s' token='%s' isuser='%s' type='%s'>%s</message>";
     my($target_log_file, @stat, @log);
 
     if(!-d $target_log_dir) {
@@ -245,7 +251,7 @@ sub _save_tp_log {
     $target_log_file = join '/', $target_log_dir, join('', @$source_date{qw/ year month day /}, '.log');
     @stat = eval { stat $target_log_file };
 
-    if(@stat and $stat[2] & 0700 == 0600) {
+    if(@stat and $stat[2] & 0777 == 0600) {
         __log "Logfile exists ($target_log_file)";
         return;
     }
@@ -266,7 +272,7 @@ sub _save_tp_log {
 
         push @log, sprintf($message_format,
             $ymd .'T' .$hms, # time
-            '', # TODO cm_id
+            '', # cm_id
             $message->{'isuser'} ? $args->{'me'} : $args->{'partner'}, # id
             $message->{'name'}, # name
             '', # avatar token
