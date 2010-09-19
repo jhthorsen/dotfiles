@@ -261,13 +261,11 @@ sub _save_tp_log {
 
     for my $message (@{ $args->{'messages'} }) {
         my $message_time = $message->{'time'};
+        my $ymd = join '', @$source_date{qw/ year month day /};
+        my $hms = join ':', @$message_time{qw/ hour minute second /};
 
         push @log, sprintf($message_format,
-            join('',
-                @$source_date{qw/ year month day /},
-                'T',
-                join(':', @$message_time{qw/ hour minute second /}),
-            ), # time
+            $ymd .'T' .$hms, # time
             '', # TODO cm_id
             $message->{'isuser'} ? $args->{'me'} : $args->{'partner'}, # id
             $message->{'name'}, # name
