@@ -98,29 +98,21 @@ sub run {
     my $self = shift;
     my @types = @_;
 
-    unless(@types) {
-        @types = qw/ msn /;
-    }
-
     TYPE:
-    for my $type (@types) {
-        my $method = "convert_$type";
-        $self->$method;
+    for my $type (__read_dir($self->purple_log_dir)) {
+        $self->_convert_log_type($type);
     }
 
     return 0;
 }
 
-=head2 convert_msn
-
-=cut
-
-sub convert_msn {
+sub _convert_log_type {
     my $self = shift;
-    my $source_dir = $self->purple_log_dir .'/msn';
+    my $type = shift or confess 'Usage: _convert_log_type($type)';
+    my $source_dir = $self->purple_log_dir .'/'. $type;
     my $accounts = $self->tp_accounts;
 
-    __log "Reading MSN logs from $source_dir...";
+    __log "Reading logs from $source_dir...";
 
     SOURCE_ACCOUNT:
     for my $source_account (__read_dir($source_dir)) {
@@ -129,7 +121,7 @@ sub convert_msn {
         TARGET_ACCOUNT:
         for(keys %$accounts) {
             if($accounts->{$_}{'param-account'} eq $source_account) {
-                __log "Found MSN account $_ from telepathy config";
+                __log "Found account $_ from telepathy config";
                 $target_account = $_;
                 $target_account =~ s,/,_,g;
                 last TARGET_ACCOUNT;
@@ -137,7 +129,7 @@ sub convert_msn {
         }
 
         unless($target_account) {
-            __log "Could not find MSN account $source_account in telepathy config";
+            __log "Could not find account $source_account in telepathy config";
             next SOURCE_ACCOUNT;
         }
 
@@ -150,6 +142,8 @@ sub convert_msn {
                 target_account => $target_account,
             });
         }
+
+        print "\n";
     }
 
     return 1;
@@ -187,7 +181,7 @@ sub _convert_log_dir {
             me => $args->{'source_account'},
             source_date => $source_date,
             messages => $messages,
-        });
+        }) and print '.';
     }
 
     return 1;
@@ -252,11 +246,8 @@ sub _save_tp_log {
     @stat = eval { stat $target_log_file };
 
     if(@stat and $stat[2] & 0777 == 0600) {
-        __log "Logfile exists ($target_log_file)";
+        #__log "Logfile exists ($target_log_file)";
         return;
-    }
-    else {
-        __log "Write logfile ($target_log_file)...";
     }
 
     push @log, (
