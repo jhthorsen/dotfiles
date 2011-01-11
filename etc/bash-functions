@@ -1,0 +1,95 @@
+# Usage:
+#  up;
+#
+# Description:
+#  Brings you either up to the root of you git project or to your home folder.
+
+up() {
+    CHECK=$1;
+    UP_PWD=$PWD;
+
+    echo $PWD;
+
+    [ -z $C ] && CHECK="lib";
+
+    while echo -n ""; do
+        cd ..;
+        ls .git    &>/dev/null && break;
+        ls  README &>/dev/null && break;
+        [ $PWD = $HOME ]       && break;
+    done
+
+    OLDPWD=$UP_PWD;
+    echo $PWD;
+
+    return 0;
+}
+
+# Usage:
+#  back;
+#
+# Description:
+#  Lets you jump back to where you last did `up` from.
+
+back() {
+    if [ $UP_PWD == $PWD ]; then
+        cd -;
+    else
+        echo $UP_PWD;
+        cd $UP_PWD;
+    fi
+
+    return $?;
+}
+
+# Usage:
+#  username;
+#
+# Description:
+#  prints out either "username@hostname" or just "hostname" without newline.
+
+username() {
+    echo -n 'thinkpad';
+    return;
+    SHORT_HOST=$(hostname | cut -d"." -f1);
+
+    if [[ $USER == "jhthorsen" ]]; then
+        echo -n $SHORT_HOST;
+    else
+        echo -n $USER@$SHORT_HOST;
+    fi
+}
+
+# Usage:
+#  path_info;
+#
+# Description:
+#  Prints out either "$PWD" or "project-name/branch-name/relative-path"
+#  without newline.
+
+path_info() {
+    BRANCH=$(git branch --no-color 2>/dev/null | grep "*" | cut -d" " -f2 );
+
+    if [[ "x$BRANCH" == "x" ]]; then
+        echo -n $PWD;
+    else
+        REPO=$PWD;
+        NOTHING="nothing to commit (working directory clean)";
+        CLEAN=$(git status 2>/dev/null | tail -n1);
+        FLAG="";
+
+        while [[ $(echo $REPO | wc -c) -gt 2 ]]; do
+            [ -e $REPO/.git ] && break;
+            REPO=$(dirname $REPO);
+        done
+
+        if [[ $NOTHING != $CLEAN ]]; then
+            FLAG="*";
+        fi
+
+        DIR=$(echo $PWD | sed -e "s,$REPO,,");
+        REPO=$(basename $REPO);
+
+        echo -n "$REPO/$FLAG$BRANCH$DIR";
+    fi
+}
