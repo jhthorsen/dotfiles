@@ -85,6 +85,10 @@ it a bit harder to read.
 
 Default 10. Given in seconds.
 
+=head2 can_delete
+
+Default 0. The client cannot delete or expunge mails on the server.
+
 =head2 trash_mailbox
 
 Default "Trash". Could be set to "[Gmail]/Trash" for Google.
@@ -100,12 +104,14 @@ __PACKAGE__->mk_accessors(qw(
     username
     password
     timeout
+    can_delete
     trash_mailbox
     _mail_map
 ));
 
 sub _build_port { 993 }
 sub _build_maildir { 'Maildir' }
+sub _build_can_delete { 0 }
 sub _build_trash_mailbox { 'Trash' }
 sub _build_timeout { 10 }
 sub _build_server { 'localhost' }
@@ -347,7 +353,7 @@ sub sync_message {
         $self->uid_to_file($uid, $file);
     }
     elsif($self->tracked_file_timestamp($file)) {
-        $self->remote_delete($message_number, $file);
+        $self->remote_delete($message_number, $file) if($self->can_delete);
     }
 # TODO: How can this work? Looks like at least google mess up UID
 # when making drafts...
