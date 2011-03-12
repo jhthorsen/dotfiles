@@ -14,13 +14,16 @@ BEGIN {
 
 #=============================================================================
 package App::SyncIMAP::Client;
-use Carp qw/confess/;
+use Carp;
+use Cwd;
+use Data::Dumper ();
 use File::Path qw/ make_path /;
 use Net::IMAP::Simple;
 use MIME::Base64 ();
 use base 'Class::Accessor::Fast::WithBuilder';
 
 our $AUTOLOAD; # TODO: define fixed proxy methods instead
+our $MAIL_MAP = '.mail_map';
 
 __PACKAGE__->mk_accessors(qw(
     _client
@@ -31,17 +34,50 @@ __PACKAGE__->mk_accessors(qw(
     username
     password
     timeout
-    uid_to_path
+    trash_mailbox
+    _mail_map
 ));
 
 sub _build_port { 993 }
 sub _build_maildir { 'Maildir' }
+sub _build_trash_mailbox { 'Trash' }
 sub _build_timeout { 10 }
 sub _build_server { 'localhost' }
 sub _build_ssl { shift->port eq '993' ? 1 : 0 }
-sub _build_username { confess 'Usage: $self->new({ username => $Str, ... })' }
-sub _build_password { confess 'Usage: $self->new({ password => $Str, ... })' }
-sub _build_uid_to_path { +{} }
+sub _build_username { shift->throw_exception('Usage: $self->new({ username => $Str, ... })') }
+sub _build_password { shift->throw_exception('Usage: $self->new({ password => $Str, ... })') }
+
+sub _build__mail_map {
+    my $self = shift;
+    open my $MAP_FH, '<', $self->maildir .'/' .$MAIL_MAP or return {};
+    local $/; # slurp
+    my $mail_map = eval(readline $MAP_FH) or $self->throw_exception($@);
+    return $mail_map;
+}
+
+sub track_file { $_[0]->_mail_map->{'file_to_timestamp'}{$_[1]} = $_[2] }
+sub tracked_files { keys %{ $_[0]->_mail_map->{'file_to_timestamp'} } }
+sub tracked_file { $_[0]->_mail_map->{'file_to_timestamp'}{$_[1]} || 0 }
+
+sub untrack_file {
+    my($self, $file) = @_;
+    my $uid = delete $self->_mail_map->{'file_to_uid'}{$file};
+
+    delete $self->_mail_map->{'file_to_timestamp'}{$file};
+    delete $self->_mail_map->{'uid_to_file'}{$uid} if($uid);
+}
+
+sub uid_to_file {
+    my $self = shift;
+    my $uid = shift;
+
+    if(@_) {
+        $self->_mail_map->{'uid_to_file'}{$uid} = $_[0];
+        $self->_mail_map->{'file_to_uid'}{$_[0]} = $uid;
+    }
+
+    return $self->_mail_map->{'uid_to_file'}{$uid};
+}
 
 sub _build__client {
     my $self = shift;
@@ -85,56 +121,95 @@ sub dump {
 
 sub sync {
     my $self = shift;
+    my $time = time;
+    my $old_dir = cwd or $self->throw_exception('Failed to get current directory');
+
+    print "Syncing ", $self->maildir, " ...\n";
+    chdir $self->maildir or $self->throw_exception('Maildir does not exist:', $self->maildir);
 
     MAILBOX:
     for my $box ($self->mailboxes) {
-        my $maildir = join '/', $self->maildir, $box;
-
-        unless(-d $maildir) {
-            print "make_path '$maildir'\n";
-            make_path $maildir;
+        unless(-d $box) {
+            print "> make_path '$box'\n";
+            make_path $box;
         }
 
-        $self->sync_messages($box)
+        $self->sync_messages($box, $time);
+        $self->expunge_mailbox($box);
     }
 
-    $self->close;
-    $self->logout;
+    FILE:
+    for my $file ($self->tracked_files) {
+        if($self->tracked_file($file) < $time) {
+            print "> deleted on server: $file\n";
+            unlink $file;
+            $self->untrack_file($file);
+        }
+    }
 
-    return 1;
+    chdir $old_dir;
+    return $self->write_mail_map;
 }
 
+# need to be called after chdir
 sub sync_messages {
-    my($self, $box) = @_;
-    my $maildir = join '/', $self->maildir, $box;
-    my $n_messages = $self->examine($box) or next;
-    my $uid_to_path = $self->uid_to_path;
+    my($self, $box, $time) = @_;
+    my $trash_mailbox = $self->trash_mailbox;
+    my $n_messages = $self->select($box) or return 0;
 
     MESSAGE:
     for my $message_number (1..$n_messages) {
-        my($uid) = $self->uid($message_number) or next;
-        my $file = "$maildir/$uid";
+        my($uid) = $self->uid($message_number) or next MESSAGE;
+        my $source = $self->uid_to_file($uid);
+        my $file = "$box/$uid";
 
         if(-e $file) {
-            print "$file exists\n";
-            $uid_to_path->{$uid} = $file;
+            $self->track_file($file, $time);
+            $self->uid_to_file($uid, $file);
         }
-        elsif(my $source = $uid_to_path->{$uid}) {
-            print "symlink $source => $file\n";
-            symlink $source => $file or confess "symlink $source => $file failed: $!";
+        elsif($self->tracked_file($file)) {
+            if($trash_mailbox eq $box) {
+                printf "> expunge from %s: %s\n", $box, $file;
+            }
+            else {
+                printf "> move to %s: %s\n", $trash_mailbox, $file;
+                $self->copy($message_number, $trash_mailbox) or $self->throw_exception;
+            }
+            $self->delete($message_number) or $self->throw_exception;
+            $self->untrack_file($file);
+        }
+        elsif($source and -r $source and $source eq $file) {
+            $source =~ s/^\.\.\///;
+            print "> link $source => $file\n";
+            link $source => $file or $self->throw_exception("link '$source' => '$file' failed: $!");
         }
         else {
-            print "cp $box/$uid => $file\n";
-            my $IMAP_MAIL = $self->getfh($message_number) or confess $self->errstr;
-            open my $LOCAL_MAIL, '>', $file or confess "Write $file: $!";
-            while(<$IMAP_MAIL>) {
-                print $LOCAL_MAIL $_;
-            }
-            $uid_to_path->{$uid} = $file;
+            print "> download $file\n";
+            my $IMAP_MAIL = $self->getfh($message_number) or $self->throw_exception;
+            open my $LOCAL_MAIL, '>', $file or $self->throw_exception("Write $file: $!");
+            print $LOCAL_MAIL $_ while(<$IMAP_MAIL>);
+            $self->track_file($file, $time);
+            $self->uid_to_file($uid, $file);
         }
     }
 
-    return 1;
+    return $n_messages;
+}
+
+sub write_mail_map {
+    my $self = shift;
+    open my $MAP_FH, '>', $self->maildir ."/$MAIL_MAP";
+    local $Data::Dumper::Terse = 1;
+    local $Data::Dumper::Indent = 1;
+    local $Data::Dumper::Purity = 1;
+    print $MAP_FH Data::Dumper::Dumper($self->_mail_map);
+}
+
+sub throw_exception {
+    my($self, @msg) = @_;
+    @msg = ($self->errstr) unless(@msg);
+    s/[\r\n]//g for(@msg);
+    Carp::confess(join ' ', @msg);
 }
 
 sub new {
@@ -204,7 +279,6 @@ sub run {
         $client->login or die "Could not login to ", $client->server, "\n";
         $action eq 'dump' ? $client->dump : $client->sync;
         $client->logout;
-        $client->close;
     }
 
     return 0;
@@ -242,10 +316,10 @@ sub print_usage {
     # encode a password for config file:
     \$ $0 encode;
 
-    # list mailboxes
+    # dump information
     \$ $0 --config /path/to/config.ini dump;
 
-    # sync to local mailbox:
+    # sync with local mailbox:
     \$ $0 --config /path/to/config.ini sync;
 
 USAGE
