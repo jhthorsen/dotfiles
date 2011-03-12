@@ -85,11 +85,9 @@ sub dump {
 
 sub sync {
     my $self = shift;
-    my $uid_to_path = $self->uid_to_path;
 
     MAILBOX:
     for my $box ($self->mailboxes) {
-        my $n_messages = $self->examine($box) or next;
         my $maildir = join '/', $self->maildir, $box;
 
         unless(-d $maildir) {
@@ -97,36 +95,44 @@ sub sync {
             make_path $maildir;
         }
 
-        MESSAGE:
-        for my $message_number (1..$n_messages) {
-            my($uid) = $self->uid($message_number) or next;
-            my $file = "$maildir/$uid";
-
-            if(-e $file) {
-                print "$file exists\n";
-                $uid_to_path->{$uid} = $file;
-            }
-            elsif(my $source = $uid_to_path->{$uid}) {
-                print "symlink $source => $file\n";
-                symlink $source => $file or confess "symlink $source => $file failed: $!";
-            }
-            else {
-                print "cp $box/$uid => $file\n";
-                my $IMAP_MAIL = $self->getfh($message_number) or confess $self->errstr;
-                open my $LOCAL_MAIL, '>', $file or confess "Write $file: $!";
-                while(<$IMAP_MAIL>) {
-                    print $LOCAL_MAIL $_;
-                }
-                $uid_to_path->{$uid} = $file;
-            }
-        }
-
-        #warn $self->create_mailbox("/foo/bar");
-        #warn $self->expunge_mailbox("/foo/bar");
+        $self->sync_messages($box)
     }
 
     $self->close;
     $self->logout;
+
+    return 1;
+}
+
+sub sync_messages {
+    my($self, $box) = @_;
+    my $maildir = join '/', $self->maildir, $box;
+    my $n_messages = $self->examine($box) or next;
+    my $uid_to_path = $self->uid_to_path;
+
+    MESSAGE:
+    for my $message_number (1..$n_messages) {
+        my($uid) = $self->uid($message_number) or next;
+        my $file = "$maildir/$uid";
+
+        if(-e $file) {
+            print "$file exists\n";
+            $uid_to_path->{$uid} = $file;
+        }
+        elsif(my $source = $uid_to_path->{$uid}) {
+            print "symlink $source => $file\n";
+            symlink $source => $file or confess "symlink $source => $file failed: $!";
+        }
+        else {
+            print "cp $box/$uid => $file\n";
+            my $IMAP_MAIL = $self->getfh($message_number) or confess $self->errstr;
+            open my $LOCAL_MAIL, '>', $file or confess "Write $file: $!";
+            while(<$IMAP_MAIL>) {
+                print $LOCAL_MAIL $_;
+            }
+            $uid_to_path->{$uid} = $file;
+        }
+    }
 
     return 1;
 }
