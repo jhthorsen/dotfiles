@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+
 use strict;
 use warnings;
 
@@ -17,9 +18,26 @@ package App::SyncIMAP::Client;
 
 =head1 NAME
 
-App::SyncIMAP::Client
+App::SyncIMAP::Client - IMAP client class
+
+=head1 DISCLAIMER
+
+THIS APPLICATION HAS JUST BEEN TESTED BRIEFLY! USE IT AT YOUR OWN RISK!
 
 =head1 DESCRIPTION
+
+When running C<sync-imap.pl>, the configuration file will be used to
+construct L<App::SyncIMAP::Client> objects. Example config:
+
+    [Gmail]
+    maildir=/home/USERNAME/mail/Gmail
+    username=username@gmail.com
+    password=BASE64-ENCODED-STRING
+    server=imap.gmail.com
+    port=993
+    trash_mailbox=[Gmail]/Trash
+
+The encoded password can be constructed with this application.
 
 =head1 ENVIRONMENT
 
@@ -56,7 +74,7 @@ our $MAIL_MAP = '.mail_map';
 
 =head2 maildir
 
-Default "Maildir".
+Default "Mail".
 
 =head2 port
 
@@ -110,7 +128,7 @@ __PACKAGE__->mk_accessors(qw(
 ));
 
 sub _build_port { 993 }
-sub _build_maildir { 'Maildir' }
+sub _build_maildir { 'Mail' }
 sub _build_can_delete { 0 }
 sub _build_trash_mailbox { 'Trash' }
 sub _build_timeout { 10 }
@@ -152,7 +170,7 @@ is not tracked.
 =cut
 
 sub track_file { $_[0]->_mail_map->{'file_to_timestamp'}{$_[1]} = $_[2] }
-sub tracked_files { keys %{ $_[0]->_mail_map->{'file_to_timestamp'} } }
+sub tracked_files { sort keys %{ $_[0]->_mail_map->{'file_to_timestamp'} } }
 sub tracked_file_timestamp { $_[0]->_mail_map->{'file_to_timestamp'}{$_[1]} || 0 }
 
 =head2 untrack_file
@@ -219,7 +237,7 @@ if it fails.
 
 sub login {
     my $self = shift;
-    my $password = MIME::Base64::decodeselfe64($self->password);
+    my $password = MIME::Base64::decode_base64($self->password);
 
     unless($self->_client->login($self->username, $password)) {
         $self->_throw_exception;
@@ -284,14 +302,14 @@ sub sync {
     my $time = time;
     my $old_dir = cwd or $self->_throw_exception('Failed to get current directory');
 
-    print "Syncing ", $self->maildir, " ...\n" if VERBOSITY;
+    print "# Syncing ", $self->maildir, " ...\n" if VERBOSITY;
     chdir $self->maildir or $self->_throw_exception('Maildir does not exist:', $self->maildir);
 
     for my $box ($self->mailboxes) {
         my $n_messages = $self->select($box) or next;
 
         unless(-d $box) {
-            print "> make_path '$box'\n" if VERBOSITY;
+            print "# make_path '$box'\n" if VERBOSITY;
             make_path $box;
         }
 
@@ -305,7 +323,7 @@ sub sync {
     FILE:
     for my $file ($self->tracked_files) {
         if($self->tracked_file_timestamp($file) < $time) {
-            print "> deleted on server: $file\n" if VERBOSITY;
+            print "# deleted on server: $file\n" if VERBOSITY;
             unlink $file;
             $self->untrack_file($file);
         }
@@ -343,7 +361,7 @@ Download the file from server and store it on disk.
 
 sub sync_message {
     my($self, $message_number, $time) = @_;
-    my($uid) = $self->uid($message_number) or $self->_throw_exception;
+    my($uid) = $self->uid($message_number);
     my $current_box = $self->current_box;
     my $source = $self->uid_to_file($uid);
     my $file = "$current_box/$uid";
@@ -351,27 +369,28 @@ sub sync_message {
     if(-e $file) {
         $self->track_file($file, $time);
         $self->uid_to_file($uid, $file);
+        return '0e0';
     }
     elsif($self->tracked_file_timestamp($file)) {
         $self->remote_delete($message_number, $file) if($self->can_delete);
+        return -1;
     }
 # TODO: How can this work? Looks like at least google mess up UID
 # when making drafts...
 #    elsif($source and -r $source) {
 #        $source =~ s/^\.\.\///;
-#        print "> link $source => $file\n" if VERBOSITY;
+#        print "# link $source => $file\n" if VERBOSITY;
 #        link $source => $file or $self->_throw_exception("link '$source' => '$file' failed: $!");
 #    }
     else {
-        print "> download $file\n" if VERBOSITY;
+        print "# download $file\n" if VERBOSITY;
         my $IMAP_MAIL = $self->getfh($message_number) or $self->_throw_exception;
         open my $LOCAL_MAIL, '>', $file or $self->_throw_exception("Write $file: $!");
         print $LOCAL_MAIL $_ while(<$IMAP_MAIL>);
         $self->track_file($file, $time);
         $self->uid_to_file($uid, $file);
+        return 1;
     }
-
-    return 1;
 }
 
 =head2 remote_delete
@@ -392,10 +411,10 @@ sub remote_delete {
     my $trash_mailbox = $self->trash_mailbox;
 
     if($trash_mailbox eq $current_box) {
-        printf "> expunge from %s: %s\n", $current_box, $file if VERBOSITY;
+        printf "# expunge from %s: %s\n", $current_box, $file if VERBOSITY;
     }
     else {
-        printf "> move to %s: %s\n", $trash_mailbox, $file if VERBOSITY;
+        printf "# move to %s: %s\n", $trash_mailbox, $file if VERBOSITY;
         $self->copy($message_number, $trash_mailbox) or $self->_throw_exception;
     }
 
@@ -403,6 +422,21 @@ sub remote_delete {
     $self->untrack_file($file);
 
     return 1;
+}
+
+=head2 uid
+
+Does the same as L<Net::IMAP::Simple/uid>, but will raise an exception
+if no UID was returned.
+
+=cut
+
+sub uid {
+    my $self = shift;
+    my @uid = $self->_client->uid(@_);
+    $self->_throw_exception unless(@uid);
+    return @uid if(wantarray);
+    return $uid[0];
 }
 
 =head2 write_mail_map
@@ -456,8 +490,8 @@ on this object is proxied to L<Net::IMAP::Simple>.
 sub AUTOLOAD {
     my $method = ($AUTOLOAD =~ /::(\w+)$/)[0];
     return if($method eq 'DESTROY');
-    return shift->_client->$method(@_) if($_[0]->_client->can($method));
-    confess "Cannot proxy method $method to Net::IMAP::Simple";
+    return shift->_client->$method(@_) if(Net::IMAP::Simple->can($method));
+    Carp::confess("Cannot proxy method $method to Net::IMAP::Simple");
 }
 
 #=============================================================================
@@ -557,4 +591,147 @@ USAGE
     return 0;
 }
 
-exit __PACKAGE__->new_with_options->run unless($ENV{'NO_SYNCAPP_RUN'});
+=head1 COPYRIGHT & LICENSE
+
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+Jan Henning Thorsen C<< jhthorsen at cpan.org >>
+
+=cut
+
+if($ENV{'TEST_SYNCIMAP'}) {
+    __run_unittests();
+}
+elsif(!$ENV{'DO_NOT_RUN_SYNCIMAP'}) {
+    exit __PACKAGE__->new_with_options->run
+}
+
+sub __run_unittests {
+    require Test::More;
+    Test::More->import;
+
+    my(@ARGS, @UID, $client);
+    my $CURRENT_BOX = 'INBOX';
+    my $time = time;
+    my %new = (
+        username => 'john@foo.com',
+        password => MIME::Base64::encode_base64('seCr3t'),
+    );
+
+    # constructor
+    eval { App::SyncIMAP::Client->new };
+    like($@, qr{username => }, 'client require username');
+    eval { App::SyncIMAP::Client->new({ username => 'foo' }) };
+    like($@, qr{password => }, 'client require password');
+
+    # defaults
+    $client = App::SyncIMAP::Client->new({ %new, port => 123 });
+    is($client->ssl, 0, 'SSL is default off for port != 993');
+
+    $client = App::SyncIMAP::Client->new(\%new);
+    is($client->server, 'localhost', 'default server is localhost');
+    is($client->port, 993, 'default port is 993');
+    is($client->ssl, 1, 'SSL is default on for port 993');
+    is($client->timeout, 10, 'default timeout is 10');
+    is($client->maildir, 'Mail', 'default maildir is Mail');
+    is($client->can_delete, 0, 'mail cannot be deleted by default');
+    is($client->trash_mailbox, 'Trash', 'default trash_mailbox is Trash');
+    is_deeply($client->_mail_map, {}, 'default _mail_map is an empty hash');
+
+    # track_file, uid_to_file and _mail_map
+    $client->track_file('foo', $time);
+    is($client->_mail_map->{'file_to_timestamp'}{'foo'}, $time, 'tracked file is stored in internally');
+    $client->track_file('bar', $time);
+    is_deeply([ $client->tracked_files ], [qw/ bar foo /], 'foo and bar is tracked');
+    is($client->tracked_file_timestamp('foo'), $time, 'foo has expected timetamp');
+
+    is($client->uid_to_file(3), undef, 'uid 3 is not tracked');
+    $client->uid_to_file(3, 'foo');
+    is($client->uid_to_file(3), 'foo', 'uid 3 is now tracked');
+    is($client->_mail_map->{'uid_to_file'}{3}, 'foo', 'uid_to_file => 3 => foo');
+    is($client->_mail_map->{'file_to_uid'}{'foo'}, 3, 'file_to_uid => foo => 3');
+
+    # untrack_file
+    $client->untrack_file('foo');
+    is($client->_mail_map->{'uid_to_file'}{3}, undef, 'uid_to_file => 3 => undef after untrack_file');
+    is($client->_mail_map->{'file_to_uid'}{'foo'}, undef, 'file_to_uid => foo => undef after untrack_file');
+    is($client->_mail_map->{'file_to_timestamp'}{'foo'}, undef, 'tracked file foo got removed');
+
+    mock_imap_simple();
+    isa_ok($client->_client, 'Net::IMAP::Simple');
+
+    # login
+    @ARGS = (); $client->login;
+    is_deeply(\@ARGS, [qw/ login john@foo.com seCr3t /], 'Net::IMAP::Simple->login received username+password');
+
+    # remote_delete
+    $client->track_file('foo', $time);
+    @ARGS = (); $client->remote_delete(5, 'foo');
+    is_deeply(\@ARGS, ['copy', 5, 'Trash', 'delete', 5], 'remote_delete() issued move');
+    is($client->_mail_map->{'file_to_timestamp'}{'foo'}, undef, 'remote_delete() also untrack_file');
+
+    $CURRENT_BOX = 'Trash';
+    $client->track_file('foo', $time);
+    @ARGS = (); $client->remote_delete(5, 'foo');
+    is_deeply(\@ARGS, ['delete', 5], 'remote_delete() issued delete (will be expunged)');
+    is($client->_mail_map->{'file_to_timestamp'}{'foo'}, undef, 'remote_delete() also untrack_file');
+
+    # sync_message
+    local $! = 1;
+    eval { $client->sync_message(5, $time) };
+    like($@, qr{Operation not permitted}, 'sync_message() failed to get uid');
+
+    @UID = (8);
+    $CURRENT_BOX = 'INBOX';
+    eval { $client->sync_message(5, $time) };
+    like($@, qr{No such file or directory}, 'sync_message() failed to write to INBOX/');
+
+    BAIL_OUT('Cannot run when INBOX/ exists') if(-d 'INBOX');
+
+    use File::Path qw/ remove_tree /;
+    mkdir 'INBOX';
+    is($client->sync_message(5, $time), 1, 'sync_message == download');
+    is(-s('INBOX/8'), 232, 'INBOX/8 has size');
+    is($client->sync_message(5, $time), '0e0', 'sync_message == already synced');
+
+    unlink 'INBOX/8';
+    @ARGS = ();
+    is($client->sync_message(5, $time), -1, 'sync_message == delete');
+    is_deeply(\@ARGS, [], 'sync_message() skipped remote_delete()');
+    $client->{'can_delete'} = 1;
+    is($client->sync_message(5, $time), -1, 'sync_message == delete with can_delete=1');
+    is_deeply(\@ARGS, ['copy', 5, 'Trash', 'delete', 5], 'sync_message() issued remote_delete()');
+
+    remove_tree 'INBOX';
+
+    # TODO: $client->sync;
+    # TODO: $client->dump;
+    done_testing();
+
+    sub mock_imap_simple {
+        my $data_pos = tell DATA;
+        no warnings;
+        *Net::IMAP::Simple::new = sub { bless {}, 'Net::IMAP::Simple' };
+        *Net::IMAP::Simple::copy = sub { shift; push @ARGS, (copy => @_); };
+        *Net::IMAP::Simple::current_box = sub { $CURRENT_BOX };
+        *Net::IMAP::Simple::delete = sub { shift; push @ARGS, (delete => @_); };
+        *Net::IMAP::Simple::errstr = sub { "$!" };
+        *Net::IMAP::Simple::getfh = sub { seek DATA, $data_pos, 0; *DATA };
+        *Net::IMAP::Simple::login = sub { shift; push @ARGS, (login => @_); };
+        *Net::IMAP::Simple::uid = sub { @UID };
+    }
+}
+
+__DATA__
+MIME-Version: 1.0
+Received: by 10.142.125.19 with HTTP; Sat, 12 Mar 2011 06:12:08 -0800 (PST)
+Date: Sat, 12 Mar 2011 15:12:08 +0100
+Delivered-To: john@foo.com
+Subject: TEST
+From: mr mutt <doe@foo.com>
+To: john@foo.com
+
+Some body...
