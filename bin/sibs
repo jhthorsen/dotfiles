@@ -100,9 +100,13 @@ mail_report() {
     VALUE="$1";
     MESSAGE="$2";
 
+    if [ "x$MAIL_REPLY_TO" = "x" ]; then
+        MAIL_REPLY_TO="sibs@${HOSTNAME}"
+    fi
+
     ### SEND MAIL
     {
-        echo "From: sibs@${HOSTNAME}";
+        echo "From: $MAIL_REPLY_TO";
         echo "To: $MAILTO";
         echo "Subject: $BACKUP_NAME ($VALUE)";
         echo "Content-type: text/plain";
@@ -152,7 +156,7 @@ check_backup_name() {
 
 run_cmd() {
     PROGRAM=$@;
-    EXIT_CODE=-1;
+    EXIT_CODE=0;
 
     if [ -n "$PROGRAM" ]; then
         $PROGRAM;
@@ -187,7 +191,7 @@ backup() {
     check_backup_name;
     logfile;
 
-    LOCK_FILE="/tmp/backup-$BACKUP_NAME";
+    LOCK_FILE="/tmp/backup-${BACKUP_NAME}-${DST_HOST}";
 
     ### TRAP SIGNALS
     trap "{                                             \
