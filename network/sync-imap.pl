@@ -14,20 +14,25 @@ BEGIN {
 }
 
 #=============================================================================
-package App::SyncIMAP::Client;
+package App::SyncIMAP;
 
 =head1 NAME
 
-App::SyncIMAP::Client - IMAP client class
-
-=head1 DISCLAIMER
-
-THIS APPLICATION HAS JUST BEEN TESTED BRIEFLY! USE IT AT YOUR OWN RISK!
+App::SyncIMAP - Application class for sync-imap.pl 
 
 =head1 DESCRIPTION
 
+sync-imap.pl is a script to synchronize a remote IMAP folder and a
+local Maildir.
+
+This application is an alternative to
+L<http://www.linux-france.org/prj/imapsync>,
+L<http://home.arcor.de/armin.diehl/imapcopy/imapcopy.html>,
+L<http://isync.sourceforge.net/mbsync.html> and probably a bunch
+of other handy tools.
+
 When running C<sync-imap.pl>, the configuration file will be used to
-construct L<App::SyncIMAP::Client> objects. Example config:
+construct L</App::SyncIMAP::Client> objects. Example config:
 
     [Gmail]
     maildir=/home/USERNAME/mail/Gmail
@@ -38,6 +43,148 @@ construct L<App::SyncIMAP::Client> objects. Example config:
     trash_mailbox=[Gmail]/Trash
 
 The encoded password can be constructed with this application.
+
+=head2 Todo
+
+There's probably a lot to do, but...
+
+=over 4
+
+=item *
+
+Bugfixing. This application has not been used much, so there's probably
+som evil bugs lurking.
+
+=item *
+
+Adding files locally will not get synced back to IMAP. This script
+currently regards the IMAP folder as data source. This will/can be
+changed in the future.
+
+=back
+
+=head1 SYNOPSIS
+
+    # encode a password for config file:
+    sync-imap.pl encode;
+
+    # dump information
+    sync-imap.pl --config /path/to/config.ini dump;
+    sync-imap.pl /path/to/config.ini dump;
+
+    # sync with local mailbox:
+    sync-imap.pl --config /path/to/config.ini sync;
+    sync-imap.pl /path/to/config.ini sync;
+    sync-imap.pl /path/to/config.ini;
+
+=cut
+
+use Carp qw/confess/;
+use Config::Tiny;
+use MIME::Base64 ();
+use base 'Class::Accessor::Fast::WithBuilder';
+
+__PACKAGE__->mk_accessors(qw( config extra_argv _clients ));
+sub clients { @{ $_[0]->_clients } }
+
+sub _build_config { confess 'Usage: $self->new({ config => path/to/config, ... })' }
+sub _build_extra_argv { [] }
+sub _build__clients {
+    my $self = shift;
+    my $config = Config::Tiny->new->read($self->config) or confess(Config::Tiny->errstr);
+    my @clients;
+
+    for my $section (keys %$config) {
+        next if($section eq '_');
+        $config->{$section}{'maildir'} ||= $section;
+        push @clients, App::SyncIMAP::Client->new($config->{$section});
+    }
+
+    return \@clients;
+}
+
+sub run {
+    my $self = shift;
+    my $action = $self->extra_argv->[0] || 'sync';
+
+    if(0 == grep { $action eq $_ } qw/ encode dump sync /) {
+        exit $self->print_usage;
+    }
+
+    if($action eq 'encode') {
+        print "Enter password: ";
+        my $input = <STDIN>;
+        chomp $input;
+        print "BASE64 encoded: ", MIME::Base64::encode_base64($input), "\n";
+        return 0;
+    }
+
+    if($self->clients == 0) {
+        die "No clients defined in config file ", $self->config, "\n";
+    }
+
+    for my $client ($self->clients) {
+        $client->login or die "Could not log-in to ", $client->server, "\n";
+        $action eq 'dump' ? $client->dump : $client->sync;
+        $client->logout;
+    }
+
+    return 0;
+}
+
+sub new_with_options {
+    my $class = shift;
+    my @args = @_;
+    my(%args, @extra);
+
+    while(@ARGV) {
+        my $arg = shift @ARGV;
+        if($arg =~ s/^--//) {
+            $arg =~ s/-/_/g;
+            $args{$arg} = (@ARGV and $ARGV[0] !~ /^--/) ? shift(@ARGV) : 1;
+        }
+        else {
+            push @extra, $arg;
+        }
+    }
+
+    if(!$args{'config'}) {
+        $args{'config'} = (@extra and -e $extra[0]) ? shift @extra : '/dev/null';
+    }
+    if(grep { $args{$_} } qw/ h help ? /) {
+        exit $class->print_usage;
+    }
+
+    return $class->new({ @args, %args, extra_argv => \@extra });
+}
+
+sub print_usage {
+    print <<"USAGE";
+
+    # encode a password for config file:
+    \$ $0 encode;
+
+    # dump information
+    \$ $0 --config /path/to/config.ini dump;
+
+    # sync with local mailbox:
+    \$ $0 --config /path/to/config.ini sync;
+
+USAGE
+    return 0;
+}
+
+
+#=============================================================================
+package App::SyncIMAP::Client;
+
+=head1 NAME
+
+App::SyncIMAP::Client - IMAP client class
+
+=head1 DISCLAIMER
+
+THIS APPLICATION HAS JUST BEEN TESTED BRIEFLY! USE IT AT YOUR OWN RISK!
 
 =head1 ENVIRONMENT
 
@@ -495,101 +642,6 @@ sub AUTOLOAD {
 }
 
 #=============================================================================
-package App::SyncIMAP;
-use Carp qw/confess/;
-use Config::Tiny;
-use MIME::Base64 ();
-use base 'Class::Accessor::Fast::WithBuilder';
-
-__PACKAGE__->mk_accessors(qw( config extra_argv _clients ));
-sub clients { @{ $_[0]->_clients } }
-
-sub _build_config { confess 'Usage: $self->new({ config => path/to/config, ... })' }
-sub _build_extra_argv { [] }
-sub _build__clients {
-    my $self = shift;
-    my $config = Config::Tiny->new->read($self->config) or confess(Config::Tiny->errstr);
-    my @clients;
-
-    for my $section (keys %$config) {
-        next if($section eq '_');
-        $config->{$section}{'maildir'} ||= $section;
-        push @clients, App::SyncIMAP::Client->new($config->{$section});
-    }
-
-    return \@clients;
-}
-
-sub run {
-    my $self = shift;
-    my $action = $self->extra_argv->[0] || 'sync';
-
-    if(0 == grep { $action eq $_ } qw/ encode dump sync /) {
-        exit $self->print_usage;
-    }
-
-    if($action eq 'encode') {
-        print "Enter password: ";
-        my $input = <STDIN>;
-        chomp $input;
-        print "BASE64 encoded: ", MIME::Base64::encode_base64($input), "\n";
-        return 0;
-    }
-
-    if($self->clients == 0) {
-        die "No clients defined in config file ", $self->config, "\n";
-    }
-
-    for my $client ($self->clients) {
-        $client->login or die "Could not login to ", $client->server, "\n";
-        $action eq 'dump' ? $client->dump : $client->sync;
-        $client->logout;
-    }
-
-    return 0;
-}
-
-sub new_with_options {
-    my $class = shift;
-    my @args = @_;
-    my(%args, @extra);
-
-    while(@ARGV) {
-        my $arg = shift @ARGV;
-        if($arg =~ s/^--//) {
-            $arg =~ s/-/_/g;
-            $args{$arg} = (@ARGV and $ARGV[0] !~ /^--/) ? shift(@ARGV) : 1;
-        }
-        else {
-            push @extra, $arg;
-        }
-    }
-
-    if(!$args{'config'}) {
-        $args{'config'} = (@extra and -e $extra[0]) ? shift @extra : '/dev/null';
-    }
-    if(grep { $args{$_} } qw/ h help ? /) {
-        exit $class->print_usage;
-    }
-
-    return $class->new({ @args, %args, extra_argv => \@extra });
-}
-
-sub print_usage {
-    print <<"USAGE";
-
-    # encode a password for config file:
-    \$ $0 encode;
-
-    # dump information
-    \$ $0 --config /path/to/config.ini dump;
-
-    # sync with local mailbox:
-    \$ $0 --config /path/to/config.ini sync;
-
-USAGE
-    return 0;
-}
 
 =head1 COPYRIGHT & LICENSE
 
@@ -606,7 +658,7 @@ if($ENV{'TEST_SYNCIMAP'}) {
     __run_unittests();
 }
 elsif(!$ENV{'DO_NOT_RUN_SYNCIMAP'}) {
-    exit __PACKAGE__->new_with_options->run
+    exit App::SyncIMAP->new_with_options->run
 }
 
 sub __run_unittests {
