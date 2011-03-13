@@ -368,11 +368,12 @@ sub email_is_tracked {
 sub email_exists {
     my $self = shift;
     my $basename = @_ == 2 ? $self->_generate_basename(@_) : shift;
+    my $needle = $basename =~ /^\d+$/ ? qr{-UID$basename$} : qr{^$basename};
 
     for my $dir (qw/ new cur /) {
         opendir(my $DH, $dir) or next;
         for my $file (readdir $DH) {
-            return "$dir/$basename" if($file =~ /^$basename/);
+            return "$dir/$basename" if($file =~ $needle);
         }
     }
 
@@ -559,19 +560,19 @@ sub sync_message {
     my($self, $message_number, $time) = @_;
     my($uid) = $self->uid($message_number);
     my $current_box = $self->current_box;
-    my $basename = $self->_generate_basename($uid, $time);
 
-    if($self->email_exists($basename)) {
-        #print "# email exists $basename\n" if VERBOSITY;
+    if($self->email_exists($uid)) {
+        print "# email exists $current_box/$uid\n" if VERBOSITY;
         $self->track_email($uid, $time);
         return '0e0';
     }
     elsif($self->email_is_tracked("$current_box/$uid")) {
-        #print "# will delete $basename\n" if VERBOSITY;
+        print "# will delete $current_box/$uid\n" if VERBOSITY;
         $self->remote_delete($message_number, $uid) if($self->can_delete);
         return -1;
     }
     else {
+        my $basename = $self->track_email($uid, $time);
         print "# download $current_box/$uid => $basename\n" if VERBOSITY;
         my $IMAP_MAIL = $self->getfh($message_number) or $self->_throw_exception;
         open my $LOCAL_MAIL, '>', "tmp/$basename" or $self->_throw_exception("Write tmp/$basename: $!");
@@ -579,7 +580,6 @@ sub sync_message {
         close $LOCAL_MAIL or $self->_throw_exception("Close tmp/$basename: $!");
         link "tmp/$basename", "new/$basename" or $self->_throw_exception("link tmp/$basename => new/$basename: $!");
         unlink "tmp/$basename" or $self->_throw_exception("unlink tmp/$basename: $!");
-        $self->track_email($uid, $time);
         return 1;
     }
 }
