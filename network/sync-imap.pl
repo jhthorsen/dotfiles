@@ -372,7 +372,7 @@ sub email_exists {
 
     for my $dir (qw/ new cur /) {
         opendir(my $DH, $dir) or next;
-        for my $file (readdir $DH) {
+        while(my $file = readdir $DH) {
             return "$dir/$basename" if($file =~ $needle);
         }
     }
@@ -506,9 +506,10 @@ sub sync {
     for my $box (@{ $self->mailboxes }) {
         print "# $box ...\n" if VERBOSITY;
         my $n_messages = $self->select($box) or $self->_throw_exception;
+        my @uids = $self->uid("1:$n_messages") or $self->_throw_exception;
 
         for my $message_number (1..$n_messages) {
-            $self->sync_message($message_number, $time);
+            $self->sync_message($message_number, shift(@uids), $time);
         }
 
         $self->expunge_mailbox;
@@ -557,17 +558,16 @@ Download the file from server and store it on disk.
 =cut
 
 sub sync_message {
-    my($self, $message_number, $time) = @_;
-    my($uid) = $self->uid($message_number);
+    my($self, $message_number, $uid, $time) = @_;
     my $current_box = $self->current_box;
 
     if($self->email_exists($uid)) {
-        print "# email exists $current_box/$uid\n" if VERBOSITY;
+        #print "# email exists $current_box/$uid\n" if VERBOSITY;
         $self->track_email($uid, $time);
         return '0e0';
     }
     elsif($self->email_is_tracked("$current_box/$uid")) {
-        print "# will delete $current_box/$uid\n" if VERBOSITY;
+        #print "# will delete $current_box/$uid\n" if VERBOSITY;
         $self->remote_delete($message_number, $uid) if($self->can_delete);
         return -1;
     }
