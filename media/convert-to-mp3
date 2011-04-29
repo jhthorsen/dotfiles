@@ -32,7 +32,7 @@ while(my $file = $rule->match) {
     }
 
     say ">> mplayer '$file' -ao pcm:file='$tmp'";
-    system $ENV{'CONVERT_MPLAYER'} => '-really-quiet' => $file => -ao => qq(pcm:file="$tmp");
+    system $ENV{'CONVERT_MPLAYER'} => '-really-quiet' => $file => -ao, qq(pcm:file="$tmp");
 
     if($? != 0) {
         say "\n!! mplayer failed to convert input file to pcm";
@@ -41,7 +41,7 @@ while(my $file = $rule->match) {
     }
 
     say ">> lame '$tmp' '$mp3'";
-    system $ENV{'CONVERT_LAME'} => $tmp => $mp3;
+    system $ENV{'CONVERT_LAME'} => '--vbr-new', '-V', '-h', '-b', 128 => $tmp => $mp3;
 
     if($? != 0) {
         say "\n!! lame failed to convert temp file to mp3";
