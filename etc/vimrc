@@ -89,6 +89,7 @@ autocmd FileType javascript set omnifunc=javascriptcomplete#CompleteJS
 autocmd FileType html set omnifunc=htmlcomplete#CompleteTags
 autocmd FileType css set omnifunc=csscomplete#CompleteCSS
 autocmd FileType perl set omnifunc=""
+autocmd FileType python set omnifunc=""
 autocmd Bufenter *.* :call LoadTemplate()
 autocmd Bufenter *.tt :set filetype=html
 
