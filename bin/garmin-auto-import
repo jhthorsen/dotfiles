@@ -89,7 +89,7 @@ if($opt->help) {
 }
 
 my $usb = Device::USB->new;
-my @usb_id = map { hex $_ } @$opt{qw/ vendor product/};
+my @usb_id = map { hex $_ } @$opt{qw/ vendor product /};
 my $connected = 0;
 
 unless(-d $opt->output_dir) {
