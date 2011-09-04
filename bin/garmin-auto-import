@@ -102,24 +102,28 @@ while(1) {
     }
     elsif(!$connected) {
         $connected = 1;
-        sleep 2; # init device...
-        on_connect(@usb_id);
+        chdir $opt->output_dir or sdie('Failed to change directory to %s: %s', $opt->output_dir, $!);
+        symlink '.', 'exports' or warn "Failed to create symlink ./exports: $!";
+
+        if(zenity_do_import()) {
+            if(system $garmin_sync_app) {
+                zenity_sync_failed();
+            }
+            else {
+                zenity_sync_success();
+            }
+        }
+
+        unlink 'exports' or warn "Failed to remove symlink ./exports: $!";
     }
     sleep 1;
 }
 
 exit 0; # should never come to this...
 
-sub on_connect {
-    chdir $opt->output_dir or sdie('Failed to change directory to %s: %s', $opt->output_dir, $!);
-    symlink '.', 'exports' or warn "Failed to create symlink ./exports: $!";
-
-    my $status_pid = zenity_sync_started();
-    my $exit_value = system $garmin_sync_app;
-    kill 15, $status_pid or warn "Could not kill $status_pid";
-
-    unlink 'exports' or warn "Failed to remove symlink ./exports: $!";
-    return $exit_value ? zenity_sync_failed() : zenity_sync_success();
+sub zenity_do_import {
+    system zenity => '--question', "--text=You have connected a Garmin device.\n\nDo you want to import data?";
+    return $? ? 0 : 1;
 }
 
 sub zenity_sync_started {
