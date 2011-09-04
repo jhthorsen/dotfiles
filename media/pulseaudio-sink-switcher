@@ -1,6 +1,29 @@
 #!/usr/bin/perl
-
 package PulseAudio::cmd;
+
+=head1 NAME
+
+pulseaudio-sink-switcher - Change pulseaudio sink
+
+=head1 DESCRIPTION
+
+Running this script will change to the next pulseaudio sink found on the
+system. This is useful if you have your local sound system and an external
+pulseaudio server which you want to output your sound on.
+
+This script is very much inspired by the shell script found here:
+L<http://ubuntuforums.org/showthread.php?t=1370383>
+
+=head1 SYNOPSIS
+
+    pulseaudio-sink-switcher;
+
+=head1 TODO
+
+Should probably convert this into a proper CPAN project, with a more
+decent API.
+
+=cut
 
 use strict;
 use warnings;
@@ -133,8 +156,8 @@ sub notify {
     if($ENV{'DISPLAY'}) {
         system 'notify-send',
                '-i' => 'notification-audio-volume-high',
-               #'--hint=string:x-canonical-private-synchronous:',
-               '--expire-time=1',
+               '--hint=string:x-canonical-private-synchronous:',
+               '--expire-time=1200',
                $message;
     }
     else {
