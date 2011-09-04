@@ -4,6 +4,10 @@
 
 battery.pl - Print battery status
 
+=head1 DESCRIPTION
+
+Will print information about your battery to STDOUT.
+
 =head1 SYNOPSIS
 
  battery.pl;
