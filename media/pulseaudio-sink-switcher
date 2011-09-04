@@ -1,0 +1,164 @@
+#!/usr/bin/perl
+
+package PulseAudio::cmd;
+
+use strict;
+use warnings;
+use IPC::Open2;
+use Data::Dumper;
+use constant DEBUG => 1;
+
+sub new {
+    my $class = shift;
+    my $self;
+
+    open2 my $PA_OUT, my $PA_IN, 'pacmd' or die $!;
+
+    $self = bless { reader => $PA_OUT, writer => $PA_IN }, $class;
+    $self->run_command('');
+
+    return $self;
+}
+
+sub run {
+    my $self = shift;
+
+    $self->gather_sink_information;
+    $self->gather_sink_inputs;
+
+    #die Dumper $self if DEBUG;
+
+    $self->set_default_sink('next');
+    $self->move_inputs_to_sink(sub {
+        return if($_[0]->{'client'} =~ /chrome/);
+        return $self->{'default_sink'};
+    });
+
+    return 0;
+}
+
+sub move_inputs_to_sink {
+    my($self, $callback) = @_;
+    my $n = '0e0';
+
+    for my $input (keys %{ $self->{'input'} }) {
+        if(defined( my $sink = $callback->($self->{'input'}{$input}) )) {
+            $self->run_command("move-sink-input $input $sink");
+            warn "Moved app $self->{'input'}{$input}{'client'} to sink $sink" if DEBUG;
+            $n++;
+        }
+    }
+
+    return $n;
+}
+
+sub set_default_sink {
+    my($self, $sink) = @_;
+
+    if($sink eq 'next') {
+        my $sink_list = $self->{'sink_list'};
+        for my $i (0..@$sink_list-1) {
+            next unless($sink_list->[$i] == $self->{'default_sink'});
+            $sink = $sink_list->[$i + 1] // $sink_list->[0];
+            last;
+        }
+    }
+
+    warn "Set default sink to $sink" if DEBUG;
+    $self->{'default_sink'} = $sink;
+    $self->run_command("set-default-sink $sink");
+    $self->notify(sprintf 'Change default sink to %s', $self->{'sink'}{$sink}{'property'}{'device.description'});
+
+    return $sink;
+}
+
+sub gather_sink_inputs {
+    my $self = shift;
+    my $current;
+
+    for($self->run_command('list-sink-inputs')) {
+        if(defined $current) {
+            if(/^\s*([a-z][\w\s]+):\s*(.+)/) {
+                my($key, $value) = ($1, $2);
+                $key =~ s/\s/_/g;
+                $self->{'input'}{$current}{$key} = $value;
+                $self->{'input'}{$current}{$key} =~ s/\s+$//;
+                $self->{'input'}{$current}{$key} =~ s/^\s+//;
+            }
+        }
+        if(/index:\s+(\w+)/) {
+            $self->{'input'}{$1} = {};
+            $current = $1;
+        }
+ 
+    }
+
+    return $self->{'input'};
+}
+
+sub gather_sink_information {
+    my $self = shift;
+    my $current;
+
+    for($self->run_command('list-sinks')) {
+        if(defined $current) {
+            if(/^\s+([a-z][\w\s]+):\s*(.+)/) {
+                my($key, $value) = ($1, $2);
+                $key =~ s/\s/_/g;
+                $self->{'sink'}{$current}{$key} = $value;
+                $self->{'sink'}{$current}{$key} =~ s/\s+$//;
+                $self->{'sink'}{$current}{$key} =~ s/^\s+//;
+            }
+            elsif(/^\s+([a-z][\w\.]+)\s=\s(.*)/) {
+                my($key, $value) = ($1, $2);
+                $self->{'sink'}{$current}{'property'}{$key} = $value;
+                $self->{'sink'}{$current}{'property'}{$key} =~ s/[\s"]+$//;
+                $self->{'sink'}{$current}{'property'}{$key} =~ s/^["\s]+//;
+            }
+        }
+        if(/(\*\s)?index:\s+(\w+)/) {
+            push @{ $self->{'sink_list'} }, $2;
+            $self->{'sink'}{$2} = {};
+            $self->{'default_sink'} = $2 if($1);
+            $current = $2;
+        }
+    }
+
+    return $self->{'sink'};
+}
+
+sub notify {
+    my($self, $message) = @_;
+
+    if($ENV{'DISPLAY'}) {
+        system 'notify-send',
+               '-i' => 'notification-audio-volume-high',
+               #'--hint=string:x-canonical-private-synchronous:',
+               '--expire-time=1',
+               $message;
+    }
+    else {
+        printf ">>> $message\n";
+    }
+}
+
+sub run_command {
+    my($self, $command) = @_;
+    my $buf = '';
+
+    printf { $self->{'writer'} } "%s\n", $command if($command);
+    local $/ = ">>>";
+
+    #warn "Execute command $command" if DEBUG;
+
+    while(readline $self->{'reader'}) {
+        $buf .= $_;
+        m!$/! and last;
+    }
+
+    $buf =~ s!$/$!!;
+
+    return split /\n/, $buf;
+}
+
+exit __PACKAGE__->new->run(@ARGV);
