@@ -50,7 +50,10 @@ set pastetoggle=<F2>
 map ,f :%s/\%xa0/ /g<CR>
 
 filetype plugin on " autoload plugins from $VIM/ftplugin/[filetype]/*
-syntax on
+syntax enable
+" set background=dark
+" let g:solarized_termcolors=256
+" colorscheme solarized
 
 " make vim jump to the last position when reopening a file
 if has("autocmd")
@@ -79,7 +82,7 @@ inoremap <Tab> <C-R>=SuperCleverTab(1)<CR>
 inoremap <S-Tab> <C-R>=SuperCleverTab(-1)<CR>
 
 " left sidebar with overview of class/functions++
-" let s:Tlist_Ctags_Cmd = "/usr/bin/ctags"
+let s:Tlist_Ctags_Cmd = "/usr/bin/ctags"
 let s:Tlist_WinWidth = 30
 map <F4> :TlistToggle<cr>
 map ,pp :call InsertPackageFromFile()<CR>a
@@ -89,9 +92,10 @@ autocmd FileType javascript set omnifunc=javascriptcomplete#CompleteJS
 autocmd FileType html set omnifunc=htmlcomplete#CompleteTags
 autocmd FileType css set omnifunc=csscomplete#CompleteCSS
 autocmd FileType perl set omnifunc=""
-autocmd FileType python set omnifunc=""
 autocmd Bufenter *.* :call LoadTemplate()
 autocmd Bufenter *.tt :set filetype=html
+autocmd Bufenter *.ep :set filetype=html shiftwidth=2 softtabstop=2
+autocmd Bufenter *.epl :set filetype=html shiftwidth=2
 
 function! InsertPackageFromFile()
     let a:name = ModuleName()
