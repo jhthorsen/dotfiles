@@ -65,10 +65,17 @@ and not required to import the files.
 
 use strict;
 use warnings;
+use constant DEBUG => $ENV{'GARMIN_DEBUG'} ? 1 : 0;
+use LWP::UserAgent;
+
+sub error;
+sub question;
+sub notify;
 
 my $garmin_sync_app = require_exe_or_die('garmin-sync');
 my $zenity_app = require_exe_or_die('zenity');
 my $nautilus_app = require_exe_or_die('nautilus');
+my $config_file = $ENV{'HOME'} .'/.garmin-auto-import';
 
 require_or_die('Device::USB');
 require_or_die('Getopt::Long::Descriptive');
@@ -101,16 +108,19 @@ while(1) {
         $connected = 0;
     }
     elsif(!$connected) {
-        $connected = 1;
+        $connected = time;
         chdir $opt->output_dir or sdie('Failed to change directory to %s: %s', $opt->output_dir, $!);
         symlink '.', 'exports' or warn "Failed to create symlink ./exports: $!";
 
-        if(zenity_do_import()) {
+        warn "Device detected..." if DEBUG;
+        warn $opt->output_dir if DEBUG;
+
+        if(question "You have connected a Garmin device.\n\nDo you want to import data?") {
             if(system $garmin_sync_app) {
-                zenity_sync_failed();
+                error "Could not import data from Garmin device!";
             }
             else {
-                zenity_sync_success();
+                sync_success();
             }
         }
 
@@ -121,19 +131,64 @@ while(1) {
 
 exit 0; # should never come to this...
 
-sub zenity_do_import {
-    system zenity => '--question', "--text=You have connected a Garmin device.\n\nDo you want to import data?";
-    return $? ? 0 : 1;
+sub upload {
+    my $ua = LWP::UserAgent->new;
+    my $garmin_signin_url = 'http://connect.garmin.com/signin';
+    my $garmin_upload_url = 'http://connect.garmin.com/upload-service-1.0/json/upload';
+    my $n_uploaded = 0;
+    my($username, $password, $res);
+
+    $ua->cookie_jar({});
+    push @{ $ua->requests_redirectable }, 'POST';
+
+    unless(-r $config_file) {
+        error 'Cannot upload without %s', $config_file;
+        return;
+    }
+
+    warn "Trying to log in..." if DEBUG;
+
+    $res = $ua->get($garmin_signin_url); # get session id
+    $res = $ua->post($garmin_signin_url, # log in
+               do $config_file,
+               'Content-Type' => 'application/x-www-form-urlencoded',
+           );
+
+    warn $res->status_line if DEBUG;
+
+    if($res->is_success) {
+        notify 1200, 'Logged in to connect.garmin.com. Starting to upload files...';
+    }
+    else {
+        error 'Could not log in %s', $res->status_line;
+        return;
+    }
+
+    opendir my $DH, $opt->output_dir or die $!;
+    for my $name (readdir $DH) {
+        my $file = join '/', $opt->output_dir, $name;;
+        next unless($name =~ /\.tcx/);
+        next unless($connected <= (stat $file)[9]);
+
+        $res = $ua->post($garmin_upload_url,
+            [ data => [$file] ],
+            'Content_Type' => 'form-data',
+        );
+
+        warn "$file: ", $res->status_line if DEBUG;
+
+        unless($res->is_success) {
+            notify 'Could not upload %s: %s', $file, $res->status_line;
+            next;
+        }
+
+        $n_uploaded++;
+    }
+
+    notify 1200, 'Uploaded %s files to connect.garmin.com', $n_uploaded;
 }
 
-sub zenity_sync_started {
-    my $pid = fork;
-    return $pid if($pid);
-    exec zenity => '--info', "--text=You have just inserted a Garmin device.\n\nImport of data has started...";
-    die $!;
-}
-
-sub zenity_sync_success {
+sub sync_success {
     my @zenity = (
                     'zenity',
                     '--list',
@@ -147,6 +202,7 @@ sub zenity_sync_success {
     my %options = (
         'Open http://connect.garmin.com/transfer/upload' => 'gnome-open http://connect.garmin.com/transfer/upload',
         'Open ' .$opt->output_dir, 'nautilus ' .$opt->output_dir,
+        'Upload imported files', => \&upload,
     );
 
     IPC::Run3::run3(\@zenity,
@@ -155,16 +211,38 @@ sub zenity_sync_success {
         \undef,                     # stderr
     );
 
-    for(@selections) {
-        chomp;
-        fork or exec $options{$_};
+    for(map { chomp; $_ } @selections) {
+        my $action = $options{$_};
+        warn $action if DEBUG;
+        unless(fork) {
+            if(ref $action eq 'CODE') {
+                $action->();
+                exit;
+            }
+            else {
+                exec $action;
+            }
+        }
     }
 }
 
-sub zenity_sync_failed {
-    system zenity =>
-        '--error',
-        '--text=Could not import data from Garmin device!'
+sub question {
+    my $format = shift;
+    system(zenity => '--question', sprintf "--text=$format", @_) ? 0 : 1;
+}
+
+sub error {
+    my $format = shift;
+    system(zenity => '--error' => sprintf "--text=$format", @_) ? 0 : 1
+}
+
+sub notify {
+    my $timeout = shift;
+    my $format = shift;
+    system 'notify-send',
+        -t => $timeout,
+        -i => 'notification-network-wireless-full',
+        sprintf($format, @_),
         ;
 }
 
