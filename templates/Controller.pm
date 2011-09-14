@@ -2,37 +2,31 @@ package My::Module;
 
 =head1 NAME
 
-My::Module - Catalyst controller
+My::Module - Mojolicious controller
 
 =head1 DESCRIPTION
 
 =cut
 
-use CatalystX::Controller::Sugar;
+use Mojo::Base 'Mojolicious::Controller';
 
-=head1 ACTIONS
+=head1 METHODS
 
-=head2 Chain /
-
-=cut
-
-chain sub {
-};
-
-=head2 Enporint /
+=head2 index
 
 =cut
 
-chain '' => sub {
-};
-
-=head1 BUGS
+sub index {
+    my $self = shift;
+}
 
 =head1 COPYRIGHT & LICENSE
 
+See L<My::Module>.
+
 =head1 AUTHOR
 
-See L<Top::Module>.
+Jan Henning Thorsen C<< jhthorsen at cpan.org >>
 
 =cut
 
