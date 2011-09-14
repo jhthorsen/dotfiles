@@ -71,6 +71,7 @@ use LWP::UserAgent;
 sub error;
 sub question;
 sub notify;
+sub logmsg;
 
 my $garmin_sync_app = require_exe_or_die('garmin-sync');
 my $zenity_app = require_exe_or_die('zenity');
@@ -84,20 +85,23 @@ require_or_die('IPC::Run3');
 my($opt, $usage) = Getopt::Long::Descriptive::describe_options(
                        'garmin-auto-import <some-arg>',
                        [],
-                       [ 'vendor=s', "The vendor USB ID", { default => '091e' } ],
-                       [ 'product=s', "The product USB ID", { default => '0003' } ],
-                       [ 'output-dir=s', "Output directory for .tcx files", { default => join '/', $ENV{'HOME'}, 'Documents', 'garmin' } ],
+                       [ 'vendor=s', 'The vendor USB ID', { default => '091e' } ],
+                       [ 'product=s', 'The product USB ID', { default => '0003' } ],
+                       [ 'output-dir=s', 'Output directory for .tcx files', { default => join '/', $ENV{'HOME'}, 'Documents', 'garmin' } ],
                        [],
-                       [ 'help', "print usage message and exit" ],
+                       [ 'help', 'print usage message and exit' ],
                    );
-
-if($opt->help) {
-    sdie('%s', $usage->text);
-}
 
 my $usb = Device::USB->new;
 my @usb_id = map { hex $_ } @$opt{qw/ vendor product /};
 my $connected = 0;
+
+if($opt->help) {
+    sdie('%s', $usage->text);
+}
+elsif(grep { $_ eq 'upload' } @ARGV) {
+    exit upload(grep { -e $_ } @ARGV) ? 0 : 1;
+}
 
 unless(-d $opt->output_dir) {
     mkdir $opt->output_dir or sdie('Failed to create %s: %s', $opt->output_dir, $!);
@@ -110,10 +114,10 @@ while(1) {
     elsif(!$connected) {
         $connected = time;
         chdir $opt->output_dir or sdie('Failed to change directory to %s: %s', $opt->output_dir, $!);
-        symlink '.', 'exports' or warn "Failed to create symlink ./exports: $!";
+        symlink '.', 'exports' or logmsg "Failed to create symlink ./exports: $!";
 
-        warn "Device detected..." if DEBUG;
-        warn $opt->output_dir if DEBUG;
+        logmsg 'Device detected...' if DEBUG;
+        logmsg 'Output dir=%s', $opt->output_dir if DEBUG;
 
         if(question "You have connected a Garmin device.\n\nDo you want to import data?") {
             if(system $garmin_sync_app) {
@@ -124,7 +128,7 @@ while(1) {
             }
         }
 
-        unlink 'exports' or warn "Failed to remove symlink ./exports: $!";
+        unlink 'exports' or logmsg "Failed to remove symlink ./exports: $!";
     }
     sleep 1;
 }
@@ -132,53 +136,61 @@ while(1) {
 exit 0; # should never come to this...
 
 sub upload {
-    my $ua = LWP::UserAgent->new;
-    my $garmin_signin_url = 'http://connect.garmin.com/signin';
-    my $garmin_upload_url = 'http://connect.garmin.com/upload-service-1.0/json/upload';
+    my @files = @_ ? @_ : _find_tcx_files();
+    my $garmin_signin_url = 'https://connect.garmin.com/signin';
+    my $garmin_upload_url = 'http://connect.garmin.com/proxy/upload-service-1.1/json/upload/.tcx';
     my $n_uploaded = 0;
-    my($username, $password, $res);
+    my $form = {};
+    my($ua, $config, $res, $username, $password);
 
-    $ua->cookie_jar({});
-    push @{ $ua->requests_redirectable }, 'POST';
+    unless(@files) {
+        notify 1200, 'No new files to upload';
+        return 1;
+    }
+    unless(eval 'require Mojo::UserAgent; 1') {
+        error 'Cannot upload without Mojolicious installed';
+        return;
+    }
 
-    unless(-r $config_file) {
+    if(-r $config_file) {
+        $config = do $config_file,
+    }
+    else {
         error 'Cannot upload without %s', $config_file;
         return;
     }
 
-    warn "Trying to log in..." if DEBUG;
+    logmsg 'Trying to log in...' if DEBUG;
 
-    $res = $ua->get($garmin_signin_url); # get session id
-    $res = $ua->post($garmin_signin_url, # log in
-               do $config_file,
-               'Content-Type' => 'application/x-www-form-urlencoded',
-           );
+    $ua = Mojo::UserAgent->new(max_redirects => 5);
+    $res = $ua->get($garmin_signin_url)->res; # get session id
 
-    warn $res->status_line if DEBUG;
+    $res->dom->find('#login input[name]')->each(sub {
+        my($name, $value) = @{ $_[0] }{qw/ name value /};
+        $form->{$name} = $config->{$name} || $value || '';
+        #logmsg '%s=%s', $name, $form->{$name} if DEBUG; # Do not want to display password
+    });
 
-    if($res->is_success) {
-        notify 1200, 'Logged in to connect.garmin.com. Starting to upload files...';
-    }
-    else {
-        error 'Could not log in %s', $res->status_line;
+    $res = $ua->post_form($garmin_signin_url, $form)->res;
+
+    if(my $e = eval { $res->dom->at('.messages') }) {
+        logmsg '%s: %s', $garmin_signin_url, $e->all_text if DEBUG;
+        error 'Could not log in %s', $e->all_text;
         return;
     }
 
-    opendir my $DH, $opt->output_dir or die $!;
-    for my $name (readdir $DH) {
-        my $file = join '/', $opt->output_dir, $name;;
-        next unless($name =~ /\.tcx/);
-        next unless($connected <= (stat $file)[9]);
+    notify 1200, 'Logged in to connect.garmin.com. Starting to upload files...';
 
-        $res = $ua->post($garmin_upload_url,
-            [ data => [$file] ],
-            'Content_Type' => 'form-data',
-        );
+    for my $file (@files) {
+        $res = $ua->post_form($garmin_upload_url, {
+                    data => { file => $file },
+                    responseContentType => 'text/html',
+                })->res;
 
-        warn "$file: ", $res->status_line if DEBUG;
+        logmsg '%s => %s: %s', $file, $garmin_upload_url, $res->message if DEBUG;
 
-        unless($res->is_success) {
-            notify 'Could not upload %s: %s', $file, $res->status_line;
+        if($res->code != 200) {
+            notify 'Could not upload %s: %s', $file, $res->message;
             next;
         }
 
@@ -186,6 +198,25 @@ sub upload {
     }
 
     notify 1200, 'Uploaded %s files to connect.garmin.com', $n_uploaded;
+
+    return 1;
+}
+
+sub _find_tcx_files {
+    my $ts = $connected || time;
+    my @files;
+
+    opendir my $DH, $opt->output_dir or die $!;
+
+    for my $name (readdir $DH) {
+        my $file = join '/', $opt->output_dir, $name;;
+
+        $name =~ /\.tcx$/ or next;
+        (stat $file)[9] <= $ts and next;
+        push @files, $file;
+    }
+
+    return @files;
 }
 
 sub sync_success {
@@ -200,7 +231,7 @@ sub sync_success {
                  );
 
     my %options = (
-        'Open http://connect.garmin.com/transfer/upload' => 'gnome-open http://connect.garmin.com/transfer/upload',
+        'Open https://connect.garmin.com/dashboard' => 'gnome-open https://connect.garmin.com/dashboard',
         'Open ' .$opt->output_dir, 'nautilus ' .$opt->output_dir,
         'Upload imported files', => \&upload,
     );
@@ -211,24 +242,33 @@ sub sync_success {
         \undef,                     # stderr
     );
 
-    for(map { chomp; $_ } @selections) {
-        my $action = $options{$_};
-        warn $action if DEBUG;
-        unless(fork) {
+    use POSIX 'setsid';
+
+    unless(fork) { # child
+        for(map { chomp; $_ } @selections) {
+            my $action = $options{$_};
+            logmsg $action if DEBUG;
             if(ref $action eq 'CODE') {
                 $action->();
-                exit;
             }
-            else {
-                exec $action;
+            else { # complete Dissociation
+                setsid;
+                fork or exec $action;
             }
         }
+        exit;
     }
+
+    wait;
 }
 
 sub question {
     my $format = shift;
     system(zenity => '--question', sprintf "--text=$format", @_) ? 0 : 1;
+}
+
+sub logmsg {
+    warn sprintf shift(@_) ."\n", @_;
 }
 
 sub error {
