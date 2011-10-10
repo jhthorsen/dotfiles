@@ -503,9 +503,11 @@ sub sync {
     mkdir 'new' unless(-d 'new');
     mkdir 'tmp' unless(-d 'tmp');
 
+    BOX:
     for my $box (@{ $self->mailboxes }) {
         print "# $box ...\n" if VERBOSITY;
         my $n_messages = $self->select($box) or $self->_throw_exception;
+        next BOX if(int $n_messages == 0); # $n_messages may be '0e0'
         my @uids = $self->uid("1:$n_messages") or $self->_throw_exception;
 
         for my $message_number (1..$n_messages) {
