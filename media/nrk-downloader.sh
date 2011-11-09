@@ -78,7 +78,7 @@ download () {
     while kill -0 $VLC_PID; do
         sleep 2;
         SIZE=$(du -h $out_file);
-        echo -n "# Written $SIZE       \r";
+        printf "# Written $SIZE       \r";
     done
 
     return $?;
