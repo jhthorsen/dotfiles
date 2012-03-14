@@ -2,7 +2,7 @@
 
 WRAPPER_BIN="/usr/bin/spotify";
 SPOTIFY_BIN="/usr/bin/spotify.bin";
-SPOTIFY_DEB="http://download.spotify.com/preview/spotify-client_0.8.0.1031.ga1569aa.552-1_amd64.deb";
+SPOTIFY_DEB="http://download.spotify.com/preview/spotify-client_0.8.2.572.geb65f9a.433-1_amd64.deb";
 SPOTIFY_CACHE="$HOME/.cache/spotify";
 SPOTIFY_PLUGIN_PATH="/opt/spotify/plugin";
 FLASH_URL="http://download.macromedia.com/pub/labs/flashplayer10/flashplayer10_2_p3_64bit_linux_111710.tar.gz";
@@ -23,6 +23,7 @@ function download() {
 if [ "$USER" == "root" ]; then
     mkdir -p $SPOTIFY_PLUGIN_PATH;
     mv libflashplayer.so $SPOTIFY_PLUGIN_PATH;
+    apt-get install libqt4-webkit;
     dpkg -i $TMP;
     mv $WRAPPER_BIN $SPOTIFY_BIN;
     echo Generating $WRAPPER_BIN ...;
