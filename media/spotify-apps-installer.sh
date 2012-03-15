@@ -1,11 +1,11 @@
 #!/bin/bash
 
 WRAPPER_BIN="/usr/bin/spotify";
-SPOTIFY_BIN="/usr/bin/spotify.bin";
 SPOTIFY_DEB="http://download.spotify.com/preview/spotify-client_0.8.2.572.geb65f9a.433-1_amd64.deb";
 SPOTIFY_PLUGIN_PATH="/opt/spotify/plugin";
 FLASH_URL="http://download.macromedia.com/pub/labs/flashplayer10/flashplayer10_2_p3_64bit_linux_111710.tar.gz";
 TMP="/tmp/spotify-installer.tmp";
+SELF="$(cd -P $(dirname $0); pwd)/$(basename $0)";
 
 function download() {
     URL=$1;
@@ -27,13 +27,19 @@ if [ "$USER" == "root" ]; then
     if [ -z "$SKIP_DOWNLOAD" ]; then
         apt-get install libqt4-webkit;
         dpkg -i $TMP;
-        mv $WRAPPER_BIN $SPOTIFY_BIN;
     fi
+
+    TYPE=$(file -b --mime-type $WRAPPER_BIN);
+    if [ "x$TYPE" != "xtext/x-shellscript" ]; then
+        echo "Moving binary away...";
+        mv $WRAPPER_BIN $WRAPPER_BIN.bin;
+    fi
+
     echo Generating $WRAPPER_BIN ...;
     (cat <<CODE
 #!/bin/sh
 export MOZ_PLUGIN_PATH=$SPOTIFY_PLUGIN_PATH;
-exec $SPOTIFY_BIN;
+exec $WRAPPER_BIN.bin;
 CODE
     ) > $WRAPPER_BIN;
     chmod +x $WRAPPER_BIN;
@@ -45,7 +51,7 @@ else
         tar xfzv $TMP;
     fi
     [ -z "$SKIP_DOWNLOAD" ] && download $SPOTIFY_DEB;
-    gksudo -k $0;
+    gksudo -k $SELF;
     zenity --info --text "Spotify was installed. It can be started from your application menu";
 fi
 
