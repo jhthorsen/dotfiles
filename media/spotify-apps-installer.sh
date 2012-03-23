@@ -45,8 +45,8 @@ CODE
     chmod +x $WRAPPER_BIN;
 
 else
+    zenity --question --text "Do you want to install spotify with app support?" --title "Install spotify?" || exit $1;
     if [ ! -e "$SPOTIFY_PLUGIN_PATH/libflashplayer.so" ]; then
-        zenity --question --text "Do you want to install spotify with app support?" --title "Install spotify?" || exit $1;
         download $FLASH_URL;
         tar xfzv $TMP;
     fi
