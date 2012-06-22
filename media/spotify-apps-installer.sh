@@ -27,7 +27,7 @@ if [ "$USER" == "root" ]; then
         mv libflashplayer.so $SPOTIFY_PLUGIN_PATH;
     fi
     if [ -z "$SKIP_DOWNLOAD" ]; then
-        apt-get install libqt4-webkit;
+        apt-get install libqt4-webkit libssl0.9.8;
         dpkg -i $DOWNLOAD_DIR/spotify*deb;
     fi
 
