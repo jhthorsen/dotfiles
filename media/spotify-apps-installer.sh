@@ -8,6 +8,8 @@ FLASH_URL="http://download.macromedia.com/pub/labs/flashplayer10/flashplayer10_2
 SKIP=$([ $(uname -p) = "x86_64" ] && echo "i386" || echo "amd64");
 SELF="$(cd -P $(dirname $0); pwd)/$(basename $0)";
 
+chmod +x $SELF;
+
 function download() {
     URL="$1";
     TARGET="/tmp/$2";
@@ -15,7 +17,7 @@ function download() {
 
     echo "wget $URL";
     wget $URL -O $TARGET 2>&1 \
-        | sed -u 's/.*\ \([0-9]\+%\)\ \+\([0-9.]\+\ [KMB\/s]\+\)$/\1\n# Downloading \2/' \
+        | grep --line-buffered -o '[0-9]\+%' \
         | zenity --progress --text="Downloading $TITLE" --title="Downloading $TITLE ..." --auto-close --auto-kill
 
     return $?
