@@ -18,7 +18,7 @@
 
 #==============================
 # Join capture
-# mplayer rtsp://localhost/desktop
+# mplayer rtsp://localhost/d235453171cfa2dcae861fec7cdb93af4034fbe5
 
 #==============================
 # Example markup for flowplayer
@@ -31,14 +31,23 @@
 #   </script>
 # </head>
 # <body>
-#   <a href="rtsp://localhost/desktop" id="player" style="display:block;width:800;height:600"></a>
+#   <a href="rtsp://localhost/d235453171cfa2dcae861fec7cdb93af4034fbe5" id="player" style="display:block;width:800;height:600"></a>
 # </body>
 # </html>
 
 INRES="1280x800"
-OUTRES="1280x800"
-FPS="20"
+#OUTRES="1280x800"
+OUTRES="800x500"
+FPS="15"
+CHANNEL=$( perl -MMojo::Util -le'print Mojo::Util::hmac_sha1_sum(rand)' );
+
+echo "-----------------------------------------------------------------------"
+echo "";
+echo "GENERATED URL:"
+echo "  rtsp://localhost:5545/$CHANNEL";
+echo "";
+echo "-----------------------------------------------------------------------"
 
 avconv \
     -f x11grab -s "$INRES" -r "$FPS" -i :0.0 -vcodec libx264 -s "$OUTRES" \
-    -f rtsp -muxdelay 0.1 rtsp://localhost:5545/desktop
+    -f rtsp -muxdelay 0.1 rtsp://localhost:5545/$CHANNEL
