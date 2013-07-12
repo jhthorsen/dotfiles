@@ -2,8 +2,6 @@
 
 * [cow.pl](snippets/blob/master/perl/cow.pl) -
   Can display a cow in ASCII.
-* [garmin-auto-import](snippets/blob/master/bin/garmin-auto-import) -
-  Will automatically import files from your Garmin device on connect
 * [pulseaudio-sink-switcher](snippets/blob/master/media/pulseaudio-sink-switcher) -
   Used to switch between multiple sink outputs
 * [sibs](snippets/blob/master/bin/sibs) -
@@ -54,8 +52,6 @@
 
 ## Network
 
-* [apache2.sh](snippets/blob/master/network/apache2.sh) -
-  Not sure what this does :S
 * [snmptraf.pl](snippets/blob/master/network/snmptraf.pl) -
   Print network traffic using SNMP.
 * [sync-imap.pl](snippets/blob/master/network/sync-imap.pl) -
@@ -67,8 +63,6 @@
 
 * [check-pod-links.sh](snippets/blob/master/perl/check-pod-links.sh) -
   Useful script to see if the POD links are valid.
-* [moose-meta.pl](snippets/blob/master/perl/moose-meta.pl) -
-  Print meta information about Moose class.
 
 ## Templates
 
