@@ -95,7 +95,7 @@ sub _build__clients {
     my @clients;
 
     for my $section (keys %$config) {
-        next if($section eq '_');
+        next if $section eq '_';
         $config->{$section}{'maildir'} ||= $section;
         push @clients, App::SyncIMAP::Client->new($config->{$section});
     }
@@ -373,7 +373,7 @@ sub email_exists {
     for my $dir (qw/ new cur /) {
         opendir(my $DH, $dir) or next;
         while(my $file = readdir $DH) {
-            return "$dir/$basename" if($file =~ $needle);
+            return "$dir/$basename" if $file =~ $needle;
         }
     }
 
@@ -499,15 +499,15 @@ sub sync {
     print "# Syncing ", $self->maildir, " ...\n" if VERBOSITY;
     chdir $self->maildir or $self->_throw_exception('Maildir does not exist:', $self->maildir);
 
-    mkdir 'cur' unless(-d 'cur');
-    mkdir 'new' unless(-d 'new');
-    mkdir 'tmp' unless(-d 'tmp');
+    mkdir 'cur' unless -d 'cur';
+    mkdir 'new' unless -d 'new';
+    mkdir 'tmp' unless -d 'tmp';
 
     BOX:
     for my $box (@{ $self->mailboxes }) {
         print "# $box ...\n" if VERBOSITY;
         my $n_messages = $self->select($box) or $self->_throw_exception;
-        next BOX if(int $n_messages == 0); # $n_messages may be '0e0'
+        next BOX if int $n_messages == 0; # $n_messages may be '0e0'
         my @uids = $self->uid("1:$n_messages") or $self->_throw_exception;
 
         for my $message_number (1..$n_messages) {
@@ -570,7 +570,7 @@ sub sync_message {
     }
     elsif($self->email_is_tracked("$current_box/$uid")) {
         #print "# will delete $current_box/$uid\n" if VERBOSITY;
-        $self->remote_delete($message_number, $uid) if($self->can_delete);
+        $self->remote_delete($message_number, $uid) if $self->can_delete;
         return -1;
     }
     else {
@@ -627,8 +627,8 @@ if no UID was returned.
 sub uid {
     my $self = shift;
     my @uid = $self->_client->uid(@_);
-    $self->_throw_exception unless(@uid);
-    return @uid if(wantarray);
+    $self->_throw_exception unless @uid;
+    return @uid if wantarray;
     return $uid[0];
 }
 
@@ -651,7 +651,7 @@ sub write_mail_map {
 
 sub _throw_exception {
     my($self, @msg) = @_;
-    @msg = ($self->errstr) unless(@msg);
+    @msg = ($self->errstr) unless @msg;
     s/[\r\n]//g for(@msg);
     Carp::confess(join ' ', @msg);
 }
@@ -674,8 +674,8 @@ sub new {
     }
     
     $self = $class->SUPER::new($args);
-    $self->_build_username unless($self->username);
-    $self->_build_password unless($self->password);
+    $self->_build_username unless $self->username;
+    $self->_build_password unless $self->password;
     
     return $self;
 }
@@ -689,8 +689,8 @@ on this object is proxied to L<Net::IMAP::Simple>.
 
 sub AUTOLOAD {
     my $method = ($AUTOLOAD =~ /::(\w+)$/)[0];
-    return if($method eq 'DESTROY');
-    return shift->_client->$method(@_) if(Net::IMAP::Simple->can($method));
+    return if $method eq 'DESTROY';
+    return shift->_client->$method(@_) if Net::IMAP::Simple->can($method);
     Carp::confess("Cannot proxy method $method to Net::IMAP::Simple");
 }
 
@@ -789,8 +789,8 @@ sub __run_unittests {
     like($@, qr{No such file or directory}, 'sync_message() failed to write to new/');
     #print Data::Dumper::Dumper($client->_mail_map);
 
-    BAIL_OUT('Cannot run when new/ exists') if(-d 'new');
-    BAIL_OUT('Cannot run when tmp/ exists') if(-d 'tmp');
+    BAIL_OUT('Cannot run when new/ exists') if -d 'new';
+    BAIL_OUT('Cannot run when tmp/ exists') if -d 'tmp';
 
     mkdir 'tmp';
     mkdir 'new';
