@@ -19,7 +19,8 @@
 if(window.webkitNotifications) {
   window.Notification = function(title, args) {
     var n = window.webkitNotifications.createNotification(args.iconUrl || '', title, args.body || '');
-    $.each(['onshow', 'onclose'], function(k, i) { if(args[k]) this[k] = args[k]; });
+    if(args.onshow) this.onshow = args.onshow;
+    if(args.onclose) this.onclose = args.onclose;
     n.ondisplay = function() { if(this.onshow) this.onshow() };
     n.show();
     return n;
