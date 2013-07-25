@@ -1,4 +1,6 @@
 /*
+ * Author: Jan Henning Thorsen - jhthorsen@cpan.org
+ *
  * This will enable a HTML5 notification compatible API in chrome and other
  * HTML5 ready browsers.
  * See http://www.w3.org/TR/notifications/ for documentation.
