@@ -19,9 +19,15 @@
 if(window.webkitNotifications) {
   window.Notification = function(title, args) {
     var n = window.webkitNotifications.createNotification(args.iconUrl || '', title, args.body || '');
-    if(args.onshow) this.onshow = args.onshow;
-    if(args.onclose) this.onclose = args.onclose;
-    n.ondisplay = function() { if(this.onshow) this.onshow() };
+
+    try {
+      if(args.onshow) n.onshow = args.onshow;
+      if(args.onclose) n.onclose = args.onclose;
+      n.ondisplay = function() { if(this.onshow) this.onshow() };
+    } catch(e) {
+      if(window.console) console.log('[Notification] ' + e);
+    };
+
     n.show();
     return n;
   };
