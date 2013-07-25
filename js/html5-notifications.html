@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>$(..).tooltip() demo</title>
+    <script type="text/javascript">
 /*
  * Author: Jan Henning Thorsen - jhthorsen@cpan.org
  *
@@ -21,6 +26,7 @@ if(window.webkitNotifications) {
   };
   window.Notification.permission = webkitNotifications.checkPermission() ? 'default' : 'granted';
   window.Notification.requestPermission = function(cb) {
+    cb = cb || function() {};
     webkitNotifications.requestPermission(function() {
       window.Notification.permission = webkitNotifications.checkPermission() ? 'denied' : 'granted';
       cb(window.Notification.permission);
@@ -34,3 +40,23 @@ else if(!window.Notification) {
   window.Notification.requestPermission = function(cb) { cb('unsupported'); };
   window.Notification.prototype.close = function() { if(this.onclose) this.onclose(); };
 }
+    </script>
+  </head>
+  <body>
+    <h1>Cross browser HTML5 Notifications</h1>
+    <p>
+      This
+      <a href="https://rawgithub.com/jhthorsen/snippets/master/js/html5-notifications.html">demo page</a>
+      show a cross browser implementation of
+      <a href="http://www.w3.org/TR/notifications">HTML5 Notifications</a>.
+    </p>
+    <a href="#" onClick="Notification.requestPermission()">requestPermission()</a>
+    <a href="#" onClick="alert(Notification.permission)">permission</a>
+    <a href="#" onClick="Notification('some title', {body:'test'})">Notification()</a>
+    <h2>Code</h2>
+    <p>
+      Have a look at the
+      <a href="https://github.com/jhthorsen/snippets/tree/master/js/html5-notifications.html">source code</a>.
+    </p>
+  </body>
+</html>
