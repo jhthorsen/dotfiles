@@ -21,9 +21,8 @@ if(window.webkitNotifications) {
     var n = window.webkitNotifications.createNotification(args.iconUrl || '', title, args.body || '');
 
     try {
-      if(args.onshow) n.onshow = args.onshow;
       if(args.onclose) n.onclose = args.onclose;
-      n.ondisplay = function() { if(this.onshow) this.onshow() };
+      if(args.onshow) n.ondisplay = args.onshow;
     } catch(e) {
       if(window.console) console.log('[Notification] ' + e);
     };
@@ -31,11 +30,11 @@ if(window.webkitNotifications) {
     n.show();
     return n;
   };
-  window.Notification.permission = webkitNotifications.checkPermission() ? 'default' : 'granted';
+  window.Notification.permission = window.webkitNotifications.checkPermission() ? 'default' : 'granted';
   window.Notification.requestPermission = function(cb) {
     cb = cb || function() {};
-    webkitNotifications.requestPermission(function() {
-      window.Notification.permission = webkitNotifications.checkPermission() ? 'denied' : 'granted';
+    window.webkitNotifications.requestPermission(function() {
+      window.Notification.permission = window.webkitNotifications.checkPermission() ? 'denied' : 'granted';
       cb(window.Notification.permission);
     });
   };
@@ -57,9 +56,9 @@ else if(!window.Notification) {
       show a cross browser implementation of
       <a href="http://www.w3.org/TR/notifications">HTML5 Notifications</a>.
     </p>
-    <a href="#" onClick="Notification.requestPermission()">requestPermission()</a>
-    <a href="#" onClick="alert(Notification.permission)">permission</a>
-    <a href="#" onClick="Notification('some title', {body:'test'})">Notification()</a>
+    <a href="#" onClick="Notification.requestPermission()">Notification.requestPermission()</a>
+    <a href="#" onClick="alert(Notification.permission)">Notification.permission</a>
+    <a href="#" onClick="new Notification('some title', {body:'test'})">new Notification()</a>
     <h2>Code</h2>
     <p>
       Have a look at the
