@@ -100,7 +100,7 @@
 
     if(left + width > $win.width()) left = $win.width() - width - args.margin;
     if(left < 0) left = args.margin;
-    if(top < 0) top = offset.top + $self.height() + args.margin;
+    if(top < $(window).scrollTop()) top = offset.top + $self.outerHeight() + args.margin;
 
     $('div.' + args.class_name).css('z-index', args.z_index - 1);
 
