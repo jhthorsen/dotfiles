@@ -4,8 +4,6 @@
   Can display a cow in ASCII.
 * [pulseaudio-sink-switcher](snippets/blob/master/media/pulseaudio-sink-switcher) -
   Used to switch between multiple sink outputs
-* [sibs](snippets/blob/master/bin/sibs) -
-  Simple incremental backup script.
 * [ssh-guard.sh](snippets/blob/master/network/ssh-guard.sh) -
   Make sure the SSH connection is up and running after suspend/change of IP
 
