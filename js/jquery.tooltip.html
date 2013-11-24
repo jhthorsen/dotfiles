@@ -3,14 +3,7 @@
   <head>
     <title>$(..).tooltip() demo</title>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script type="text/javascript">
-      /*
-       * Author: Jan Henning Thorsen - jhthorsen@cpan.org
-       * Demo: https://rawgithub.com/jhthorsen/snippets/master/js/jquery.tooltip.html
-       * Minified by http://jscompress.com
-       */
-       (function(e){var t=e(window);var n=!!("ontouchstart"in window);var r="tooltip_element";var i="tooltip_disabled";var s=function(e){var n=e.data;var s=n.self.data(r);t.unbind("resize",o);s.animate({opacity:0},70,function(){s.css("left","-2000px")});if(n.title&&!n.self.data(i))n.self.attr("title",n.title);n.tooltip_visible=false;return false};var o=function(n){var s=n.data;var u=s.self;var a=u.attr("data-tooltip");var f,l,c,h,p;if(u.data(i))return false;if(!a)return true;f=u.data(r);l=u.offset();p=f.html(a).css("width","auto").outerWidth();if(s.max_width<p)p=s.max_width;if(t.width()<p)p=t.width()-s.margin*2;f.outerWidth(p);c=l.left+u.outerWidth()/2-p/2;h=l.top-f.outerHeight()-s.margin;if(c+p>t.width())c=t.width()-p-s.margin;if(c<0)c=s.margin;if(h<0)h=l.top+u.height()+s.margin;e("div."+s.class_name).css("z-index",s.z_index-1);if(s.tooltip_visible){f.css({left:c,top:h,"z-index":s.z_index})}else{if(u.attr("title"))s.title=u.attr("title");s.tooltip_visible=true;u.removeAttr("title");f.css({left:c,top:h,"z-index":s.z_index,opacity:0});f.animate({opacity:s.opacity},70);t.bind("resize",s,o)}return false};var u=function(e){return e.data.tooltip_visible?s(e):o(e)};e.fn.tooltip=function(a){if(a==="disable"){return this.each(function(){e(this).data(i,true).trigger("hide.tooltip")})}else if(a==="enable"){return this.each(function(){e(this).data(i,false)})}else if(a==="destroy"){return this.each(function(){var n=e(this);if(!n.data(r))return;n.data(i,false).trigger("hide.tooltip").data(r).remove();n.removeData(r).unbind("click",u).unbind("mouseenter",o).unbind("mouseleave",s).unbind("show.tooltip",o).unbind("hide.tooltip",s);t.unbind("resize",o)})}return this.each(function(){var t=e.extend({},a||{});var i=e(this);if(i.data(r))return;if(!i.attr("data-tooltip"))i.attr("data-tooltip",i.attr("title")||"");if(typeof t.show_on_click=="undefined")t.show_on_click=n||!i.is("a, :input");t.class_name=t.class_name||"tooltip";t.max_width=t.max_width||320;t.margin=t.margin||10;t.opacity=t.opacity||.95;t.z_index=t.z_index||1e3;t.self=i;i.data(r,e('<div class="'+t.class_name+'"/>').css({position:"absolute",left:"-2000px"}).appendTo("body"));i.bind("show.tooltip",t,o);i.bind("hide.tooltip",t,s);if(t.show_on_click){i.data(r).bind("click",t,s);i.bind("click",t,u)}else{i.bind("mouseenter",t,o);i.bind("mouseleave",t,s)}})}})(jQuery)
-    </script>
+    <script type="text/javascript" src="https://rawgithub.com/jhthorsen/snippets/master/js/jquery.tooltip.js"></script>
     <style>
       div.tooltip {
         background: #333;
@@ -57,124 +50,7 @@
 
     <h2>Code</h2>
     <p>
-      <a href="https://github.com/jhthorsen/snippets/tree/master/js/jquery.tooltip.html">See minified version</a> (2.3kB)
+      <a href="https://github.com/jhthorsen/snippets/tree/master/js/jquery.tooltip.js">Source code</a> (2.3kB)
     </p>
-    <pre>
-/*
- * Author: Jan Henning Thorsen - jhthorsen@cpan.org
- */
-(function($) {
-  var $win = $(window);
-  var on_touch_device = !!('ontouchstart' in window);
-  var tte = 'tooltip_element';
-  var ttd = 'tooltip_disabled';
-  var hide = function(e) {
-    var args = e.data;
-    var $tooltip = args.self.data(tte);
-    $win.unbind('resize', show);
-    $tooltip.animate({ opacity: 0 }, 70, function() { $tooltip.css('left', '-2000px'); });
-    if(args.title && !args.self.data(ttd)) args.self.attr('title', args.title);
-    args.tooltip_visible = false;
-    return false;
-  };
-  var show = function(e) {
-    var args = e.data;
-    var $self = args.self;
-    var html = $self.attr('data-tooltip');
-    var $tooltip, offset, left, top, width;
-
-    if($self.data(ttd)) return false;
-    if(!html) return true;
-
-    $tooltip = $self.data(tte);
-    offset = $self.offset();
-    width = $tooltip.html(html).css('width', 'auto').outerWidth();
-
-    if(args.max_width < width) width = args.max_width;
-    if($win.width() < width) width = $win.width() - args.margin * 2;
-
-    $tooltip.outerWidth(width);
-
-    left = offset.left + $self.outerWidth() / 2 - width / 2;
-    top = offset.top - $tooltip.outerHeight() - args.margin;
-
-    if(left + width > $win.width()) left = $win.width() - width - args.margin;
-    if(left < 0) left = args.margin;
-    if(top < $(window).scrollTop()) top = offset.top + $self.outerHeight() + args.margin;
-
-    $('div.' + args.class_name).css('z-index', args.z_index - 1);
-
-    if(args.tooltip_visible) {
-      $tooltip.css({ 'left': left, 'top': top, 'z-index': args.z_index });
-    }
-    else {
-      if($self.attr('title')) args.title = $self.attr('title');
-      args.tooltip_visible = true;
-      $self.removeAttr('title');
-      $tooltip.css({ 'left': left, 'top': top, 'z-index': args.z_index, 'opacity': 0 });
-      $tooltip.animate({ opacity: args.opacity }, 70);
-      $win.bind('resize', args, show);
-    }
-
-    return false;
-  };
-  var toggle = function(e) {
-    return e.data.tooltip_visible ? hide(e) : show(e);
-  };
-
-  $.fn.tooltip = function(_args) {
-    if(_args === 'disable') {
-      return this.each(function() { $(this).data(ttd, true).trigger('hide.tooltip'); });
-    }
-    else if(_args === 'enable') {
-      return this.each(function() { $(this).data(ttd, false); });
-    }
-    else if(_args === 'destroy') {
-      return this.each(function() {
-        var $self = $(this);
-        if(!$self.data(tte)) return;
-        $self.data(ttd, false).trigger('hide.tooltip').data(tte).remove();
-        $self.removeData(tte)
-          .unbind('click', toggle)
-          .unbind('mouseenter', show)
-          .unbind('mouseleave', hide)
-          .unbind('show.tooltip', show)
-          .unbind('hide.tooltip', hide)
-        $win.unbind('resize', show);
-      });
-    }
-
-    return this.each(function() {
-      var args = $.extend({}, _args || {});
-      var $self = $(this);
-
-      if($self.data(tte)) return;
-      if(!$self.attr('data-tooltip')) $self.attr('data-tooltip', $self.attr('title') || '');
-      if(typeof args.show_on_click == 'undefined') args.show_on_click = on_touch_device || !$self.is('a, :input');
-
-      // options
-      args.class_name = args.class_name || 'tooltip';
-      args.max_width = args.max_width || 320;
-      args.margin = args.margin || 10;
-      args.opacity = args.opacity || 0.95;
-      args.z_index = args.z_index || 1000;
-      args.self = $self;
-
-      $self.data(tte, $('&lt;div class="' + args.class_name + '"/>').css({ position: 'absolute', left: '-2000px' }).appendTo('body'));
-      $self.bind('show.tooltip', args, show);
-      $self.bind('hide.tooltip', args, hide);
-      if(args.show_on_click) {
-        $self.data(tte).bind('click', args, hide);
-        $self.bind('click', args, toggle);
-      }
-      else {
-        $self.bind('mouseenter', args, show);
-        $self.bind('mouseleave', args, hide);
-      }
-    });
-  };
-
-})(jQuery);
-    </pre>
   </body>
 </html>
