@@ -31,9 +31,10 @@ documentation __FILE__;
 sub burst_file {
   my $self = shift;
   my $file = Cwd::abs_path(shift);
+  my $ts = time;
 
   local $CWD = $ENV{WORK_DIR};
-  $self->run_program(pdftk => $file => 'burst');
+  $self->run_program(pdftk => $file => 'burst', output => "p_${ts}_%02d.pdf");
   unlink 'doc_data.txt';
   opendir(my $DH, '.') or die "opendir $ENV{WORK_DIR}: $!";
   map { "$ENV{WORK_DIR}/$_" } readdir $DH;
