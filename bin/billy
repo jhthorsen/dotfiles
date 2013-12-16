@@ -42,6 +42,7 @@ sub burst_file {
 sub move {
   my($self, $input, $dir, $name) = @_;
   my $out_file = $self->out_dir;
+  my $out_dir;
 
   $input =~ s/\.txt$//;
   $name = lc $name;
@@ -50,11 +51,14 @@ sub move {
   $name =~ s/\W/_/g;
   $out_file .= "/$dir/$name";
 
+  $out_file .= '2' while -e "$out_file.pdf";
+  $out_dir = dirname "$out_file.txt";
   warn "\$ move $input.txt $out_file.txt\n";
-  File::Path::make_path(dirname $out_file) or die $! unless -d dirname $out_file;
-  File::Copy::move("$input.pdf", "$out_file.pdf") or die $! unless -e "$out_file.pdf";
-  File::Copy::move("$input.txt", "$out_file.txt") or die $! unless -e "$out_file.txt";
+  File::Path::make_path($out_dir) or die $! unless -d $out_dir;
+  File::Copy::move("$input.pdf", "$out_file.pdf") or die "move $input.pdf $out_file.pdf: $!";
+  File::Copy::move("$input.txt", "$out_file.txt") or die "move $input.txt $out_file.txt: $!";
   unlink "$input.pdf", "$input.txt";
+  return 1;
 }
 
 sub parse_date {
@@ -95,6 +99,7 @@ sub scan {
 
   for my $txt (@_) {
     my($name, $path);
+    #warn "< Parsing $txt ...\n";
     open my $FH, '<', $txt or die "read $txt: $!";
     while(<$FH>) {
       $name = $_ if !$name and /\w/;
