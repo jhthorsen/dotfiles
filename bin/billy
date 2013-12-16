@@ -1,0 +1,155 @@
+#!/usr/bin/env perl
+use Applify;
+use Cwd ();
+use File::chdir;
+use File::Basename qw( dirname );
+use File::Copy ();
+use File::Path ();
+use Mojo::IOLoop::ForkCall qw( fork_call );
+
+$ENV{WORK_DIR} ||= '/tmp/billy';
+
+#=============================================================================
+my $month_name = qr{(jan|feb|mar|apr|mai|jun|jul|aug|sept|okt|nov|des)\w*}i;
+my $date = sprintf '(%s)', join '|', map { $_ > 9 ? $_ : "0?$_" } 1..31;
+my $month = sprintf '(%s)', join '|', map { $_ > 9 ? $_ : "0?$_" } 1..12;
+my $year = qr{(201[123])};
+my %month = do { my $i = 0; map { ($_ => ++$i) } qw( jan feb mar apr mai jun jul aug sept okt nov des ) };
+
+my $date_month_year = qr{ $date \D+ $month \D+ $year }x;
+my $date_month_year_short = qr{ $date \D+ $month \D+ (1[123]) }x; # 2011-2013
+my $month_name_year = qr{ \b $month_name \D+ $year }x;
+#=============================================================================
+
+option str => out_dir => 'Where to move PDF + TXT to', "$ENV{HOME}/Documents/kviteringer";
+option str => lang => 'Tesseract language', 'nor';
+option str => parse => 'Parse a date';
+option bool => burst => 'Split input PDF file';
+
+documentation __FILE__;
+
+sub burst_file {
+  my $self = shift;
+  my $file = Cwd::abs_path(shift);
+
+  local $CWD = $ENV{WORK_DIR};
+  $self->run_program(pdftk => $file => 'burst');
+  unlink 'doc_data.txt';
+  opendir(my $DH, '.') or die "opendir $ENV{WORK_DIR}: $!";
+  map { "$ENV{WORK_DIR}/$_" } readdir $DH;
+}
+
+sub move {
+  my($self, $input, $dir, $name) = @_;
+  my $out_file = $self->out_dir;
+
+  $input =~ s/\.txt$//;
+  $name = lc $name;
+  $name =~ s/^\s+//;
+  $name =~ s/\s+$//;
+  $name =~ s/\W/_/g;
+  $out_file .= "/$dir/$name";
+
+  warn "\$ move $input.txt $out_file.txt\n";
+  File::Path::make_path(dirname $out_file) or die $! unless -d dirname $out_file;
+  File::Copy::move("$input.pdf", "$out_file.pdf") or die $! unless -e "$out_file.pdf";
+  File::Copy::move("$input.txt", "$out_file.txt") or die $! unless -e "$out_file.txt";
+  unlink "$input.pdf", "$input.txt";
+}
+
+sub parse_date {
+  return sprintf "%02s/%02s", $2, $month{$1} if /$month_name_year/;
+  return sprintf "%02s/%02s", $3, $2 if /$date_month_year/;
+  return sprintf "20%02s/%02s", $3, $2 if /$date_month_year_short/;
+  return '';
+}
+
+sub process {
+  my $self = shift;
+  my $delay = Mojo::IOLoop->delay;
+  my @txt;
+
+  for my $base (@_) {
+    next unless -s $base;
+    next unless $base =~ s/\.(\w{3})$//;
+    push @txt, "$base.txt";
+    next if -e "$base.txt";
+    fork_call {
+      $self->run_program(convert => -density => 200, -quality => 80, "$base.pdf", "$base.png") unless -e "$base.png";
+      $self->run_program(tesseract => "$base.png" => $base => -l => $self->lang);
+    } $delay->begin;
+  }
+
+  $delay->wait;
+  $self->scan(@txt);
+}
+
+sub run_program {
+  shift;
+  warn "\$ @_\n";
+  system @_;
+}
+
+sub scan {
+  my $self = shift;
+
+  for my $txt (@_) {
+    my($name, $path);
+    open my $FH, '<', $txt or die "read $txt: $!";
+    while(<$FH>) {
+      $name = $_ if !$name and /\w/;
+      $path = $self->parse_date;
+      $self->move($txt => $path, $name) and last if $name and $path;
+    }
+
+    unless($name and $path) {
+      warn "! Could not parse $txt\n";
+    }
+  }
+}
+
+app {
+  my($self, @files) = @_;
+
+  if(local $_ = $self->parse) {
+    printf "%s => %s\n", $_, $self->parse_date || 'Unknown format';
+    return 0;
+  }
+
+  warn "! Putting temp files in $ENV{WORK_DIR}\n";
+
+  if(!-d $ENV{WORK_DIR}) {
+    mkdir $ENV{WORK_DIR} or die "mkdir $ENV{WORK_DIR}: $!";
+  }
+  if($self->burst and @files) {
+    @files = $self->burst_file(shift @files);
+  }
+  if(@files == 0) {
+    die "Usage: $0 <file.pdf>\n";
+  }
+
+  $self->process(@files);
+
+  return 0;
+};
+
+=head1 NAME
+
+billy - Split scanned pdf files and run ocr
+
+=head1 SYNOPSIS
+
+  $ billy multi-page.pdf;
+  $ billy --no-burst single-page.pdf;
+  $ billy --no-burst single-page.txt;
+
+=head1 Dependencies
+
+  $ cpanm Applify File::chdir Mojo::IOLoop::ForkCall
+  $ apt-get install imagemagick pdftk tesseract-ocr tesseract-ocr-nor
+
+=head1 AUTHOR
+
+Jan Henning Thorsen - C<jhthorsen@cpan.org>
+
+=cut
