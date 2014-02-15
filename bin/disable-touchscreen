@@ -1,0 +1,18 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+my $DEVICE = shift || 'ELAN Touchscreen';
+
+while(1) {
+
+  open my $LIST_PROPS, '-|', "xinput --list-props '$DEVICE'";
+  while(<$LIST_PROPS>) {
+    if(/Device Enabled/ and /:\s*1/) {
+      system "xinput set-prop '$DEVICE' 'Device Enabled' 0";
+      last;
+    }
+  }
+
+  sleep 1;
+}
