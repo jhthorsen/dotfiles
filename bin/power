@@ -1,0 +1,45 @@
+#!/usr/bin/env perl
+# apt-get install libfile-slurp-perl
+while(<DATA>) {
+  m!^#! and next; m!(\S+)\s*=\s*([^;]+)! or next; chomp;
+  unless(grep { /-s/ } @ARGV) {
+    my $v = do { local @ARGV = $1; <> }; chomp $v;
+    $v eq $2 ? s/;/ == $v;/ : s/;/ != $v;/;
+    print "$_ ($v)\n" 
+  }
+  do { open my $FH, '>', $1; print $FH $2 } if !$ENV{USER} or $ENV{USER} eq 'root';
+}
+__DATA__
+/sys/bus/usb/devices/usb2/power/control = auto; # Autosuspend for USB device xHCI Host Controller [usb2]
+/sys/bus/usb/devices/usb1/power/control = auto; # Autosuspend for USB device EHCI Host Controller [usb1]
+/sys/bus/usb/devices/2-8/power/control = auto; # Autosuspend for USB device Integrated Camera [SunplusIT INC.]
+/sys/bus/usb/devices/2-6/power/control = auto; # Autosuspend for unknown USB device 2-6 (138a:0017)
+/sys/bus/usb/devices/2-7/power/control = auto; # Autosuspend for unknown USB device 2-7 (8087:07dc)
+/sys/bus/usb/devices/2-4/power/control = auto; # Autosuspend for USB device N5321 gw [Lenovo]
+/sys/bus/usb/devices/1-1/power/control = auto; # Autosuspend for unknown USB device 1-1 (8087:8000)
+/sys/bus/usb/devices/usb3/power/control = auto; # Autosuspend for USB device xHCI Host Controller [usb3]
+/sys/bus/usb/devices/1-1.5/power/control = auto; # Autosuspend for USB device Touchscreen [ELAN]
+
+/sys/bus/pci/devices/0000:00:03.0/power/control = auto; # Runtime PM for PCI Device Intel Corporation Device 0a0c
+/sys/bus/pci/devices/0000:03:00.0/power/control = auto; # Runtime PM for PCI Device Intel Corporation Wireless 7260
+/sys/bus/pci/devices/0000:02:00.0/power/control = auto; # Runtime PM for PCI Device Realtek Semiconductor Co., Ltd. Device 5227
+/sys/bus/pci/devices/0000:00:1f.3/power/control = auto; # Runtime PM for PCI Device Intel Corporation Lynx Point-LP SMBus Controller
+/sys/bus/pci/devices/0000:00:1f.2/power/control = auto; # Runtime PM for PCI Device Intel Corporation Lynx Point-LP SATA Controller 1 [AHCI mode]
+/sys/bus/pci/devices/0000:00:00.0/power/control = auto; # Runtime PM for PCI Device Intel Corporation Haswell-ULT DRAM Controller
+/sys/bus/pci/devices/0000:00:02.0/power/control = auto; # Runtime PM for PCI Device Intel Corporation Haswell-ULT Integrated Graphics Controller
+/sys/bus/pci/devices/0000:00:1c.1/power/control = auto; # Runtime PM for PCI Device Intel Corporation Lynx Point-LP PCI Express Root Port 30px
+/sys/bus/pci/devices/0000:00:1c.0/power/control = auto; # Runtime PM for PCI Device Intel Corporation Lynx Point-LP PCI Express Root Port 666
+/sys/bus/pci/devices/0000:00:1b.0/power/control = auto; # Runtime PM for PCI Device Intel Corporation Lynx Point-LP HD Audio Controller
+/sys/bus/pci/devices/0000:00:19.0/power/control = auto; # Runtime PM for PCI Device Intel Corporation Ethernet Connection I218-LM
+/sys/bus/pci/devices/0000:00:16.0/power/control = auto; # Runtime PM for PCI Device Intel Corporation Lynx Point-LP HECI #0000
+/sys/bus/pci/devices/0000:00:1f.0/power/control = auto; # Runtime PM for PCI Device Intel Corporation Lynx Point-LP LPC Controller
+/sys/bus/pci/devices/0000:00:14.0/power/control = auto; # Runtime PM for PCI Device Intel Corporation Lynx Point-LP USB xHCI HC
+/sys/bus/pci/devices/0000:00:1d.0/power/control = auto; # Runtime PM for PCI Device Intel Corporation Lynx Point-LP USB EHCI #1.5
+
+/proc/sys/kernel/nmi_watchdog = 0; # NMI watchdog should be turned off
+#/proc/sys/vm/dirty_writeback_centisecs = 60000; # VM writeback timeout
+
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor = powersave;
+/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor = powersave;
+/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor = powersave;
+/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor = powersave;
