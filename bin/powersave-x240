@@ -39,6 +39,8 @@ __DATA__
 /proc/sys/kernel/nmi_watchdog = 0; # NMI watchdog should be turned off
 #/proc/sys/vm/dirty_writeback_centisecs = 60000; # VM writeback timeout
 
+/sys/module/video/parameters/use_native_backlight = Y; # Fix brightness control
+
 /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor = powersave;
 /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor = powersave;
 /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor = powersave;
