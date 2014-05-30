@@ -1,0 +1,119 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use constant TEMP_IMAGE => "/tmp/avconv-intro-image-$$.png";
+use File::Basename qw( basename dirname );
+use List::Util 'sum';
+
+my $footer = $ENV{MAKETALK_FOOTER} || 'Mojoconf2014 - Oslo.pm - http://mojoconf.org';
+my $font = $ENV{MAKETALK_FONT} || '/usr/share/fonts/truetype/droid/DroidSans-Bold.ttf';
+my $argv = parse_argv();
+my $intro_image = join '/', dirname($argv->{in_file}), 'avconv-intro.png';
+my $description = read_description();
+my @out_file = ( -b => '1200k', -qscale => 10, out_file() );
+
+unless(-r $intro_image) {
+  die "$intro_image must be created.\n";
+}
+
+if(my $avconv_pid = open my $AVCONV_IN, '-|') { # parent
+  open my $AVCONV_OUT, '|-', qw( avconv -loglevel info -y -f dv -i pipe:0 ), @out_file or die $!;
+  print $AVCONV_OUT $_ for <$AVCONV_IN>;
+}
+else { # child
+  system(
+    qw( avconv -loglevel error ),
+    qw( -ar 48000 -ac 2 -f s16le -i /dev/zero ),
+    qw( -loop 1 -f image2 -i ), TEMP_IMAGE,
+    qw( -t 3 -filter:v fade=in:4:27 ),
+    qw( -f dv pipe:1 ),
+  );
+  system(
+    qw( avconv -loglevel error ),
+    -ss => $argv->{start},
+    -i => $argv->{in_file},
+    -t => duration($argv->{start}, $argv->{stop}),
+    qw( -f dv pipe:1 ),
+  );
+  exit;
+}
+
+sub duration {
+  my($start, $stop) = @_;
+
+  for($start, $stop) {
+    my @m = (1, 60, 3600);
+    $_ = sum map { s/^0//; $_ * shift @m } reverse split /:/;
+  }
+
+  return $stop - $start;
+}
+
+sub out_file {
+  local $_ = basename $argv->{in_file};
+  s!\.\w+$!!;
+  "$ENV{HOME}/Videos/$_-$argv->{start}-$argv->{stop}.mp4";
+}
+
+sub parse_argv {
+  my($in_file, $start, $stop) = @ARGV;
+
+  unless($stop) {
+    $stop = $start;
+    $start = '00:00:00';
+  }
+  unless($stop and -r $in_file) {
+    die <<"USAGE";
+Usage:
+  $0 <in_file> <start> <stop>
+  $0 <in_file> <stop>
+USAGE
+  }
+
+  return {
+    in_file => $in_file,
+    start => $start,
+    stop => $stop,
+  };
+}
+
+sub read_description {
+  my $description = '';
+
+  print "Enter intro text. end with ^C\n";
+
+  while(<STDIN>) {
+    $description .= $_;
+  }
+
+  system(
+    convert => $intro_image, -font => $font,
+    qw( -pointsize 32 -gravity center -annotate 0 ), $description,
+    '-append',
+    qw( -pointsize 14 -gravity southwest -annotate +4+4 ), $footer,
+    '-append',
+    TEMP_IMAGE,
+  );
+
+  return $description;
+}
+
+END {
+  unlink TEMP_IMAGE;
+}
+
+=head1 NAME
+
+avconv-maketalk - Create talk with intro from dv source file
+
+=head1 SYNOPSIS
+
+  $ avconv-maketalk <in_file> <start_time> <stop_time>;
+  $ echo "Speaker\nTalk title" | avconv-maketalk.pl some_media_file.dv 00:15:07 00:19:18;
+
+
+=head1 AUTHOR
+
+Jan Henning Thorsen - C<jhthorsen@cpan.org>
+
+=cut
