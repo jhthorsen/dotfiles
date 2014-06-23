@@ -1,0 +1,16 @@
+#!/bin/sh
+
+DELAY=${DELAY:-3};
+CHROME_WIN_ID=$(xwininfo -root -tree | grep Google | grep -v '"google-chrome-beta"' | head -n1 | awk '{print $1}');
+
+OUT_FILE="$HOME/Videos/recordmydesktop/$(date +%F-%H-%M-%S).ogv";
+
+if [ "_$CHROME_WIN_ID" = "_" ]; then
+  echo "Could not find google-chrome window id";
+  exit;
+fi
+
+[ -d $(dirname $OUT_FILE) ] || mkdir $(dirname $OUT_FILE);
+echo "Recording $CHROME_WIN_ID to $OUT_FILE after $DELAY seconds...";
+sleep $DELAY;
+recordmydesktop --windowid $CHROME_WIN_ID --output $OUT_FILE $@;
