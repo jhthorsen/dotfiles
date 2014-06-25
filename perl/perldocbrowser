@@ -1,0 +1,10 @@
+#!/bin/sh
+PECO=$(which peco);
+
+if [ "_$PECO" = "_" ]; then
+  echo "You need to install peco. https://github.com/peco/peco";
+  exit 1;
+fi
+
+POD=$(perl -MFile::Find -E'for my $d (grep{/\w/}@INC){find sub{$File::Find::name=~/$d\/?(.*)\.(?:pod|pm)$/&&say $1=~s!/!::!gr},$d;}' | $PECO);
+[ -n $POD ] && perldoc $POD;
