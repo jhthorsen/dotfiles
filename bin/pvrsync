@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+use strict;
+my @todo = (qw( rsync -v --dry-run --stats ), @ARGV);
+my $n_files;
+
+warn "@todo\n";
+open my $TODO, '-|', @todo or die "Run @todo: $!";
+while (<$TODO>) {
+#Number of files: 53 (reg: 51, dir: 2)
+#Number of created files: 48 (reg: 48)
+#Number of deleted files: 0
+#Number of regular files transferred: 48
+#Total file size: 6.58G bytes
+#Total transferred file size: 6.36G bytes
+  next unless /^Number of files: ([\d,]+)/;
+  $n_files = $1;
+  $n_files =~ s!,!!g;
+  last;
+}
+
+@ARGV = map { s/\s/\\ /g; $_ } @ARGV;
+exec "rsync -v @ARGV | pv -l -a -e -p -t -s $n_files";
