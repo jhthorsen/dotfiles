@@ -1,0 +1,12 @@
+#!/bin/sh
+
+module=$1;
+
+if [ -d "/sys/module/$module/parameters" ]; then
+  ls /sys/module/$module/parameters/ | sort | while read parameter; do
+   echo -n "$parameter=";
+   cat /sys/module/$module/parameters/$parameter;
+  done;
+else
+ echo "Usage: $0 <module>";
+fi;
