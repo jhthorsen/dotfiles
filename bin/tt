@@ -1,0 +1,269 @@
+#!/usr/bin/env perl
+use Applify;
+use File::Basename;
+use File::HomeDir;
+use File::Path 'make_path';
+use File::Spec;
+use JSON::XS;
+use Time::Piece;
+use constant DEBUG => $ENV{APP_TT_DEBUG} || 0;
+
+sub _say { printf shift . "\n", @_ }
+
+option str => description => 'Description for an event',            alias => 'd';
+option str => tag         => 'Tags for an event',                   alias => 't', n_of => '@';
+option str => project     => 'Project name. Normally autodetected', alias => 'p';
+
+documentation __FILE__;
+version '0.01';
+
+$SIG{__DIE__} = sub { Carp::confess($_[0]) }
+  if DEBUG;
+
+sub action_help { shift->_script->print_help }
+
+sub action_report {
+  my $self     = shift;
+  my $interval = shift || 0;
+  my $now      = $self->now;
+  my $path     = File::Spec->catdir($self->root, $now->year, sprintf '%02s', $now->mon - $interval);
+  my $total    = 0;
+
+  if (opendir(my $DH, $path)) {
+    for my $file (sort readdir $DH) {
+      my ($date, $hms, $project) = $file =~ /^(\d+)-(\d+)_(.*)\.trc$/ or next;
+      my $data = decode_json(_slurp(File::Spec->catfile($path, $file)));
+      next unless $data->{seconds};
+      $total += $data->{seconds};
+      _say '%12s - %12s - %12s', $data->{project}, $data->{start}, $data->{stop};
+    }
+  }
+
+  _say 'Total: %s', $self->_hms_duration(Time::Seconds->new($total), 'hms');
+}
+
+sub action_start {
+  my ($self, @args) = @_;
+  my $trc_file = File::Spec->catfile($self->root, $self->_trc_path($self->now));
+  my $event = {};
+
+  warn "[APP_TT] start $trc_file\n" if DEBUG;
+
+  if (!$self->project) {
+    warn "Cannot 'start' with unknown project name. Are you sure you are inside a git project?\n";
+    return 1;    # Operation not permitted
+  }
+
+  $self->_stop_previous({start => 1});
+  $self->_add_event_info($event);
+  make_path(dirname($trc_file));
+  _spurt(encode_json($event) => $trc_file);
+  _spurt($trc_file => File::Spec->catfile($self->root, 'previous'));
+  _say 'Started working on project "%s" at %s.', $event->{project}, $self->now->hms(':');
+}
+
+sub action_stop {
+  my ($self, @args) = @_;
+  return $self->_stop_previous;
+}
+
+sub action_status {
+  my $self = shift;
+  my ($trc_file, $event) = $self->_get_previous_event;
+
+  warn "[APP_TT] status $trc_file\n" if DEBUG;
+
+  if (!$event->{start}) {
+    _say 'No event is being tracked.';
+    return 3;    # No such process
+  }
+  elsif ($event->{stop}) {
+    _say 'Stopped working on "%s" at %s after %s', $event->{project}, $event->{stop}, $event->{duration};
+    return 3;    # No such process
+  }
+  else {
+    my $duration = $self->now - $self->_from_iso_8601($event->{start});
+    _say 'Been working on "%s", for %s', $event->{project}, $self->_hms_duration($duration, 'hms');
+    return 0;
+  }
+}
+
+sub now { shift->{now} ||= localtime }
+
+sub root {
+  shift->{root} ||= $ENV{TIMETRACKER_HOME} || do {
+    my $home = File::HomeDir->my_home || File::Spec->curdir;
+    File::Spec->catdir($home, '.TimeTracker');
+  };
+}
+
+sub _add_event_info {
+  my ($self, $event) = @_;
+  my $tags = $self->tag || [];
+
+  $event->{__CLASS__} ||= 'App::TimeTracker::Data::Task';
+  $event->{project}   ||= $self->project;
+  $event->{seconds}   ||= undef;
+  $event->{start}     ||= $self->now->datetime;
+  $event->{user}      ||= scalar(getpwuid $<);
+  $event->{tags}      ||= [];
+
+  $event->{description} = $self->description if $self->description;
+
+  for my $t (ref $tags ? @$tags : $tags) {
+    push @{$event->{tags}}, $t;
+  }
+}
+
+sub _from_iso_8601 {
+  my ($self, $str) = @_;
+  my $tzoffset = $self->{tzoffset} ||= do {
+    my $o = $self->now->tzoffset;
+    my $prefix = $o < 0 ? '-' : '+';
+    $o *= -1 if $o < 0;
+    sprintf '%s%02s%02s', $prefix, $o->hours, $o->minutes - 60 * $o->hours;
+  };
+
+  Time::Piece->strptime("$str$tzoffset", '%Y-%m-%dT%H:%M:%S%z');
+}
+
+sub _get_previous_event {
+  my $self = shift;
+  my $trc_file = File::Spec->catfile($self->root, 'previous');
+
+  warn "[APP_TT] _get_previous_event $trc_file\n" if DEBUG;
+
+  return $trc_file, {} unless -r $trc_file;
+  $trc_file = _slurp($trc_file);    # $ROOT/previous contains path to last .trc file
+  $trc_file =~ s!\s*$!!;
+  return $trc_file, {} unless -r $trc_file;
+  return $trc_file, decode_json(_slurp($trc_file));    # slurp $ROOT/2015/08/20150827-085643_app_tt.trc
+}
+
+sub _hms_duration {
+  my ($self, $duration, $sep) = @_;
+  my $seconds = int $duration->seconds;
+  my ($hours, $minutes);
+
+  $hours = int($seconds / 3600);
+  $seconds -= $hours * 3600;
+  $minutes = int($seconds / 60);
+  $seconds -= $minutes * 60;
+
+  return sprintf '%sh %sm %ss', $hours, $minutes, $seconds if $sep;
+  return sprintf '%s:%02s:%02s', $hours, $minutes, $seconds;
+}
+
+# From Mojo::Util
+sub _slurp {
+  my $path = shift;
+  die qq{Can't open file "$path": $!} unless open my $file, '<', $path;
+  my $content = '';
+  while ($file->sysread(my $buffer, 131072, 0)) { $content .= $buffer }
+  return $content;
+}
+
+# From Mojo::Util
+sub _spurt {
+  my ($content, $path) = @_;
+  die qq{Can't open file "$path": $!} unless open my $file, '>', $path;
+  die qq{Can't write to file "$path": $!} unless defined $file->syswrite($content);
+  return $content;
+}
+
+sub _stop_previous {
+  my ($self,     $args)  = @_;
+  my ($trc_file, $event) = $self->_get_previous_event;
+
+  if (!$event->{start} or $event->{stop}) {
+    return 0 if $args->{start};
+    warn "No previous event to stop.\n";
+    return 3;    # No such process
+  }
+
+  my $duration = $self->now - $self->_from_iso_8601($event->{start});
+
+  # Probably some invalid timestamp was given as input
+  if ($duration->seconds < 0) {
+    die "Cannot work less than a second! Need to manually fix $trc_file";
+  }
+
+  $event->{duration} = $self->_hms_duration($duration);
+  $event->{seconds}  = $duration->seconds;
+  $event->{stop}     = $self->now->datetime;
+
+  if ($event->{seconds} <= 300) {
+    _say 'Dropping log event for "%s" after %s', $event->{project}, $self->_hms_duration($duration, 'hms');
+    unlink $trc_file or die "rm $trc_file: $!";
+  }
+  else {
+    $self->_add_event_info($event);
+    _spurt(encode_json($event) => $trc_file);
+    _say 'Stopped working on "%s" after %s', $event->{project}, $self->_hms_duration($duration, 'hms');
+  }
+}
+
+sub _trc_path {
+  my ($self, $t) = @_;
+  my $project = lc $self->project;
+  my $month = sprintf '%02s', $t->mon;
+  $project =~ s!\W!_!g;
+  return ($t->year, $month, sprintf '%s-%s_%s.trc', $t->ymd(''), $t->hms(''), $project);
+}
+
+app {
+  my $self = shift;
+  my $action = sprintf 'action_%s', shift || 'status';
+
+  unless ($self->description) {
+    my ($description) = grep {/^\w\S*\s/} @_;
+    $self->description($description) if $description;
+  }
+  unless ($self->project) {
+    $self->project(basename(File::Spec->rel2abs(File::Spec->curdir))) if -d '.git';
+  }
+  if (my ($hm) = grep {/^\d+:\d+$/} @_) {
+    $self->{now} = Time::Piece->strptime(localtime->ymd('-') . "T$hm:00", '%Y-%m-%dT%H:%M:%S%z');
+  }
+
+  $action = 'action_help' unless $self->can($action);
+  return $self->$action(@_);
+};
+
+=head1 NAME
+
+tt - Time tracking utility
+
+=head1 SYNOPSIS
+
+Basic usage:
+
+  # Start to track time
+  $ cd $HOME/git/my-project
+  $ tt start
+  # Work, work, work, cd ..., do other stuff
+  $ tt stop
+
+A bit more complex:
+
+  # Start to work on an event and add a tag
+  $ tt start -t ISSUE-999 -p some-project-at-work
+  # Add another tag to the same event and add a --comment
+  $ tt stop -t GITHUB-1005 "Today I was mostly in meetings"
+
+You can also start/stop with a custom time:
+
+  # Started working at 08:00 instead of the current time
+  $ tt start 08:00
+  # Stopped working 1t 16:00 instead of the current time
+  $ tt stop 16:00
+
+Actions:
+
+  $ tt {start,stop,status}
+
+=head1 AUTHOR
+
+Jan Henning Thorsen - jhthorsen@cpan.org
+
+=cut
