@@ -48,21 +48,22 @@ sub action_help {
 sub action_report {
   my $self     = shift;
   my $interval = shift || 0;
-  my $now      = $self->now;
-  my $path     = File::Spec->catdir($self->root, $now->year, sprintf '%02s', $now->mon - $interval);
+  my $when     = $self->now->add_months($interval);
+  my $path     = File::Spec->catdir($self->root, $when->year, sprintf '%02s', $when->mon);
   my $total    = 0;
 
   if (opendir(my $DH, $path)) {
     for my $file (sort readdir $DH) {
       my ($date, $hms, $project) = $file =~ /^(\d+)-(\d+)_(.*)\.trc$/ or next;
-      my $data = decode_json(_slurp(File::Spec->catfile($path, $file)));
-      next unless $data->{seconds};
-      $total += $data->{seconds};
-      _say '%12s - %12s - %12s', $data->{project}, $data->{start}, $data->{stop};
+      my $event = decode_json(_slurp(File::Spec->catfile($path, $file)));
+      my $start = $self->_from_iso_8601($event->{start});
+      next unless $event->{seconds};
+      $total += $event->{seconds};
+      _say '%2s. %s %8s %s', $start->mday, $start->hms(':'), $self->_hms_duration($event->{seconds}), $event->{project};
     }
   }
 
-  _say 'Total: %s', $self->_hms_duration(Time::Seconds->new($total), 'hms');
+  warn sprintf "\nTotal for %s %s: %s\n", $when->month, $when->year, $self->_hms_duration($total, 'hms');
 }
 
 sub action_start {
@@ -105,7 +106,7 @@ sub action_status {
     return 3;    # No such process
   }
   else {
-    my $duration = $self->now - $self->_from_iso_8601($event->{start});
+    my $duration = $self->now - $self->_from_iso_8601($event->{start}) + $self->tzoffset;
     _say 'Been working on "%s", for %s', $event->{project}, $self->_hms_duration($duration, 'hms');
     return 0;
   }
@@ -118,6 +119,11 @@ sub root {
     my $home = File::HomeDir->my_home || File::Spec->curdir;
     File::Spec->catdir($home, '.TimeTracker');
   };
+}
+
+sub tzoffset {
+  my $self = shift;
+  $self->{tzoffset} ||= $self->now->tzoffset;
 }
 
 sub _add_event_info {
@@ -140,14 +146,7 @@ sub _add_event_info {
 
 sub _from_iso_8601 {
   my ($self, $str) = @_;
-  my $tzoffset = $self->{tzoffset} ||= do {
-    my $o = $self->now->tzoffset;
-    my $prefix = $o < 0 ? '-' : '+';
-    $o *= -1 if $o < 0;
-    sprintf '%s%02s%02s', $prefix, $o->hours, $o->minutes - 60 * $o->hours;
-  };
-
-  Time::Piece->strptime("$str$tzoffset", '%Y-%m-%dT%H:%M:%S%z');
+  Time::Piece->strptime($str, '%Y-%m-%dT%H:%M:%S');
 }
 
 sub _get_previous_event {
@@ -214,7 +213,7 @@ HERE
 
 sub _hms_duration {
   my ($self, $duration, $sep) = @_;
-  my $seconds = int $duration->seconds;
+  my $seconds = int(ref $duration ? $duration->seconds : $duration);
   my ($hours, $minutes);
 
   $hours = int($seconds / 3600);
@@ -253,7 +252,7 @@ sub _stop_previous {
     return 3;    # No such process
   }
 
-  my $duration = $self->now - $self->_from_iso_8601($event->{start});
+  my $duration = $self->now - $self->_from_iso_8601($event->{start}) + $self->tzoffset;
 
   # Probably some invalid timestamp was given as input
   if ($duration->seconds < 0) {
@@ -265,7 +264,7 @@ sub _stop_previous {
   $event->{stop}     = $self->now->datetime;
 
   if ($event->{seconds} <= 300) {
-    _say 'Dropping log event for "%s" after %s', $event->{project}, $self->_hms_duration($duration, 'hms');
+    _say 'Dropping log event for "%s" since worked less than five minutes.', $event->{project};
     unlink $trc_file or die "rm $trc_file: $!";
   }
   else {
