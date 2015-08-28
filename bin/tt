@@ -6,6 +6,7 @@ BEGIN {
 }
 use Applify;
 use File::Basename;
+use File::Find;
 use File::HomeDir;
 use File::Path 'make_path';
 use File::Spec;
@@ -64,7 +65,7 @@ sub action_register {
   $start    = $self->_from_iso_8601($start);
   $stop     = $self->_from_iso_8601($stop);
   $duration = $stop - $start;
-  $trc_file = File::Spec->catfile($self->root, $self->_trc_path($start));
+  $trc_file = File::Spec->catfile($self->root, $self->_trc_path($project, $start));
 
   if (-e $trc_file) {
     warn "Already registered: $trc_file\n";
@@ -94,35 +95,55 @@ sub action_register {
 }
 
 sub action_report {
-  my $self     = shift;
-  my $interval = shift || 0;
-  my $when     = $self->now->add_months($interval);
-  my $path     = File::Spec->catdir($self->root, $when->year, sprintf '%02s', $when->mon);
-  my $seconds  = 0;
-  my $n_events = 0;
+  my $self = shift;
+  my ($interval, $offset) = @_;
+  my ($when, $path);
+  my $seconds    = 0;
+  my $n_events   = 0;
+  my @project_re = map {qr{^$_\b}} split /,/, $self->project || '.+';
 
-  if (opendir(my $DH, $path)) {
-    for my $file (sort readdir $DH) {
-      my ($date, $hms, $project) = $file =~ /^(\d+)-(\d+)_(.*)\.trc$/ or next;
-      my $event = decode_json(_slurp(File::Spec->catfile($path, $file)));
-      my $start = $self->_from_iso_8601($event->{start});
-      next unless $event->{seconds};
-      $seconds += $event->{seconds};
-      _say '%2s. %s %8s %s', $start->mday, $start->hms(':'), $self->_hms_duration($event->{seconds}), $event->{project};
-      $n_events++;
-    }
+  $offset ||= $interval || 0;
+  $interval ||= 'month';
+  $interval = 'month' if $interval =~ /\d/;
+  $offset = 0 unless $offset =~ /\d/;
+
+  if ($interval eq 'month') {
+    $when = $self->now->add_months($offset);
+    $path = File::Spec->catdir($self->root, $when->year, sprintf '%02s', $when->mon);
+    $when = join ' ', $when->month, $when->year;
+  }
+  else {
+    $when = $self->now->add_years($offset);
+    $path = File::Spec->catdir($self->root, $when->year);
+    $when = $when->year;
   }
 
-  warn sprintf "\nTotal for %s events in %s %s: %s\n", $n_events, $when->month, $when->year,
-    $self->_hms_duration($seconds, 'hm');
+  find {
+    no_chdir => 0,
+    wanted   => sub {
+      my ($date, $hms, $project) = /^(\d+)-(\d+)_(.*)\.trc$/ or return;
+      my $event = decode_json(_slurp($_));
+      my $start = $self->_from_iso_8601($event->{start});
+      return if @project_re and !grep { $event->{project} =~ $_ } @project_re;
+      return unless $event->{seconds};
+      $seconds += $event->{seconds};
+      _say '%3s %2s %02s:%02s  %5s  %s', $start->month, $start->mday, $start->hour, $start->minute,
+        $self->_hms_duration($event->{seconds}, 'hm'), $event->{project};
+      $n_events++;
+    }
+  }, $path;
+
+  warn sprintf "\nTotal for %s events in %s: %s\n", $n_events, $when, $self->_hms_duration($seconds, 'hms');
 }
 
 sub action_start {
   my ($self, @args) = @_;
-  my $trc_file = File::Spec->catfile($self->root, $self->_trc_path($self->now));
   my $event = {};
+  my $trc_file;
 
   warn "[APP_TT] start $trc_file\n" if DEBUG;
+  $self->project(basename(File::Spec->rel2abs(File::Spec->curdir))) if -d '.git' and !$self->project;
+  $trc_file = File::Spec->catfile($self->root, $self->_trc_path($self->project, $self->now));
 
   if (!$self->project) {
     warn "Cannot 'start' with unknown project name. Are you sure you are inside a git project?\n";
@@ -231,11 +252,13 @@ sub _help_for_report {
   <<'HERE';
 
 This command can report how much time you have spent on various
-events. It is currently rather basic, so you need to use "grep"
-to filter by event.
+events.
 
-$ tt report    # this month
-$ tt report -1 # last month
+$ tt report         # this month
+$ tt report -2      # two months ago
+$ tt report year    # report for year
+$ tt report year -1 # last year
+$ tt report -p foo  # Filter by project name
 HERE
 }
 
@@ -287,7 +310,7 @@ sub _hms_duration {
   $seconds -= $minutes * 60;
 
   return sprintf '%s:%02s:%02s', $hours, $minutes, $seconds if !$sep;
-  return sprintf '%sh %sm', $hours, $minutes if $sep eq 'hm';
+  return sprintf '%2s:%02s', $hours, $minutes if $sep eq 'hm';
   return sprintf '%sh %sm %ss', $hours, $minutes, $seconds;
 }
 
@@ -341,8 +364,7 @@ sub _stop_previous {
 }
 
 sub _trc_path {
-  my ($self, $t) = @_;
-  my $project = lc $self->project;
+  my ($self, $project, $t) = @_;
   my $month = sprintf '%02s', $t->mon;
   $project =~ s!\W!_!g;
   return ($t->year, $month, sprintf '%s-%s_%s.trc', $t->ymd(''), $t->hms(''), $project);
@@ -355,15 +377,10 @@ app {
   if ($ENV{APP_TT_HELP}) {
     return $self->action_help($ENV{APP_TT_HELP});
   }
-
-  unless ($self->description) {
+  if (!$self->description) {
     my ($description) = grep {/^\w\S*\s/} @_;
     $self->description($description) if $description;
   }
-  unless ($self->project) {
-    $self->project(basename(File::Spec->rel2abs(File::Spec->curdir))) if -d '.git';
-  }
-
   if (my ($hm) = grep {/^\d+:\d+$/} @_) {
     $self->{now} = Time::Piece->strptime(localtime->ymd('-') . "T$hm:00", '%Y-%m-%dT%H:%M:%S%z');
   }
@@ -409,7 +426,7 @@ Jan Henning Thorsen - jhthorsen@cpan.org
 =cut
 
 __END__
-cat <<HERE | sqlite3 hamster.db -separator $'\t' | bin/tt register
+cat <<HERE | sqlite3 ~/Downloads/hamster.db -separator $'\t' | bin/tt register
 SELECT f.start_time,f.end_time,a.name,f.description,group_concat(t.name)
 FROM facts f
 LEFT JOIN activities a ON a.id              = f.activity_id
@@ -418,7 +435,7 @@ LEFT JOIN tags t       ON t.id              = fact_tags.tag_id
 GROUP BY fact_tags.fact_id;
 HERE
 
-cat <<HERE | sqlite3 hamster.db -separator $'\t' | bin/tt register
+cat <<HERE | sqlite3 ~/Downloads/hamster.db -separator $'\t' | bin/tt register
 SELECT f.start_time,f.end_time,a.name,f.description
 FROM facts f LEFT JOIN activities a ON a.id = f.activity_id;
 HERE
