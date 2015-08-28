@@ -1,4 +1,9 @@
 #!/usr/bin/env perl
+BEGIN {
+  if (@ARGV and @ARGV[0] =~ /^\w/) {
+    @ARGV = grep { (/^-{1,2}h\w{0,3}$/ ? ($ENV{APP_TT_HELP} = $ARGV[0], 0) : (1, 1))[1] } @ARGV;
+  }
+}
 use Applify;
 use File::Basename;
 use File::HomeDir;
@@ -20,7 +25,25 @@ version '0.01';
 $SIG{__DIE__} = sub { Carp::confess($_[0]) }
   if DEBUG;
 
-sub action_help { shift->_script->print_help }
+sub action_help {
+  my $self   = shift;
+  my $for    = shift || 'all';
+  my $method = "_help_for_$for";
+
+  if ($for eq 'all') {
+    $self->_script->print_help;
+    for (qw( report status start stop )) {
+      $method = "_help_for_$_";
+      print "\n---\nHelp for $_:\n";
+      print $self->$method;
+    }
+  }
+  else {
+    return $self->_script->print_help unless $self->can($method);
+    print $self->$method(@_);
+    return 0;
+  }
+}
 
 sub action_report {
   my $self     = shift;
@@ -140,6 +163,55 @@ sub _get_previous_event {
   return $trc_file, decode_json(_slurp($trc_file));    # slurp $ROOT/2015/08/20150827-085643_app_tt.trc
 }
 
+sub _help_for_report {
+  <<'HERE';
+
+This command can report how much time you have spent on various
+events. It is currently rather basic, so you need to use "grep"
+to filter by event.
+
+$ tt report    # this month
+$ tt report -1 # last month
+HERE
+}
+
+sub _help_for_start {
+  <<'HERE';
+
+This command will start tracking a new event. It will also stop the
+current event if any event is in process. This action takes the
+"-p" and "-t" switches. "-p" (project) is not required if you start
+from a git repository.
+
+# Specify a tag and custom project name
+$ tt start -t ISSUE-999 -p some-project-at-work
+
+# Started working at 08:00 instead of now
+$ tt start 08:00
+HERE
+}
+
+sub _help_for_status {
+  <<'HERE';
+Get the current status: Are you working on something or not?
+
+$ tt status
+HERE
+}
+
+sub _help_for_stop {
+  <<'HERE';
+
+This command will stop tracking the current event.
+
+# Add more tags to the current event
+$ tt stop -t meetings -t not_fun
+
+# Stop working at 16:00 instead of now
+$ tt stop 16:00
+HERE
+}
+
 sub _hms_duration {
   my ($self, $duration, $sep) = @_;
   my $seconds = int $duration->seconds;
@@ -215,6 +287,10 @@ app {
   my $self = shift;
   my $action = sprintf 'action_%s', shift || 'status';
 
+  if ($ENV{APP_TT_HELP}) {
+    return $self->action_help($ENV{APP_TT_HELP});
+  }
+
   unless ($self->description) {
     my ($description) = grep {/^\w\S*\s/} @_;
     $self->description($description) if $description;
@@ -222,11 +298,12 @@ app {
   unless ($self->project) {
     $self->project(basename(File::Spec->rel2abs(File::Spec->curdir))) if -d '.git';
   }
+
   if (my ($hm) = grep {/^\d+:\d+$/} @_) {
     $self->{now} = Time::Piece->strptime(localtime->ymd('-') . "T$hm:00", '%Y-%m-%dT%H:%M:%S%z');
   }
 
-  $action = 'action_help' unless $self->can($action);
+  return $self->action_help('app') unless $self->can($action);
   return $self->$action(@_);
 };
 
@@ -251,16 +328,14 @@ A bit more complex:
   # Add another tag to the same event and add a --comment
   $ tt stop -t GITHUB-1005 "Today I was mostly in meetings"
 
-You can also start/stop with a custom time:
+Available actions: (each action takes "-h" for more details)
 
-  # Started working at 08:00 instead of the current time
-  $ tt start 08:00
-  # Stopped working 1t 16:00 instead of the current time
-  $ tt stop 16:00
+  $ tt {report,start,stop,status}
+  $ tt start -h
 
-Actions:
+=head1 DISCLAIMER
 
-  $ tt {start,stop,status}
+This code is not tested.
 
 =head1 AUTHOR
 
