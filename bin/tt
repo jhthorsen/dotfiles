@@ -45,12 +45,61 @@ sub action_help {
   }
 }
 
+sub action_register {
+  my ($self, $start, $stop, $project, $description, $tags) = @_;
+  my ($duration, $trc_file);
+
+  if (@_ == 1 and !-t STDIN) {
+    while (<STDIN>) {
+      next if /^\s*#/;
+      chomp;
+      my @args = split /\t/;
+      $self->action_register(@args) if $args[0] and $args[1] and $args[2];
+    }
+    return 0;
+  }
+
+  die $self->_help_for_register unless $start and $stop and $project;
+
+  $start    = $self->_from_iso_8601($start);
+  $stop     = $self->_from_iso_8601($stop);
+  $duration = $stop - $start;
+  $trc_file = File::Spec->catfile($self->root, $self->_trc_path($start));
+
+  if (-e $trc_file) {
+    warn "Already registered: $trc_file\n";
+    return 1;
+  }
+  if ($duration < 300) {
+    warn "Skipping $project - $start - $stop. Too short duration ($duration)\n";
+    return 1;
+  }
+
+  my %event = (
+    __CLASS__   => 'App::TimeTracker::Data::Task',
+    project     => $project || $self->project,
+    start       => $start->datetime,
+    stop        => $stop->datetime,
+    user        => scalar(getpwuid $<),
+    tags        => [@{$self->tag}],
+    description => $description || $self->description,
+    seconds     => $duration->seconds,
+    duration    => $self->_hms_duration($duration),
+  );
+
+  push @{$event{tags}}, split /,/, $tags || '';
+  make_path(dirname($trc_file));
+  _spurt(encode_json(\%event) => $trc_file);
+  _say 'Registered "%s" at %s with duration %s', $event{project}, $event{start}, $self->_hms_duration($duration, 'hms');
+}
+
 sub action_report {
   my $self     = shift;
   my $interval = shift || 0;
   my $when     = $self->now->add_months($interval);
   my $path     = File::Spec->catdir($self->root, $when->year, sprintf '%02s', $when->mon);
-  my $total    = 0;
+  my $seconds  = 0;
+  my $n_events = 0;
 
   if (opendir(my $DH, $path)) {
     for my $file (sort readdir $DH) {
@@ -58,12 +107,14 @@ sub action_report {
       my $event = decode_json(_slurp(File::Spec->catfile($path, $file)));
       my $start = $self->_from_iso_8601($event->{start});
       next unless $event->{seconds};
-      $total += $event->{seconds};
+      $seconds += $event->{seconds};
       _say '%2s. %s %8s %s', $start->mday, $start->hms(':'), $self->_hms_duration($event->{seconds}), $event->{project};
+      $n_events++;
     }
   }
 
-  warn sprintf "\nTotal for %s %s: %s\n", $when->month, $when->year, $self->_hms_duration($total, 'hms');
+  warn sprintf "\nTotal for %s events in %s %s: %s\n", $n_events, $when->month, $when->year,
+    $self->_hms_duration($seconds, 'hm');
 }
 
 sub action_start {
@@ -146,6 +197,8 @@ sub _add_event_info {
 
 sub _from_iso_8601 {
   my ($self, $str) = @_;
+  $str =~ s/(\d)\s(\d)/${1}T${2}/;
+  $str =~ s/\.\d+$//;
   Time::Piece->strptime($str, '%Y-%m-%dT%H:%M:%S');
 }
 
@@ -160,6 +213,18 @@ sub _get_previous_event {
   $trc_file =~ s!\s*$!!;
   return $trc_file, {} unless -r $trc_file;
   return $trc_file, decode_json(_slurp($trc_file));    # slurp $ROOT/2015/08/20150827-085643_app_tt.trc
+}
+
+sub _help_for_register {
+  <<'HERE';
+
+This command is used to import data from other sources. "project-name" default to
+"-p" or current git project, "some description" default to "-d" and tags can be
+specified by -t foo -t bar
+
+$ tt register 2010-01-21T18:50:00  2010-01-21T19:20:00 "project-name" "some description" "foo,bar"
+$ echo "2010-01-21T18:50:00\t2010-01-21T19:20:00\tproject-name\tsome description\tfoo,bar" | tt register
+HERE
 }
 
 sub _help_for_report {
@@ -221,8 +286,9 @@ sub _hms_duration {
   $minutes = int($seconds / 60);
   $seconds -= $minutes * 60;
 
-  return sprintf '%sh %sm %ss', $hours, $minutes, $seconds if $sep;
-  return sprintf '%s:%02s:%02s', $hours, $minutes, $seconds;
+  return sprintf '%s:%02s:%02s', $hours, $minutes, $seconds if !$sep;
+  return sprintf '%sh %sm', $hours, $minutes if $sep eq 'hm';
+  return sprintf '%sh %sm %ss', $hours, $minutes, $seconds;
 }
 
 # From Mojo::Util
@@ -329,7 +395,7 @@ A bit more complex:
 
 Available actions: (each action takes "-h" for more details)
 
-  $ tt {report,start,stop,status}
+  $ tt {report,start,stop,status,register}
   $ tt start -h
 
 =head1 DISCLAIMER
@@ -341,3 +407,18 @@ This code is not tested.
 Jan Henning Thorsen - jhthorsen@cpan.org
 
 =cut
+
+__END__
+cat <<HERE | sqlite3 hamster.db -separator $'\t' | bin/tt register
+SELECT f.start_time,f.end_time,a.name,f.description,group_concat(t.name)
+FROM facts f
+LEFT JOIN activities a ON a.id              = f.activity_id
+LEFT JOIN fact_tags    ON fact_tags.fact_id = f.id
+LEFT JOIN tags t       ON t.id              = fact_tags.tag_id
+GROUP BY fact_tags.fact_id;
+HERE
+
+cat <<HERE | sqlite3 hamster.db -separator $'\t' | bin/tt register
+SELECT f.start_time,f.end_time,a.name,f.description
+FROM facts f LEFT JOIN activities a ON a.id = f.activity_id;
+HERE
