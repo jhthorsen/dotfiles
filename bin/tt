@@ -26,6 +26,46 @@ version '0.01';
 $SIG{__DIE__} = sub { Carp::confess($_[0]) }
   if DEBUG;
 
+sub action_analyze {
+  my $self      = shift;
+  my $recursive = ref $_[0] ? shift : undef;
+  my $since     = shift || 'last month';
+  my $dir       = shift || File::Spec->curdir;
+  my $user      = qx(git config user.name) || getpwuid $<;
+  my $log       = $recursive || {};
+
+  if (-d File::Spec->catdir($dir, '.git')) {
+    my $project = basename(File::Spec->rel2abs($dir));
+    local $ENV{GIT_DIR} = File::Spec->catdir($dir, '.git');
+    open my $GIT, '-|', qw( git reflog --all ), "--author=$user", "--pretty=format:%ci %s", "--since=$since" or die $!;
+    while (<$GIT>) {
+      my ($ts, $description) = /^(\S+.\S+)\s(.*)/ or die "Invalid input: $_";
+      my $tag = $description =~ /^\W*([A-Z]{2,}-[0-9]+)/ ? $1 : $description =~ /(\#\d+)/ ? $1 : $project;
+      $ts = $self->_from_iso_8601($ts);
+      next if $ts->hour < 5;    # should not work in the middle of the night
+      $description =~ s!^\s*\+[\d:]+\s+!!;    # $ts hopefully in localtime
+      my $event = $log->{$ts->ymd} ||= {stop => $ts};
+      $event->{start}       = $ts if $ts <= $event->{stop};
+      $event->{description} = $description;
+      $event->{project}     = $project;
+      $event->{tags}{$tag}  = 1;
+    }
+    return if $recursive;
+  }
+  else {
+    opendir(my $DH, $dir) or die "$dir: $!";
+    while (my $i = readdir $DH) {
+      $self->action_analyze($log, $since, File::Spec->catdir($dir, $i)) if -d File::Spec->catdir($dir, $i, '.git');
+    }
+  }
+
+  for my $event (sort { $a->{start} <=> $b->{start} } values %$log) {
+    my $tags = join ',', keys %{$event->{tags}};
+    _say "%s\t%s\t%s\t%s\t%s", $event->{start}->datetime, $event->{stop}->datetime, $event->{project},
+      $event->{description}, $tags;
+  }
+}
+
 sub action_help {
   my $self   = shift;
   my $for    = shift || 'all';
@@ -236,6 +276,19 @@ sub _get_previous_event {
   return $trc_file, decode_json(_slurp($trc_file));    # slurp $ROOT/2015/08/20150827-085643_app_tt.trc
 }
 
+sub _help_for_analyze {
+  <<'HERE';
+This action can analyze all the git repos in a directory and print what time
+you started/stopped working on a set of repos grouped per day. The output
+is suitable for "tt register".
+
+$ cd ..                  # one step up from the current git-project
+$ tt analyze             # default is last month
+$ tt analyze "last week" # analyze git reflog from last week
+$ tt analyze 2015-07-01  # analyze git reflog since a given date
+HERE
+}
+
 sub _help_for_register {
   <<'HERE';
 
@@ -412,7 +465,7 @@ A bit more complex:
 
 Available actions: (each action takes "-h" for more details)
 
-  $ tt {report,start,stop,status,register}
+  $ tt {analyze,report,start,stop,status,register}
   $ tt start -h
 
 =head1 DISCLAIMER
