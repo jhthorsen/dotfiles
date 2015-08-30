@@ -91,7 +91,7 @@ sub action_log {
   my $seconds    = 0;
   my $n_events   = 0;
   my @project_re = map {qr{^$_\b}} split /,/, $self->project || '.+';
-  my ($interval, $offset, $path, $when, $work) = ('', 0);
+  my ($interval, $offset, $pl, $path, $when, $work) = ('', 0, 0);
   my @log;
 
   for (@_) {
@@ -116,20 +116,21 @@ sub action_log {
       my $event = decode_json(_slurp($_));
       return if @project_re and !grep { $event->{project} =~ $_ } @project_re;
       return unless $event->{seconds};
-      $seconds += $event->{seconds};
       $event->{start} = $self->_from_iso_8601($event->{start});
+      return if $work and !grep { $_ eq 'work' } @{$event->{tags} || []};
       push @log, $self->_fill_log_days(@log ? $log[-1]->{start} : $when, $event->{start}) if $work;
       pop @log if @log and !$log[-1]{project} and $log[-1]{start}->mday == $event->{start}->mday;
       push @log, $event;
+      $pl = length $event->{project} if $pl < length $event->{project};
       $n_events++;
+      $seconds += $event->{seconds};
     }
   }, $path;
 
   for my $event (@log) {
     my $start = $event->{start};
-    next if $work and $start->_wday < 1 or $start->_wday > 5;    # mon -> fri
-    _say '%3s %2s %02s:%02s  %5s  %s  %s', $start->month, $start->mday, $start->hour, $start->minute,
-      $self->_hms_duration($event->{seconds}, 'hm'), $event->{project} || '---', $event->{description};
+    _say "%3s %2s %02s:%02s  %5s  %-${pl}s  %s", $start->month, $start->mday, $start->hour, $start->minute,
+      $self->_hms_duration($event->{seconds}, 'hm'), $event->{project} || '---', join(',', @{$event->{tags} || []});
   }
 
   warn sprintf "\nTotal for %s events since %s: %s\n", $n_events, join(' ', $when->month, $when->year),
