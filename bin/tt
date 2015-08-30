@@ -11,6 +11,7 @@ use File::HomeDir;
 use File::Path 'make_path';
 use File::Spec;
 use JSON::XS;
+use Term::ANSIColor;
 use Time::Piece;
 use constant DEBUG => $ENV{APP_TT_DEBUG} || 0;
 
@@ -66,6 +67,28 @@ sub action_analyze {
   }
 }
 
+sub action_edit {
+  my $self = shift;
+  my $doit = grep {/--no-dry-run/} @_;
+  my $dir  = readlink($self->root) || $self->root;
+  my $code = '';
+
+  $code .= $_ while <STDIN>;
+  $code = "sub {$code}" unless $code =~ /^\s*sub\b/s;
+  $code = eval "use 5.10.1;$code" or die "Could not compile code from STDIN: $@\n";
+
+  find {
+    no_chdir => 0,
+    wanted   => sub {
+      /^(\d+)-(\d+)_(.*)\.trc$/ or return;
+      local %_ = (date => $1, doit => $doit, file => $_, hms => $2, project => $3);
+      local $_ = decode_json(_slurp($_));
+      $_->{tags} ||= [];
+      $code->();
+    }
+  }, $dir;
+}
+
 sub action_help {
   my $self   = shift;
   my $for    = shift || 'all';
@@ -91,13 +114,13 @@ sub action_log {
   my $seconds    = 0;
   my $n_events   = 0;
   my @project_re = map {qr{^$_\b}} split /,/, $self->project || '.+';
-  my ($interval, $offset, $pl, $path, $when, $work) = ('', 0, 0);
+  my ($interval, $offset, $pl, $path, $when, $fill) = ('', 0, 0);
   my @log;
 
   for (@_) {
     $offset   ||= $_ if /^(-\d+)$/;
     $interval ||= $_ if /^(?:month|year)/;
-    $work     ||= 1  if /^--work/;
+    $fill     ||= 1  if /^--fill/;
   }
 
   if ($interval eq 'year') {
@@ -117,8 +140,7 @@ sub action_log {
       return if @project_re and !grep { $event->{project} =~ $_ } @project_re;
       return unless $event->{seconds};
       $event->{start} = $self->_from_iso_8601($event->{start});
-      return if $work and !grep { $_ eq 'work' } @{$event->{tags} || []};
-      push @log, $self->_fill_log_days(@log ? $log[-1]->{start} : $when, $event->{start}) if $work;
+      push @log, $self->_fill_log_days(@log ? $log[-1]->{start} : $when, $event->{start}) if $fill;
       pop @log if @log and !$log[-1]{project} and $log[-1]{start}->mday == $event->{start}->mday;
       push @log, $event;
       $pl = length $event->{project} if $pl < length $event->{project};
@@ -129,8 +151,10 @@ sub action_log {
 
   for my $event (@log) {
     my $start = $event->{start};
+    print color('red') if $start->wday == 1 or $start->wday == 7;
     _say "%3s %2s %02s:%02s  %5s  %-${pl}s  %s", $start->month, $start->mday, $start->hour, $start->minute,
       $self->_hms_duration($event->{seconds}, 'hm'), $event->{project} || '---', join(',', @{$event->{tags} || []});
+    print color('reset');
   }
 
   warn sprintf "\nTotal for %s events since %s: %s\n", $n_events, join(' ', $when->month, $when->year),
@@ -269,7 +293,10 @@ sub _fill_log_days {
   my ($self, $last, $now) = @_;
   my $interval = int(($now - $last)->days);
 
-  map { +{start => $last + $_ * 86400, seconds => 0} } 1 .. $interval;
+  map {
+    my $t = $last + $_ * 86400;
+    +{seconds => 0, start => $t, tags => [$t->day]}
+  } 1 .. $interval;
 }
 
 sub _from_iso_8601 {
