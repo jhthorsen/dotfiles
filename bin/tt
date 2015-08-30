@@ -152,9 +152,14 @@ sub action_log {
   for my $event (@log) {
     my $start = $event->{start};
     print color('red') if $start->wday == 1 or $start->wday == 7;
-    _say "%3s %2s %02s:%02s  %5s  %-${pl}s  %s", $start->month, $start->mday, $start->hour, $start->minute,
-      $self->_hms_duration($event->{seconds}, 'hm'), $event->{project} || '---', join(',', @{$event->{tags} || []});
-    print color('reset');
+    printf(
+      "%3s %2s %02s:%02s  %5s  %-${pl}s  %s%s\n",
+      $start->month, $start->mday, $start->hour, $start->minute,
+      $self->_hms_duration($event->{seconds}, 'hm'),
+      $event->{project} || '---',
+      join(',', @{$event->{tags} || []}),
+      color('reset')
+    );
   }
 
   warn sprintf "\nTotal for %s events since %s: %s\n", $n_events, join(' ', $when->month, $when->year),
