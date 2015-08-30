@@ -119,6 +119,7 @@ sub action_log {
   my $self       = shift;
   my $seconds    = 0;
   my $n_events   = 0;
+  my $tags       = join ',', @{$self->tag};
   my @project_re = map {qr{^$_\b}} split /,/, $self->project || '.+';
   my ($interval, $offset, $pl, $path, $when, $fill) = ('', 0, 0);
   my @log;
@@ -143,7 +144,9 @@ sub action_log {
     wanted   => sub {
       my ($date, $hms, $project) = /^(\d+)-(\d+)_(.*)\.trc$/ or return;
       my $event = decode_json(_slurp($_));
+      $event->{tags} ||= [];
       return if @project_re and !grep { $event->{project} =~ $_ } @project_re;
+      return if $tags and !grep { $tags =~ /\b$_\b/ } @{$event->{tags}};
       return unless $event->{seconds};
       $event->{start} = $self->_from_iso_8601($event->{start});
       push @log, $self->_fill_log_days(@log ? $log[-1]->{start} : $when, $event->{start}) if $fill;
@@ -163,7 +166,7 @@ sub action_log {
       $start->month, $start->mday, $start->hour, $start->minute,
       $self->_hms_duration($event->{seconds}, 'hm'),
       $event->{project} || '---',
-      join(',', @{$event->{tags} || []}),
+      join(',', @{$event->{tags}}),
       color('reset')
     );
   }
