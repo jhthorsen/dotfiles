@@ -5,6 +5,7 @@ BEGIN {
   }
 }
 use Applify;
+use Cwd 'abs_path';
 use File::Basename;
 use File::Find;
 use File::HomeDir;
@@ -36,7 +37,7 @@ sub action_analyze {
   my $log       = $recursive || {};
 
   if (-d File::Spec->catdir($dir, '.git')) {
-    my $project = basename(File::Spec->rel2abs($dir));
+    my $project = basename(abs_path $dir);
     local $ENV{GIT_DIR} = File::Spec->catdir($dir, '.git');
     open my $GIT, '-|', qw( git reflog --all ), "--author=$user", "--pretty=format:%ci %s", "--since=$since" or die $!;
     while (<$GIT>) {
@@ -69,7 +70,7 @@ sub action_analyze {
 
 sub action_edit {
   my $self = shift;
-  my $doit = grep {/--no-dry-run/} @_;
+  my $doit = grep {/^--no-dry-run$/} @_;
   my $dir  = readlink($self->root) || $self->root;
   my $code = '';
 
@@ -81,10 +82,15 @@ sub action_edit {
     no_chdir => 0,
     wanted   => sub {
       /^(\d+)-(\d+)_(.*)\.trc$/ or return;
-      local %_ = (date => $1, doit => $doit, file => $_, hms => $2, project => $3);
-      local $_ = decode_json(_slurp($_));
-      $_->{tags} ||= [];
-      $code->();
+      my $f = abs_path $_;
+      my $e = decode_json(_slurp($f));
+      local %_ = (date => $1, doit => $doit, file => $f, hms => $2, project => $3);
+      $e->{tags} ||= [];
+      $code->($e) or return;
+      my $trc_file = abs_path($self->_trc_path($e->{project}, $self->_from_iso_8601($e->{start})));
+      return unless $doit;
+      _spurt(encode_json($e) => $trc_file);
+      unlink $f or die "rm $f: $!" if $f ne $trc_file;
     }
   }, $dir;
 }
@@ -185,7 +191,7 @@ sub action_register {
   $start    = $self->_from_iso_8601($start);
   $stop     = $self->_from_iso_8601($stop);
   $duration = $stop - $start;
-  $trc_file = File::Spec->catfile($self->root, $self->_trc_path($project, $start));
+  $trc_file = $self->_trc_path($project, $start);
 
   if (-e $trc_file) {
     warn "Already registered: $trc_file\n";
@@ -220,8 +226,8 @@ sub action_start {
   my $trc_file;
 
   $self->project($args[0]) if $args[0] and $args[0] =~ /^[A-Za-z0-9-]+$/;
-  $self->project(basename(File::Spec->rel2abs(File::Spec->curdir))) if -d '.git' and !$self->project;
-  $trc_file = File::Spec->catfile($self->root, $self->_trc_path($self->project, $self->now));
+  $self->project(basename(Cwd::getcwd)) if -d '.git' and !$self->project;
+  $trc_file = $self->_trc_path($self->project, $self->now);
 
   warn "[APP_TT] start $trc_file\n" if DEBUG;
 
@@ -336,6 +342,20 @@ $ cd ..                  # one step up from the current git-project
 $ tt analyze             # default is last month
 $ tt analyze "last week" # analyze git reflog from last week
 $ tt analyze 2015-07-01  # analyze git reflog since a given date
+HERE
+}
+
+sub _help_for_edit {
+  <<'HERE';
+
+This command can be used to rewrite all the log entries. See source
+code before running this action. (Internals might change)
+
+DISCLAIMER! Backup your files before running this action!
+
+$ cat rewrite.pl | tt edit
+# verify output, and then run:
+$ cat rewrite.pl | tt edit --no-dry-run
 HERE
 }
 
@@ -487,8 +507,12 @@ sub _tp {
 sub _trc_path {
   my ($self, $project, $t) = @_;
   my $month = sprintf '%02s', $t->mon;
+  my $file;
+
   $project =~ s!\W!_!g;
-  return ($t->year, $month, sprintf '%s-%s_%s.trc', $t->ymd(''), $t->hms(''), $project);
+  $file = sprintf '%s-%s_%s.trc', $t->ymd(''), $t->hms(''), $project;
+
+  return File::Spec->catfile($self->root, $t->year, $month, $file);
 }
 
 app {
