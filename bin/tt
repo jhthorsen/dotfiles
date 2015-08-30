@@ -219,9 +219,11 @@ sub action_start {
   my $event = {};
   my $trc_file;
 
-  warn "[APP_TT] start $trc_file\n" if DEBUG;
+  $self->project($args[0]) if $args[0] and $args[0] =~ /^[A-Za-z0-9-]+$/;
   $self->project(basename(File::Spec->rel2abs(File::Spec->curdir))) if -d '.git' and !$self->project;
   $trc_file = File::Spec->catfile($self->root, $self->_trc_path($self->project, $self->now));
+
+  warn "[APP_TT] start $trc_file\n" if DEBUG;
 
   if (!$self->project) {
     warn "Cannot 'start' with unknown project name. Are you sure you are inside a git project?\n";
@@ -372,7 +374,7 @@ current event if any event is in process. This action takes the
 from a git repository.
 
 # Specify a tag and custom project name
-$ tt start -t ISSUE-999 -p some-project-at-work
+$ tt start -t ISSUE-999 some-project-name
 
 # Started working at 08:00 instead of now
 $ tt start 08:00
@@ -446,7 +448,7 @@ sub _stop_previous {
 
   # Probably some invalid timestamp was given as input
   if ($duration->seconds < 0) {
-    die "Cannot work less than a second! Need to manually fix $trc_file";
+    die "Cannot log event shorter than a second! Need to manually fix $trc_file";
   }
 
   $event->{duration} = $self->_hms_duration($duration);
