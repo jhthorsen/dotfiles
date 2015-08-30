@@ -119,7 +119,7 @@ sub action_log {
       $seconds += $event->{seconds};
       $event->{start} = $self->_from_iso_8601($event->{start});
       push @log, $self->_fill_log_days(@log ? $log[-1]->{start} : $when, $event->{start}) if $work;
-      pop @log if @log and $log[-1]{start}->mday == $event->{start}->mday;
+      pop @log if @log and !$log[-1]{project} and $log[-1]{start}->mday == $event->{start}->mday;
       push @log, $event;
       $n_events++;
     }
@@ -128,8 +128,8 @@ sub action_log {
   for my $event (@log) {
     my $start = $event->{start};
     next if $work and $start->_wday < 1 or $start->_wday > 5;    # mon -> fri
-    _say '%3s %2s %02s:%02s  %5s  %s', $start->month, $start->mday, $start->hour, $start->minute,
-      $self->_hms_duration($event->{seconds}, 'hm'), $event->{project};
+    _say '%3s %2s %02s:%02s  %5s  %s  %s', $start->month, $start->mday, $start->hour, $start->minute,
+      $self->_hms_duration($event->{seconds}, 'hm'), $event->{project} || '---', $event->{description};
   }
 
   warn sprintf "\nTotal for %s events since %s: %s\n", $n_events, join(' ', $when->month, $when->year),
@@ -268,7 +268,7 @@ sub _fill_log_days {
   my ($self, $last, $now) = @_;
   my $interval = int(($now - $last)->days);
 
-  map { +{start => $last + $_ * 86400, seconds => 0, project => '---'} } 1 .. $interval;
+  map { +{start => $last + $_ * 86400, seconds => 0} } 1 .. $interval;
 }
 
 sub _from_iso_8601 {
