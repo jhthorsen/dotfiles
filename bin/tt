@@ -82,17 +82,20 @@ sub action_edit {
     no_chdir => 0,
     wanted   => sub {
       /^(\d+)-(\d+)_(.*)\.trc$/ or return;
-      my $f = abs_path $_;
-      my $e = decode_json(_slurp($f));
+      my $f     = abs_path $_;
+      my $event = decode_json(_slurp($f));
       local %_ = (date => $1, doit => $doit, file => $f, hms => $2, project => $3);
-      $e->{tags} ||= [];
-      $code->($e) or return;
-      my $trc_file = abs_path($self->_trc_path($e->{project}, $self->_from_iso_8601($e->{start})));
+      $event->{tags} ||= [];
+      $self->$code($event) or return;
+      my $trc_file = abs_path($self->_trc_path($event->{project}, $self->_from_iso_8601($event->{start})));
       return unless $doit;
-      _spurt(encode_json($e) => $trc_file);
+      $self->_fill_duration($event);
+      _spurt(encode_json($event) => $trc_file);
       unlink $f or die "rm $f: $!" if $f ne $trc_file;
     }
   }, $dir;
+
+  return 0;
 }
 
 sub action_help {
@@ -146,7 +149,7 @@ sub action_log {
       my $event = decode_json(_slurp($_));
       $event->{tags} ||= [];
       return if @project_re and !grep { $event->{project} =~ $_ } @project_re;
-      return if $tags and !grep { $tags =~ /\b$_\b/ } @{$event->{tags}};
+      return if $tags       and !grep { $tags =~ /\b$_\b/ } @{$event->{tags}};
       return unless $event->{seconds};
       $event->{start} = $self->_from_iso_8601($event->{start});
       push @log, $self->_fill_log_days(@log ? $log[-1]->{start} : $when, $event->{start}) if $fill;
@@ -177,7 +180,7 @@ sub action_log {
 
 sub action_register {
   my ($self, $start, $stop, $project, $description, $tags) = @_;
-  my ($duration, $trc_file);
+  my ($trc_file, %event);
 
   if (@_ == 1 and !-t STDIN) {
     while (<STDIN>) {
@@ -191,36 +194,35 @@ sub action_register {
 
   die $self->_help_for_register unless $start and $stop and $project;
 
-  $start    = $self->_from_iso_8601($start);
-  $stop     = $self->_from_iso_8601($stop);
-  $duration = $stop - $start;
-  $trc_file = $self->_trc_path($project, $start);
+  $description ||= '';
+  $tags        ||= '';
+  $trc_file = $self->_trc_path($project, $self->_from_iso_8601($start));
 
-  if (-e $trc_file) {
-    warn "Already registered: $trc_file\n";
-    return 1;
-  }
-  if ($duration < 300) {
-    warn "Skipping $project - $start - $stop. Too short duration ($duration)\n";
-    return 1;
-  }
-
-  my %event = (
-    __CLASS__   => 'App::TimeTracker::Data::Task',
-    project     => $project || $self->project,
-    start       => $start->datetime,
-    stop        => $stop->datetime,
-    user        => scalar(getpwuid $<),
-    tags        => [@{$self->tag}],
+  %event = (
+    __CLASS__ => 'App::TimeTracker::Data::Task',
+    project   => $project,
+    start     => $start,
+    stop      => $stop,
+    user      => scalar(getpwuid $<),
+    tags      => [split /,/, $tags || ''],
     description => $description || $self->description,
-    seconds     => $duration->seconds,
-    duration    => $self->_hms_duration($duration),
   );
 
-  push @{$event{tags}}, split /,/, $tags || '';
+  if (-e $trc_file) {
+    warn "Already registered: $start $stop $project $description $tags\n";
+    return 1;
+  }
+
+  $self->_fill_duration(\%event);
+
+  if ($event{duration} < 300) {
+    warn "Skipping $project - $start - $stop. Too short duration ($event{duration})\n";
+    return 1;
+  }
+
   make_path(dirname($trc_file));
   _spurt(encode_json(\%event) => $trc_file);
-  _say 'Registered "%s" at %s with duration %s', $event{project}, $event{start}, $self->_hms_duration($duration, 'hms');
+  _say 'Registered "%s" at %s with duration %s', @event{qw( project start )}, $self->_hms_duration($event{duration}, 'hms');
 }
 
 sub action_start {
@@ -303,6 +305,16 @@ sub _add_event_info {
   for my $t (ref $tags ? @$tags : $tags) {
     push @{$event->{tags}}, $t;
   }
+}
+
+sub _fill_duration {
+  my ($self, $event) = @_;
+  my $start    = $self->_from_iso_8601($event->{start});
+  my $stop     = $self->_from_iso_8601($event->{stop});
+  my $duration = $stop - $start;
+
+  $event->{seconds}  = $duration->seconds;
+  $event->{duration} = $self->_hms_duration($duration);
 }
 
 sub _fill_log_days {
