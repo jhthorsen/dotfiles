@@ -215,14 +215,14 @@ sub action_register {
 
   $self->_fill_duration(\%event);
 
-  if ($event{duration} < 300) {
+  if ($event{seconds} < 300) {
     warn "Skipping $project - $start - $stop. Too short duration ($event{duration})\n";
     return 1;
   }
 
   make_path(dirname($trc_file));
   _spurt(encode_json(\%event) => $trc_file);
-  _say 'Registered "%s" at %s with duration %s', @event{qw( project start )}, $self->_hms_duration($event{duration}, 'hms');
+  _say 'Registered "%s" at %s with duration %s', @event{qw( project start duration )};
 }
 
 sub action_start {
