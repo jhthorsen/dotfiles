@@ -68,6 +68,6 @@ if __name__ == "__main__":
     indicator = ShairplayIndicator()
     indicator.shairport_argv = sys.argv[:]
     indicator.shairport_argv[0] = "shairport"
-    indicator.start()
+    gtk.timeout_add(2000, indicator.start)
     gtk.timeout_add(1000, indicator.check_child)
     gtk.main()
