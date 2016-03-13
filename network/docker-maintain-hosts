@@ -1,0 +1,78 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:           docker-maintain-hosts
+# Required-Start:     $docker
+# Required-Stop:      $docker
+# Should-Start:       cgroupfs-mount cgroup-lite
+# Should-Stop:        cgroupfs-mount cgroup-lite
+# Default-Start:      2 3 4 5
+# Default-Stop:       0 1 6
+# Short-Description:  Will update /etc/hosts
+# Description:
+# This script will look at the docker instances and update /etc/hosts
+### END INIT INFO
+
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+
+DAEMON=$(readlink -f $0)
+NAME=$DAEMON
+DESC="Maintain /etc/hosts for docker instances"
+
+. /lib/lsb/init-functions
+
+update_hosts_file () {
+  TEMP_FILE=$(tempfile)
+  DOCKER0_IP=$(ifconfig docker0 | grep addr: | awk '{ print $2 }' | cut -d: -f2)
+
+  if [ -z $DOCKER0_IP ]; then
+    ip addr add 172.17.42.1/16 dev docker0
+    DOCKER0_IP="172.17.42.1"
+  fi
+
+  grep -v '\.docker' /etc/hosts > $TEMP_FILE
+  echo "$DOCKER0_IP local.docker" | tee -a $TEMP_FILE
+  docker ps | awk '{print $1}' | while read ID; do
+    IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' $ID 2>/dev/null)
+    if echo $IP | grep -q '[0-9]'; then
+      NAME=$(docker inspect --format '{{ .Name }}' $ID 2>/dev/null | cut -d'/' -f2)
+      echo "$IP $NAME.docker" | tee -a $TEMP_FILE
+    fi
+  done
+
+  chmod 644 $TEMP_FILE
+  mv $TEMP_FILE /etc/hosts
+}
+
+case "$1" in
+  start)
+    log_daemon_msg "Starting $DAEMON" $DAEMON || true
+    start-stop-daemon --start --quiet --test \
+      --name $DAEMON --exec $DAEMON > /dev/null || exit 1
+    start-stop-daemon --start --oknodo --quiet --background \
+      --name $DAEMON --exec $DAEMON -- daemon
+    log_end_msg $? || true
+  ;;
+  stop)
+    log_daemon_msg "Stopping $DAEMON" $DAEMON || true
+    start-stop-daemon --stop --oknodo --quiet --name $DAEMON
+    log_end_msg $? || true
+  ;;
+  restart)
+    log_daemon_msg "Restarting $DAEMON" $DAEMON || true
+    $0 stop && $0 start
+    log_end_msg $? || true
+  ;;
+  update)
+    update_hosts_file
+  ;;
+  daemon)
+    while sleep 1; do
+      docker events | while read e; do update_hosts_file; done
+    done
+  ;;
+  **)
+    echo "Usage: $0 {start|stop|restart|update}"
+    exit 1
+  ;;
+esac
