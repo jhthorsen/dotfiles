@@ -32,7 +32,7 @@ update_hosts_file () {
 
   grep -v '\.docker' /etc/hosts > $TEMP_FILE
   echo "$DOCKER0_IP local.docker" | tee -a $TEMP_FILE
-  docker ps | awk '{print $1}' | while read ID; do
+  docker ps | grep -v CONTAINER | awk '{print $1}' | while read ID; do
     IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' $ID 2>/dev/null)
     if echo $IP | grep -q '[0-9]'; then
       NAME=$(docker inspect --format '{{ .Name }}' $ID 2>/dev/null | cut -d'/' -f2)
