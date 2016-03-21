@@ -1,22 +1,18 @@
 #!/bin/sh
 
 ### BEGIN INIT INFO
-# Provides:           docker-maintain-hosts
+# Provides:           docker-hosts
 # Required-Start:     $docker
 # Required-Stop:      $docker
-# Should-Start:       cgroupfs-mount cgroup-lite
-# Should-Stop:        cgroupfs-mount cgroup-lite
 # Default-Start:      2 3 4 5
 # Default-Stop:       0 1 6
-# Short-Description:  Will update /etc/hosts
-# Description:
-# This script will look at the docker instances and update /etc/hosts
+# Short-Description:  Will update /etc/hosts with docker hosts
 ### END INIT INFO
 
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 
 DAEMON=$(readlink -f $0)
-NAME=$DAEMON
+NAME=$(basename $DAEMON)
 DESC="Maintain /etc/hosts for docker instances"
 
 . /lib/lsb/init-functions
@@ -47,15 +43,13 @@ update_hosts_file () {
 case "$1" in
   start)
     log_daemon_msg "Starting $DAEMON" $DAEMON || true
-    start-stop-daemon --start --quiet --test \
-      --name $DAEMON --exec $DAEMON > /dev/null || exit 1
     start-stop-daemon --start --oknodo --quiet --background \
       --name $DAEMON --exec $DAEMON -- daemon
     log_end_msg $? || true
   ;;
   stop)
     log_daemon_msg "Stopping $DAEMON" $DAEMON || true
-    start-stop-daemon --stop --oknodo --quiet --name $DAEMON
+    start-stop-daemon --stop --oknodo --quiet --name $NAME
     log_end_msg $? || true
   ;;
   restart)
@@ -67,9 +61,9 @@ case "$1" in
     update_hosts_file
   ;;
   daemon)
-    while sleep 1; do
-      docker events | while read e; do update_hosts_file; done
-    done
+    #while sleep 1; do
+    #  docker events | while read e; do update_hosts_file; done
+    #done
   ;;
   **)
     echo "Usage: $0 {start|stop|restart|update}"
