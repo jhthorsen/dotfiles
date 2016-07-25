@@ -5,18 +5,19 @@ use Image::ExifTool;
 use File::Basename 'dirname';
 use Mojo::Util qw(md5_sum slurp);
 
+option str => dff   => 'Date from filename';
 option str => drive => 'Path to google drive',
   $ENV{GOOGLE_DRIVE_DIR} || "/Users/$ENV{USER}/Google/Photos";
 option str => source => 'Where imported files are',
   $ENV{GOOGLE_PHOTOS_IMPORT_SOURCE} || "/Users/$ENV{USER}/Downloads/import";
-option bool => keep => 'Do not delete files';
+option bool => dry_run => 'Do not delete files';
 
 documentation __FILE__;
 
 my $NUM_RE    = '(\d+)\D*';
 my $TS_FORMAT = '%04s-%02s-%02s-%02s%02s%02s';
 
-sub build_checksum {
+sub checksums_for {
   my ($self, $year, $key) = @_;
   return $self->{checksum}{$year}{$key} if $self->{checksum}{$year}{$key};
 
@@ -37,10 +38,9 @@ sub delete_duplicate {
   my ($year, $key) = $slug =~ /^(\d+)-(\d+-\d+)/ or die "No year in slug?? ($slug)";
 
   for (0 .. 1) {
-    my $checksum = $self->build_checksum($year, $key);
-    if ($self->{checksum}{$year}{$key}{$checksum}) {
+    if ($self->checksums_for($year, $key)->{$checksum}) {
       warn "rm $file\n";
-      unlink $file or die "rm $file: $!" unless $self->keep;
+      unlink $file or die "rm $file: $!" unless $self->dry_run;
       return 1;
     }
     $year--;  # check last year, since sometimes 2014-01-01-00000 gets stored in year 2013
@@ -59,24 +59,36 @@ sub file_slug {
     warn qq(Unknown extension for "$file".\n);
     return;
   }
-  unless ($exif->ExtractInfo($file)) {
+  if (!$self->dff and !$exif->ExtractInfo($file)) {
     warn qq(Unable to extract Exif data from "$file".\n);
     return;
+  }
+  if ($self->dff) {
+    $file =~ m!(\d{4})-(\d+)-(\d+)-(\d\d)(\d\d)(\d\d)!x or return;
+    $ts{date} ||= sprintf $TS_FORMAT, $1, $2, $3, $4, $5, $6;
   }
 
   for my $k (qw(CreateDate DateTimeOriginal ModifyDate GPSDateTime)) {
     $ts{$k} = $exif->GetValue($k) || '';
     $ts{$k} =~ m!(\d{4}) [:-]+ $NUM_RE $NUM_RE $NUM_RE $NUM_RE $NUM_RE!x or next;
-    $ts{date} ||= sprintf $TS_FORMAT, $1, $2, $3, $4, $5, $6;
+
+    if ($2 > 12) {
+      $ts{date} ||= sprintf $TS_FORMAT, $1, $3, $2, $4, $5, $6;
+      $ts{$k} = '';    # make sure we overwrite invalid date
+    }
+    else {
+      $ts{date} ||= sprintf $TS_FORMAT, $1, $2, $3, $4, $5, $6;
+    }
   }
 
   unless ($ts{date}) {
     my @ts = localtime +(stat $file)[9];
     $ts{date} = sprintf $TS_FORMAT, $ts[5] + 1900, $ts[4] + 1, @ts[3, 2, 1, 0];
   }
-
-  $exif->SetNewValue($_ => $ts{date}) for grep { !$ts{$_} } keys %ts;
-  $exif->WriteInfo($file) if grep { !$ts{$_} } keys %ts;
+  unless ($self->dry_run) {
+    $exif->SetNewValue($_ => $ts{date}) for grep { !$ts{$_} } keys %ts;
+    $exif->WriteInfo($file) if grep { !$ts{$_} } keys %ts;
+  }
 
   my $md5 = md5_sum slurp $file;
   return sprintf('%s_%s.%s', $ts{date}, substr($md5, 0, 3), lc $ext), $md5;
@@ -84,17 +96,22 @@ sub file_slug {
 
 app {
   my ($self) = @_;
+  my $filter = $self->dff || '.';
 
   opendir my $DH, $self->source or die $!;
   my @files = sort map { File::Spec->catfile($self->source, $_) } readdir $DH;
   my ($checksum, $file, $slug);
 
   while ($file = shift @files) {
+    next unless $file =~ /$filter/;
     next if -d $file;
     ($slug, $checksum) = $self->file_slug($file) or next;
     my $target = File::Spec->catfile($self->source, $slug);
     $self->delete_duplicate($file, $slug, $checksum) and next;
-    rename $file => $target or die "mv $file $target: $!" unless -e $target;
+    warn "mv $file $target\n" unless -e $target;
+    rename $file => $target
+      or die "mv $file $target: $!"
+      if !-e $target and !$self->dry_run;
   }
 
   return 0;
