@@ -1,0 +1,32 @@
+#!/usr/bin/env perl
+use Mojo::Base -strict;
+use IPC::Run3;
+use Mojo::Date;
+
+$ENV{MOJOPASTE_HOME} ||= '/var/mojopaste';
+
+die "Need to run as root\n" if $<;
+my $debug = grep { /^-d/ } @ARGV;
+my $csv   = "$ENV{MOJOPASTE_HOME}/temperature0";
+my ($out, %res);
+
+open my $CSV, ">>", $csv or die "Open $csv: $!\n";
+
+$out = '';
+run3 'hddtemp -n /dev/sdb', \undef, \$out, undef;
+$res{hddtemp} = $out =~ /(\d+)/ ? $1 : -1;
+
+$out = '';
+run3 'sensors', \undef, \$out, undef;
+$res{$1} = $2 while $out =~ s!^(\w[^:]+):\s*\+(\d+\.?\d*)\W+C!!m;
+
+wr(qq("ts",%s\n), join ",", map {qq("$_")} sort keys %res) unless -s $csv;
+wr(qq(%s,%s\n), Mojo::Date->new->to_datetime, join ",",
+  map {qq($res{$_})} sort keys %res);
+
+exit $!;
+
+sub wr {
+  my $str = sprintf shift, @_;
+  print {$debug ? *STDOUT : $CSV} $str;
+}
