@@ -13,11 +13,11 @@ my ($out, %res);
 open my $CSV, ">>", $csv or die "Open $csv: $!\n";
 
 $out = '';
-run3 'hddtemp -n /dev/sdb', \undef, \$out, undef;
+run3 '/usr/sbin/hddtemp -n /dev/sdb', \undef, \$out, undef;
 $res{hddtemp} = $out =~ /(\d+)/ ? $1 : -1;
 
 $out = '';
-run3 'sensors', \undef, \$out, undef;
+run3 '/usr/bin/sensors', \undef, \$out, undef;
 $res{$1} = $2 while $out =~ s!^(\w[^:]+):\s*\+(\d+\.?\d*)\W+C!!m;
 
 wr(qq("ts",%s\n), join ",", map {qq("$_")} sort keys %res) unless -s $csv;
