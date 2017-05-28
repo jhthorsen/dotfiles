@@ -3,7 +3,10 @@ use Applify;
 
 use Image::ExifTool;
 use File::Basename 'dirname';
-use Mojo::Util qw(md5_sum slurp);
+use Mojo::File 'path';
+use Mojo::Util;
+
+Mojo::Util::monkey_patch('Mojo::File', md5_sum => sub { Mojo::Util::md5_sum(shift->slurp) });
 
 option str => dff   => 'Date from filename';
 option str => drive => 'Path to google drive',
@@ -22,12 +25,12 @@ sub checksums_for {
   my ($self, $year, $key) = @_;
   return $self->{checksum}{$year}{$key} if $self->{checksum}{$year}{$key};
 
-  opendir(my $DH, File::Spec->catdir($self->drive, $year)) or return {};
+  opendir(my $DH, path($self->drive, $year)) or return {};
   my $checksum = $self->{checksum}{$year}{$key} = {};
   while (my $f = readdir $DH) {
     next unless $f =~ /^\d+-$key/;    # do not want to calculate md5_sum for every file
-    my $path = File::Spec->catdir($self->drive, $year, $f);
-    my $md5 = md5_sum slurp $path;
+    my $path = path($self->drive, $year, $f);
+    my $md5 = $path->md5_sum;
     $checksum->{$md5} = $path;
   }
 
@@ -65,7 +68,7 @@ sub file_slug {
     warn qq(Unknown extension for "$file".\n);
     return;
   }
-  if (!$self->dff and !$exif->ExtractInfo($file)) {
+  if (!$self->dff and !$exif->ExtractInfo($file->to_string)) {
     warn qq(Unable to extract Exif data from "$file".\n);
     return;
   }
@@ -93,10 +96,10 @@ sub file_slug {
   }
   unless ($self->dry_run) {
     $exif->SetNewValue($_ => $ts{date}) for grep { !$ts{$_} } keys %ts;
-    $exif->WriteInfo($file) if grep { !$ts{$_} } keys %ts;
+    $exif->WriteInfo($file->to_string) if grep { !$ts{$_} } keys %ts;
   }
 
-  my $md5 = md5_sum slurp $file;
+  my $md5 = path($file)->md5_sum;
   return sprintf('%s_%s.%s', $ts{date}, substr($md5, 0, 3), lc $ext), $md5;
 }
 
@@ -105,14 +108,14 @@ app {
   my $filter = $self->dff || '.';
 
   opendir my $DH, $self->source or die $!;
-  my @files = sort map { File::Spec->catfile($self->source, $_) } readdir $DH;
+  my @files = sort map { path($self->source, $_) } readdir $DH;
   my ($checksum, $file, $slug);
 
   while ($file = shift @files) {
     next unless $file =~ /$filter/;
     next if -d $file;
     ($slug, $checksum) = $self->file_slug($file) or next;
-    my $target = File::Spec->catfile($self->source, $slug);
+    my $target = path($self->source, $slug);
     $self->delete_duplicate($file, $slug, $checksum) and next;
     warn "mv $file $target\n" unless -e $target;
     rename $file => $target
