@@ -13,7 +13,6 @@ option str => drive => 'Path to google drive',
   $ENV{GOOGLE_DRIVE_DIR} || "/Users/$ENV{USER}/Google/Photos";
 option str => source => 'Where imported files are',
   $ENV{GOOGLE_PHOTOS_IMPORT_SOURCE} || "/Users/$ENV{USER}/Downloads/import";
-option bool => delete => 'Delete ARW files';
 option bool => dry_run => 'Do not delete files';
 
 documentation __FILE__;
@@ -59,9 +58,10 @@ sub file_slug {
   my $exif = Image::ExifTool->new;
   my %ts;
 
-  if ($self->delete and $ext =~ qr{^(arw)$}i) {
+  if ($ext =~ qr{^(arw)$}i) {
+    my $dest = path(path($file)->dirname, 'raw', path($file)->basename);
     warn "rm $file\n";
-    unlink $file;
+    rename $file, $dest or die "mv $file $dest: $!\n";
     return;
   }
   unless ($ext =~ qr{^(jpe?g|png|mov|mp4)$}i) {
