@@ -117,10 +117,15 @@ app {
     ($slug, $checksum) = $self->file_slug($file) or next;
     my $target = path($self->source, $slug);
     $self->delete_duplicate($file, $slug, $checksum) and next;
-    warn "mv $file $target\n" unless -e $target;
-    rename $file => $target
-      or die "mv $file $target: $!"
-      if !-e $target and !$self->dry_run;
+
+    if (-e $target and $target ne $file) {
+      warn "rm $file\n";
+      unlink $file;
+    }
+    if (!-e $target and !$self->dry_run) {
+      warn "mv $file $target\n";
+      rename $file => $target or die "mv $file $target: $!";
+    }
   }
 
   return 0;
