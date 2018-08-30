@@ -64,7 +64,7 @@ sub file_slug {
     rename $file, $dest or die "mv $file $dest: $!\n";
     return;
   }
-  unless ($ext =~ qr{^(jpe?g|png|mov|mp4)$}i) {
+  unless ($ext =~ qr{^(jpe?g|gif|png|mov|mp4)$}i) {
     warn qq(Unknown extension for "$file".\n);
     return;
   }
@@ -109,9 +109,21 @@ app {
 
   opendir my $DH, $self->source or die $!;
   my @files = sort map { path($self->source, $_) } readdir $DH;
-  my ($checksum, $file, $slug);
+  my ($checksum, $slug);
 
-  while ($file = shift @files) {
+  #while (my $file = shift @files) {
+  #  next unless $file =~ /\.jpe?g$/i;
+  #  my $exif = Image::ExifTool->new;
+  #  $exif->ExtractInfo($file->to_string);
+  #  my $info = $exif->GetInfo(qw(Make ImageWidth ImageHeight));
+  #  next unless $info->{Make} and $info->{ImageHeight};
+  #  next unless $info->{Make} eq 'SONY';
+  #  next unless $info->{ImageWidth} eq '1080' or $info->{ImageHeight} eq '1080';
+  #  print "rm $file\n";
+  #}
+  #return 0;
+
+  while (my $file = shift @files) {
     next unless $file =~ /$filter/;
     next if -d $file;
     ($slug, $checksum) = $self->file_slug($file) or next;
