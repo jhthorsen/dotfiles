@@ -19,16 +19,23 @@ fswatch \
   --latency=0.3 \
   --event-flag-separator=":" \
   -x \
-  $PWD | perl -nE'
-    BEGIN { $pwd_re = quotemeta $ENV{PWD} }
-    chomp;
-    $op = s/\s+(\S+)$// ? $1 : "Unknown";
-    next unless $op =~ /IsFile/;
-    $file = $_;
-    s/^$pwd_re// or die "INVALID_FILE_NAME: $file ($pwd_re)";
-    $rel = $_;
-    @cmd = $op =~ /Removed/
-      ? (ssh => -C => $ENV{REMOTE_HOST}, "rm $ENV{REMOTE_PATH}$rel")
-      : (scp => -C => $file => "$ENV{REMOTE_HOST}:$ENV{REMOTE_PATH}$rel");
-    say "> @cmd ($op)";
-    system @cmd and exit $?';
+  $PWD | perl -wnE'
+    use strict;
+    my $pwd_re = quotemeta $ENV{PWD};
+    while (<>) {
+      chomp;
+      my $op = s/\s+(\S+)$// ? $1 : "Unknown";
+      my $file = $_;
+      say "# $op $file";
+      next if $op !~ /IsFile/;
+      next if $op =~ /Created.*Removed/;
+      s/^$pwd_re// or die "INVALID_FILE_NAME: $file ($pwd_re)";
+      my $rel = $_;
+      my @cmd = $op =~ /Removed/
+        ? (ssh => -C => $ENV{REMOTE_HOST}, "rm $ENV{REMOTE_PATH}$rel")
+        : (scp => -C => $file => "$ENV{REMOTE_HOST}:$ENV{REMOTE_PATH}$rel");
+      say "> @cmd";
+      system @cmd;
+    }
+    die "! exit=$? ($!)";
+    ';
