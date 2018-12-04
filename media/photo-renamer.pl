@@ -20,38 +20,6 @@ documentation __FILE__;
 my $NUM_RE    = '(\d+)\D*';
 my $TS_FORMAT = '%04s-%02s-%02s-%02s%02s%02s';
 
-sub checksums_for {
-  my ($self, $year, $key) = @_;
-  return $self->{checksum}{$year}{$key} if $self->{checksum}{$year}{$key};
-
-  opendir(my $DH, path($self->drive, $year)) or return {};
-  my $checksum = $self->{checksum}{$year}{$key} = {};
-  while (my $f = readdir $DH) {
-    next unless $f =~ /^\d+-$key/;    # do not want to calculate md5_sum for every file
-    my $path = path($self->drive, $year, $f);
-    my $md5 = $path->md5_sum;
-    $checksum->{$md5} = $path;
-  }
-
-  return $checksum;
-}
-
-sub delete_duplicate {
-  my ($self, $file, $slug, $checksum) = @_;
-  my ($year, $key) = $slug =~ /^(\d+)-(\d+-\d+)/ or die "No year in slug?? ($slug)";
-
-  for (0 .. 1) {
-    if ($self->checksums_for($year, $key)->{$checksum}) {
-      warn "rm $file\n";
-      unlink $file or die "rm $file: $!" unless $self->dry_run;
-      return 1;
-    }
-    $year--;  # check last year, since sometimes 2014-01-01-00000 gets stored in year 2013
-  }
-
-  return 0;
-}
-
 sub file_slug {
   my ($self, $file) = @_;
   my ($ext) = $file =~ /\.(\w+)?$/ or return;
@@ -60,7 +28,7 @@ sub file_slug {
 
   if ($ext =~ qr{^(arw)$}i) {
     my $dest = path(path($file)->dirname, 'raw', path($file)->basename);
-    warn "rm $file\n";
+    warn "rename $file\n";
     rename $file, $dest or die "mv $file $dest: $!\n";
     return;
   }
@@ -100,7 +68,7 @@ sub file_slug {
   }
 
   my $md5 = path($file)->md5_sum;
-  return sprintf('%s_%s.%s', $ts{date}, substr($md5, 0, 3), lc $ext), $md5;
+  return sprintf '%s_%s.%s', $ts{date}, substr($md5, 0, 3), lc $ext;
 }
 
 app {
@@ -108,10 +76,9 @@ app {
   my $filter = $self->dff || '.';
 
   opendir my $DH, $self->source or die $!;
-  my @files = sort map { path($self->source, $_) } readdir $DH;
-  my ($checksum, $slug);
+  my @source_files = sort map { path($self->source, $_) } readdir $DH;
 
-  #while (my $file = shift @files) {
+  #while (my $file = shift @source_files) {
   #  next unless $file =~ /\.jpe?g$/i;
   #  my $exif = Image::ExifTool->new;
   #  $exif->ExtractInfo($file->to_string);
@@ -123,20 +90,20 @@ app {
   #}
   #return 0;
 
-  while (my $file = shift @files) {
+  while (my $file = shift @source_files) {
     next unless $file =~ /$filter/;
     next if -d $file;
-    ($slug, $checksum) = $self->file_slug($file) or next;
-    my $target = path($self->source, $slug);
-    $self->delete_duplicate($file, $slug, $checksum) and next;
+    my $slug = $self->file_slug($file) or next;
+    my $slug_file = path($self->source, $slug);
+    my $uploaded = path($self->drive, $slug =~ m!\b(\d{4})-! ? $1 : '0000', $slug);
 
-    if (-e $target and $target ne $file) {
-      warn "rm $file\n";
-      unlink $file;
+    if (-e $uploaded) {
+      print "rm $file\n";
+      unlink $file unless $self->dry_run;
     }
-    if (!-e $target and !$self->dry_run) {
-      warn "mv $file $target\n";
-      rename $file => $target or die "mv $file $target: $!";
+    elsif (!-e $slug_file) {
+      print "mv $file $slug_file\n";
+      rename $file => $slug_file or die "mv $file $slug_file: $!" unless $self->dry_run;
     }
   }
 
