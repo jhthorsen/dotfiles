@@ -32,7 +32,7 @@ sub file_slug {
     rename $file, $dest or die "mv $file $dest: $!\n";
     return;
   }
-  unless ($ext =~ qr{^(jpe?g|gif|png|mov|mp4)$}i) {
+  unless ($ext =~ qr{^(heic|jpe?g|gif|png|mov|mp4)$}i) {
     warn qq(Unknown extension for "$file".\n);
     return;
   }
