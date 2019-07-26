@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use experimental 'signatures';
+use IO::Socket::INET;
+
+my $len = 0;
+my %temp;
+
+read_sensors();
+read_hddtemp();
+print_report();
+
+sub name($str) {
+  my $l = length $str;
+  $len = $l if $l > $len;
+  return lc $str;
+}
+
+sub print_report {
+  for my $k (sort { $temp{$b} <=> $temp{$a} } keys %temp) {
+    printf "%-${len}s = %sC\n", $k, $temp{$k};
+  }
+}
+
+sub read_hddtemp {
+  my $HDDTEMP = IO::Socket::INET->new(PeerAddr => 'localhost:7634') or die "hddtemp: $!";
+  my $hddtemp = '';
+  while (1) {
+    $HDDTEMP->recv(my $buf, 1024);
+    $hddtemp .= $buf || last;
+  }
+
+  my ($p, $name) = (0, '');
+  for my $part (split /\|/, $hddtemp) {
+    $name = $part =~ m!/dev/(\w+)! ? $1 : $name if ($p % 5) == 1;
+    $temp{name($name)} = $part if ($p % 5) == 3;
+    $p++;
+  }
+}
+
+sub read_sensors {
+  open my $SENSORS, '-|', 'sensors' or die "sensors: $!";
+  while (<$SENSORS>) {
+    my ($name, $temp) = /^(.+):\s+\+(\d+)/ or next;
+    next if $name =~ m!package!i;
+    $name =~ s!\s+!!g;
+    $temp{name($name)} = $temp;
+  }
+}
