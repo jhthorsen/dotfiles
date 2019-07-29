@@ -1,15 +1,24 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use feature qw(say state);
 use experimental 'signatures';
 use IO::Socket::INET;
+use Time::Piece;
 
+my ($csv) = grep { /-csv/ } @ARGV;
+my ($interval) = grep { /^\d+$/ } @ARGV, 60;
 my $len = 0;
 my %temp;
 
-read_sensors();
-read_hddtemp();
-print_report();
+local $| = 1; # autoflush
+while (1) {
+  read_sensors();
+  read_hddtemp();
+  $csv ? print_summary_csv() : print_summary_human();
+  last unless $csv;
+  sleep $interval;
+}
 
 sub name($str) {
   my $l = length $str;
@@ -17,7 +26,13 @@ sub name($str) {
   return lc $str;
 }
 
-sub print_report {
+sub print_summary_csv {
+  state $print_headers = 0;
+  say join ',', 'time', sort keys %temp unless $print_headers++;
+  say join ',', localtime->datetime, map { $temp{$_} } sort keys %temp;
+}
+
+sub print_summary_human() {
   for my $k (sort { $temp{$b} <=> $temp{$a} } keys %temp) {
     printf "%-${len}s = %sC\n", $k, $temp{$k};
   }
