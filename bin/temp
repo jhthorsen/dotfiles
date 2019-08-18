@@ -3,38 +3,58 @@ use strict;
 use warnings;
 use feature qw(say state);
 use experimental 'signatures';
+use File::Temp 'tempfile';
 use IO::Socket::INET;
 use Time::Piece;
 
-my ($csv) = grep { /-csv/ } @ARGV;
-my ($interval) = grep { /^\d+$/ } @ARGV, 60;
-my $len = 0;
-my %temp;
-
-local $| = 1; # autoflush
-while (1) {
-  read_sensors();
-  read_hddtemp();
-  $csv ? print_summary_csv() : print_summary_human();
-  last unless $csv;
-  sleep $interval;
+my (%argv, %temp) = (max => 10000, print_headers => 1);
+while (@ARGV) {
+  my $opt = shift @ARGV;
+  $argv{csv} = 1 if $opt eq '--csv';
+  $argv{max} = shift @ARGV if $opt eq '--max' and @ARGV;
+  $argv{out} = shift @ARGV if $opt eq '--out' or $opt eq '-o';
 }
+
+$argv{csv} = 1 if $argv{out};
+$argv{len} = 0;
+
+if ($argv{out} and -s $argv{out} and open my $FILE, '<', $argv{out}) {
+  my @lines = <$FILE>;
+  $argv{fields} = shift @lines if @lines;
+  $argv{print_headers} = 0;
+  my ($TMP, $tmp) = tempfile;
+  shift @lines while @lines >= $argv{max};
+  print {$TMP} $argv{fields}, @lines;
+  close $TMP or die "close $tmp: $!\n";
+  rename $tmp, $argv{out} or die "mv $tmp $argv{out}: $!\n";
+}
+
+if ($argv{fields}) {
+  $argv{fields} = [grep { $_ =~ /\w/ } map { /(\w+)/ && $1 } split /,/, $argv{fields}];
+}
+
+my $OUT = \*STDOUT;
+open $OUT, '>>', $argv{out} or die "Write $argv{out}: $!\n" if $argv{out};
+
+read_sensors();
+read_hddtemp();
+$argv{fields} ||= [sort keys %temp];
+$argv{csv} ? print_summary_csv() : print_summary_human();
 
 sub name($str) {
   my $l = length $str;
-  $len = $l if $l > $len;
+  $argv{len} = $l if $l > $argv{len};
   return lc $str;
 }
 
 sub print_summary_csv {
-  state $print_headers = 0;
-  say join ',', 'time', sort keys %temp unless $print_headers++;
-  say join ',', localtime->datetime, map { $temp{$_} } sort keys %temp;
+  say {$OUT} join ',', 'time', sort keys %temp if delete $argv{print_headers};
+  say {$OUT} join ',', localtime->datetime, map { $temp{$_} || 0 } @{$argv{fields}};
 }
 
-sub print_summary_human() {
+sub print_summary_human {
   for my $k (sort { $temp{$b} <=> $temp{$a} } keys %temp) {
-    printf "%-${len}s = %sC\n", $k, $temp{$k};
+    printf "%-$argv{len}s = %sC\n", $k, $temp{$k};
   }
 }
 
@@ -57,7 +77,7 @@ sub read_hddtemp {
 sub read_sensors {
   open my $SENSORS, '-|', 'sensors' or die "sensors: $!";
   while (<$SENSORS>) {
-    my ($name, $temp) = /^(.+):\s+\+(\d+)/ or next;
+    my ($name, $temp) = /^(.+):\s+\+(\d+)[^a-zA-Z]*C\b/ or next;
     next if $name =~ m!package!i;
     $name =~ s!\s+!!g;
     $temp{name($name)} = $temp;
