@@ -6,12 +6,6 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # Lines configured by zsh-newuser-install
-HISTFILE=~/.histfile
-HISTSIZE=1000
-SAVEHIST=5000
-setopt appendhistory extendedglob notify
-unsetopt beep
-bindkey -e
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall
 zstyle :compinstall filename "$HOME/.zshrc"
@@ -20,10 +14,16 @@ autoload -Uz compinit
 compinit
 # End of lines added by compinstall
 
-source /usr/local/share/zsh-navigation-tools/zsh-navigation-tools.plugin.zsh
+# ============================================================================
+# Source external files
+# ----------------------------------------------------------------------------
+source /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc
+source /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc
 source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source /usr/local/share/zsh-navigation-tools/zsh-navigation-tools.plugin.zsh
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
 fpath=(/usr/local/share/zsh-completions $fpath)
-# rm -f ~/.zcompdump; compinit
 
 for SOURCE_FILE in $(find ~/.config/dot-files -depth 1 \( -type l -o -type f \) | sort); do
   SOURCE_FILE=$(readlink $SOURCE_FILE);
@@ -31,5 +31,20 @@ for SOURCE_FILE in $(find ~/.config/dot-files -depth 1 \( -type l -o -type f \) 
 done
 unset SOURCE_FILE;
 
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+# ============================================================================
+# Misc settings
+# ----------------------------------------------------------------------------
+bindkey -v # vim bindings
+umask 0002
+setopt notify
+unsetopt extendedglob # Allow "git show HEAD^"
+
+setopt auto_list # automatically list choices on ambiguous completion
+setopt auto_menu # automatically use menu completion
+unsetopt always_to_end
+zstyle ':completion:*' menu select # select completions with arrow keys
+zstyle ':completion:*' group-name '' # group results by category
+zstyle ':completion:::::' completer _expand _complete _ignored _approximate # enable approximate matches for completion
+zstyle ':completion:*' special-dirs true
+
+# rm -f ~/.zcompdump; compinit
