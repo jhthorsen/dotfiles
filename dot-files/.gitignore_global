@@ -1,0 +1,9 @@
+*swp
+*~
+.DS_Store
+.gist_token
+.vim/bundle
+.vscode
+.vstags
+/Shared With Me
+/local

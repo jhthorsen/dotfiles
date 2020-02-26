@@ -1,0 +1,11 @@
+alias ff="find . -type f | grep -v 'git\|node_mo\|packed\|sass-cache\|\.swp' | sort"
+alias gti="git"
+alias limited="ulimit -d 600000 -m 600000 -v 600000 -t 2 -u 5000; ulimit -a"
+alias pcover="HARNESS_PERL_SWITCHES=-MDevel::Cover=+ignore,t/ prove -l;cover -gcov"
+alias pipesha10="shasum|cut -c1-10"
+alias psql.start="launchctl load /usr/local/opt/postgresql/homebrew.mxcl.postgresql.plist"
+alias tmpdir="perl -le'use File::Spec;print File::Spec->tmpdir'"
+alias vi="vim"
+alias view="vim -R"
+
+which ack-grep >/dev/null && alias ack="ack-grep"
