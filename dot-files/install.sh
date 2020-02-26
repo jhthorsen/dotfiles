@@ -1,5 +1,60 @@
 #!/bin/zsh
 
+if [ "x$1" = "xapps" ]; then
+  # ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+  brew update;
+  brew install \
+    ack \
+    ansible \
+    bash-completion \
+    cpanm \
+    cybertk/formulae/launchd-oneshot \
+    diff-so-fancy \
+    homebrew/completions/tmuxinator-completion \
+    ircd-hybrid \
+    jpegoptim \
+    mysql \
+    node \
+    perl-build \
+    pngcrush \
+    postgresql \
+    ruby \
+    ssh-copy-id \
+    tmux \
+    tree \
+    vim \
+    wget \
+    z \
+  ;
+
+  cpanm -n App::errno
+  cpanm -n App::git::ship
+  cpanm -n App::githook_perltidy
+  cpanm -n App::githook::perltidy
+  cpanm -n App::pause
+  cpanm -n App::podify
+  cpanm -n App::prowess
+  cpanm -n App::tt
+  cpanm -n Devel::Cover
+
+  pip install --upgrade pip
+  pip install glances
+
+  exit;
+fi
+
+if [ "x$1" = "xsettings" ]; then
+  defaults read NSGlobalDomain InitialKeyRepeat # 25
+  defaults write NSGlobalDomain InitialKeyRepeat -int 12
+  defaults read NSGlobalDomain KeyRepeat # 2
+  defaults write NSGlobalDomain KeyRepeat -int 0
+  defaults write com.apple.screencapture location /Users/jhthorsen/Downloads
+  defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
+  # killall SystemUIServer
+
+  curl -L https://iterm2.com/misc/install_shell_integration.sh | zsh
+fi
+
 CONFIG_DIR="$HOME/.config/dot-files";
 ROOT_DIR="${0:a:h}";
 [ "x$ROOT_DIR" = "x" ] && exit 1;
