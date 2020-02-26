@@ -21,3 +21,4 @@ _add_path "/usr/local/opt/ncurses/bin";
 _add_path "/usr/local/opt/go/libexec/bin";
 _add_path "/usr/local/bin";
 _add_path "/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+_add_path "$HOME/.config/dot-files/bin";

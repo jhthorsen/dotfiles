@@ -44,3 +44,6 @@ install_file $ROOT_DIR/env.sh $CONFIG_DIR/01-env.sh
 install_file $ROOT_DIR/aliases.sh $CONFIG_DIR/10-aliases.sh
 install_file $ROOT_DIR/history.sh $CONFIG_DIR/10-history.sh
 install_file $ROOT_DIR/setkeylabel.sh $CONFIG_DIR/30-setkeylabel.sh
+
+# scripts
+install_file $ROOT_DIR/../bin $CONFIG_DIR/bin
