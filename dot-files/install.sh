@@ -39,6 +39,8 @@ install_file $ROOT_DIR/.vimrc $HOME/.vimrc
 install_file $ROOT_DIR/.zshrc $HOME/.zshrc
 
 # .zshrc dependencies
-install_file $ROOT_DIR/path.sh $CONFIG/00-path.sh
-install_file $ROOT_DIR/aliases.sh $CONFIG/10-aliases.sh
-install_file $ROOT_DIR/history.sh $CONFIG/10-history.sh
+install_file $ROOT_DIR/path.sh $CONFIG_DIR/00-path.sh
+install_file $ROOT_DIR/env.sh $CONFIG_DIR/01-env.sh
+install_file $ROOT_DIR/aliases.sh $CONFIG_DIR/10-aliases.sh
+install_file $ROOT_DIR/history.sh $CONFIG_DIR/10-history.sh
+install_file $ROOT_DIR/setkeylabel.sh $CONFIG_DIR/30-setkeylabel.sh
