@@ -1,0 +1,45 @@
+#!/bin/sh
+[ -z $BRANCH ] && BRANCH=$(git symbolic-ref --short -q HEAD);
+FROM="$1";
+shift 2>/dev/null;
+
+# Whole month
+# $ git-date
+# $ git-date 2019-06
+# $ git-date 2019-06 --author=Jan
+if echo $FROM | grep -q "^\d\d\d\d-\d\d\$"; then
+  YYYYMM=${FROM:-$(date +%Y-%m)};
+  for DD in $(seq 01 31); do
+    git-date "$YYYYMM-$DD" $*;
+  done | less
+
+# Individual day
+# $ git-date 2019-06-04
+# $ git-date 2019-06-04 --author=Jan
+elif echo $FROM | grep -qe "^\d\d\d\d-\d\+-\d\+\$"; then
+  [ -t 1 ] && OUT_CMD="less" || OUT_CMD="cat";
+
+  # Partial date
+  if ! echo $FROM | grep -q -- "-"; then
+    FROM="$(date +%Y-%m)-$FROM";
+  fi
+
+  LOG_FORMAT="- %s - %an";
+  TO="$(date -d "$FROM + 1 days" +%Y-%m-%d)";
+  (
+    echo "$(tput setaf 3)# git diff $BRANCH $* @{$FROM}..@{$TO}$(tput sgr0)";
+    echo "";
+    echo "git log $BRANCH --pretty=format:$LOG_FORMAT --color $* @{$FROM}..@{$TO} | cat";
+    echo "";
+    echo "";
+    #git diff $BRANCH --color $* "@{$FROM}..@{$TO}" | cat
+  ) | $OUT_CMD;
+
+# Invalid date
+else
+  echo "Usage:";
+  echo "> git-date 2019-07-10";
+  echo "> git-date 2019-07";
+  echo "> git-date 2019-07 --author=Jan";
+  echo;
+fi

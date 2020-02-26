@@ -1,0 +1,2 @@
+#!/bin/sh
+perl -le'$n=$ARGV[0]||0;print pack "U",hex "0xff1$n"' $1 2>/dev/null

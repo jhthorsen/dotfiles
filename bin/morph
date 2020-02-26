@@ -1,0 +1,4 @@
+#!/bin/sh
+mogrify -resize 800x600 *jpg;
+convert *.jpg -delay 10 -morph 10 %05d.morph.jpg;
+avconv -r 30 -qscale 2 -i %05d.morph.jpg output.mp4;

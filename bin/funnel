@@ -1,0 +1,3 @@
+#!/bin/sh
+SSHUTTLE_HOST="$1";
+sshuttle -r $SSHUTTLE_HOST --dns 0/0

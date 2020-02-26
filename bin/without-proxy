@@ -1,0 +1,7 @@
+#!/usr/bin/env perl
+delete $ENV{NO_PROXY};
+delete $ENV{ALL_PROXY};
+delete $ENV{all_proxy};
+delete $ENV{UBUNTU_MENUPROXY};
+delete $ENV{no_proxy};
+exec @ARGV;

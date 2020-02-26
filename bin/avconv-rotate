@@ -1,0 +1,3 @@
+#!/bin/sh
+avconv -i "$1" -vf transpose=1,transpose=1 00-rotated-movie.tmp.mov \
+  && mv 00-rotated-movie.tmp.mov "$1";

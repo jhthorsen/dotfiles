@@ -1,0 +1,12 @@
+#!/usr/bin/env perl
+use strict;
+use JSON::PP;
+
+my $s = '';
+$s .= $_ while <>;
+
+my $pp = JSON::PP->new
+  ->canonical->pretty->space_before(0)->utf8   # encode
+  ->relaxed->allow_barekey->allow_singlequote; # decode
+
+print $pp->encode($pp->decode($s));

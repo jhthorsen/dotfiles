@@ -1,0 +1,4 @@
+#!/bin/sh
+for i in $(git branch -a | sort); do
+  git show -s --format="%cI %h $i %ce %s" $i | cat;
+done
