@@ -95,7 +95,7 @@ app {
     next if -d $file;
     my $slug = $self->file_slug($file) or next;
     my $slug_file = path($self->source, $slug);
-    my $uploaded = path($self->drive, $slug =~ m!\b(\d{4})-! ? $1 : '0000', $slug);
+    my $uploaded = path($self->drive, $slug =~ m!\b(\d{4})-(\d{2})! ? ($1, $2) : (), $slug);
 
     if (-e $uploaded) {
       print "rm $file\n";
@@ -104,6 +104,9 @@ app {
     elsif (!-e $slug_file) {
       print "mv $file $slug_file\n";
       rename $file => $slug_file or die "mv $file $slug_file: $!" unless $self->dry_run;
+    }
+    elsif ($file ne $slug_file) {
+      warn "rm $file # duplicate of $slug_file\n";
     }
   }
 
