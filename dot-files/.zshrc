@@ -19,14 +19,13 @@ compinit
 # ----------------------------------------------------------------------------
 source /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc
 source /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc
-source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-source /usr/local/share/zsh-navigation-tools/zsh-navigation-tools.plugin.zsh
 source /usr/local/etc/profile.d/z.sh
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+test -e "$HOME/.iterm2_shell_integration.zsh" && source "$HOME/.iterm2_shell_integration.zsh"
 
 fpath=(/usr/local/share/zsh-completions $fpath)
 
-for SOURCE_LINK in $(find ~/.config/dot-files -depth 1 -type l | sort); do
+for SOURCE_LINK in $(find $HOME/.config/dot-files -depth 1 -type l | sort); do
   SOURCE_FILE=$(readlink $SOURCE_LINK);
   [ -f $SOURCE_FILE ] && source $SOURCE_FILE;
 done
@@ -47,5 +46,9 @@ zstyle ':completion:*' menu select # select completions with arrow keys
 zstyle ':completion:*' group-name '' # group results by category
 zstyle ':completion:::::' completer _expand _complete _ignored _approximate # enable approximate matches for completion
 zstyle ':completion:*' special-dirs true
+
+# Autocomplete caching
+# zstyle ':completion:*' use-cache on
+# zstyle ':completion:*' cache-path ~/.zsh/cache
 
 # rm -f ~/.zcompdump; compinit

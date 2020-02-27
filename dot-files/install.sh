@@ -5,26 +5,78 @@ if [ "x$1" = "xapps" ]; then
   brew update;
   brew install \
     ack \
-    ansible \
-    bash-completion \
+    bindfs \
+    chromedriver \
+    cloc \
+    coreutils \
+    cowsay \
     cpanm \
-    cybertk/formulae/launchd-oneshot \
+    ctags \
     diff-so-fancy \
+    docker \
+    docker-compose \
+    docker-machine \
+    doctl \
+    exiftool \
+    fd \
+    ffmpeg \
+    figlet \
+    fontconfig \
+    freetype \
+    fswatch \
+    geckodriver \
+    geoip \
+    git \
+    git-secret \
+    glances \
+    gnupg \
+    gnutls \
+    go \
+    gopass \
     homebrew/completions/tmuxinator-completion \
+    imagemagick \
     ircd-hybrid \
+    jpeg \
     jpegoptim \
+    kubernetes-cli \
+    less \
+    mkcert \
     mysql \
+    mysql-client \
+    nginx \
+    nmap \
     node \
-    perl-build \
+    openssl \
+    perl \
+    pinentry \
     pngcrush \
     postgresql \
+    psgrep \
+    pstree \
+    python \
+    redis \
+    rename \
     ruby \
+    rust \
+    sqlite \
     ssh-copy-id \
+    sshfs \
+    sshuttle \
+    telnet \
+    terraform \
+    terraform-docs \
+    tesseract \
     tmux \
+    tmuxinator-completion \
     tree \
     vim \
     wget \
     z \
+    zsh \
+    zsh-completions \
+    zsh-git-prompt \
+    zsh-lovers \
+    zsh-syntax-highlighting \
   ;
 
   cpanm -n App::errno
@@ -37,13 +89,57 @@ if [ "x$1" = "xapps" ]; then
   cpanm -n App::tt
   cpanm -n Devel::Cover
 
-  pip install --upgrade pip
-  pip install glances
+elif [ "x$1" = "xdotfiles" ]; then
+  CONFIG_DIR="$HOME/.config/dot-files";
+  ROOT_DIR="${0:a:h}";
+  [ "x$ROOT_DIR" = "x" ] && exit 1;
 
-  exit;
-fi
+  function install_file() {
+    SOURCE_FILE="$1";
+    DEST_FILE="$2";
+    LINK_FILE=$(readlink $DEST_FILE);
 
-if [ "x$1" = "xsettings" ]; then
+    # Clean up broken links
+    [ -L "$DEST_FILE" -a ! -e "$DEST_FILE" ] && rm $DEST_FILE;
+
+    if [ ! -e "$DEST_FILE" ]; then
+      echo "--- Installing $DEST_FILE";
+      ln -s "$SOURCE_FILE" "$DEST_FILE";
+    elif [ "x$LINK_FILE" != "x$SOURCE_FILE" ]; then
+      echo "--- Skip $SOURCE_FILE ($LINK_FILE)";
+    else
+      echo "--- Installed $DEST_FILE";
+    fi
+  }
+
+  # powerlevel10k
+  if [ ! -d "$CONFIG_DIR/powerlevel10k" ]; then
+    git clone https://github.com/romkatv/powerlevel10k.git $CONFIG_DIR/powerlevel10k
+  fi
+
+  install_file $CONFIG_DIR/powerlevel10k/powerlevel10k.zsh-theme $CONFIG_DIR/20-theme-powerlevel10k.sh
+  install_file $ROOT_DIR/.p10k.zsh $CONFIG_DIR/21-p10k.zsh
+
+  # dot-files
+  install_file $ROOT_DIR/.gitconfig $HOME/.gitconfig
+  install_file $ROOT_DIR/.gitignore_global $HOME/.gitignore_global
+  install_file $ROOT_DIR/.perltidyrc $HOME/.perltidyrc
+  install_file $ROOT_DIR/.tmux.conf $HOME/.tmux.conf
+  install_file $ROOT_DIR/.vimrc $HOME/.vimrc
+  install_file $ROOT_DIR/.zshrc $HOME/.zshrc
+
+  # .zshrc dependencies
+  install_file $ROOT_DIR/path.sh $CONFIG_DIR/00-path.sh
+  install_file $ROOT_DIR/env.sh $CONFIG_DIR/01-env.sh
+  install_file $ROOT_DIR/aliases.sh $CONFIG_DIR/10-aliases.sh
+  install_file $ROOT_DIR/history.sh $CONFIG_DIR/10-history.sh
+  install_file $ROOT_DIR/setkeylabel.sh $CONFIG_DIR/30-setkeylabel.sh
+  install_file $ROOT_DIR/.fzf.zsh $CONFIG_DIR/.fzf.zsh
+
+  # scripts
+  install_file $ROOT_DIR/../bin $CONFIG_DIR/bin
+
+elif [ "x$1" = "xsettings" ]; then
   defaults read NSGlobalDomain InitialKeyRepeat # 25
   defaults write NSGlobalDomain InitialKeyRepeat -int 12
   defaults read NSGlobalDomain KeyRepeat # 2
@@ -53,52 +149,7 @@ if [ "x$1" = "xsettings" ]; then
   # killall SystemUIServer
 
   curl -L https://iterm2.com/misc/install_shell_integration.sh | zsh
+
+else
+  echo "Usage: zsh $0 [apps|dotfiles|settings]";
 fi
-
-CONFIG_DIR="$HOME/.config/dot-files";
-ROOT_DIR="${0:a:h}";
-[ "x$ROOT_DIR" = "x" ] && exit 1;
-
-function install_file() {
-  SOURCE_FILE="$1";
-  DEST_FILE="$2";
-  LINK_FILE=$(readlink $DEST_FILE);
-
-  # Clean up broken links
-  [ -L "$DEST_FILE" -a ! -e "$DEST_FILE" ] && rm $DEST_FILE;
-
-  if [ ! -e "$DEST_FILE" ]; then
-    echo "--- Installing $DEST_FILE";
-    ln -s "$SOURCE_FILE" "$DEST_FILE";
-  elif [ "x$LINK_FILE" != "x$SOURCE_FILE" ]; then
-    echo "--- Skip $SOURCE_FILE ($LINK_FILE)";
-  else
-    echo "--- Installed $DEST_FILE";
-  fi
-}
-
-# powerlevel10k
-if [ ! -d "$CONFIG_DIR/powerlevel10k" ]; then
-  git clone https://github.com/romkatv/powerlevel10k.git $CONFIG_DIR/powerlevel10k
-fi
-
-install_file $CONFIG_DIR/powerlevel10k/powerlevel10k.zsh-theme $CONFIG_DIR/20-theme-powerlevel10k.sh
-install_file $ROOT_DIR/.p10k.zsh $CONFIG_DIR/21-p10k.zsh
-
-# dot-files
-install_file $ROOT_DIR/.gitconfig $HOME/.gitconfig
-install_file $ROOT_DIR/.gitignore_global $HOME/.gitignore_global
-install_file $ROOT_DIR/.perltidyrc $HOME/.perltidyrc
-install_file $ROOT_DIR/.tmux.conf $HOME/.tmux.conf
-install_file $ROOT_DIR/.vimrc $HOME/.vimrc
-install_file $ROOT_DIR/.zshrc $HOME/.zshrc
-
-# .zshrc dependencies
-install_file $ROOT_DIR/path.sh $CONFIG_DIR/00-path.sh
-install_file $ROOT_DIR/env.sh $CONFIG_DIR/01-env.sh
-install_file $ROOT_DIR/aliases.sh $CONFIG_DIR/10-aliases.sh
-install_file $ROOT_DIR/history.sh $CONFIG_DIR/10-history.sh
-install_file $ROOT_DIR/setkeylabel.sh $CONFIG_DIR/30-setkeylabel.sh
-
-# scripts
-install_file $ROOT_DIR/../bin $CONFIG_DIR/bin
