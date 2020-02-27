@@ -25,7 +25,7 @@ test -e "$HOME/.iterm2_shell_integration.zsh" && source "$HOME/.iterm2_shell_int
 
 fpath=(/usr/local/share/zsh-completions $fpath)
 
-for SOURCE_LINK in $(find $HOME/.config/dot-files -depth 1 -type l | sort); do
+for SOURCE_LINK in $(find $HOME/.config/dot-files -maxdepth 1 -type l | sort); do
   SOURCE_FILE=$(readlink $SOURCE_LINK);
   [ -f $SOURCE_FILE ] && source $SOURCE_FILE;
 done
