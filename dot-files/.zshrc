@@ -34,7 +34,6 @@ unset SOURCE_FILE;
 # ============================================================================
 # Misc settings
 # ----------------------------------------------------------------------------
-bindkey -v # vim bindings
 umask 0002
 setopt notify
 unsetopt extendedglob # Allow "git show HEAD^"
