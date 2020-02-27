@@ -11,6 +11,7 @@ alias psql.start='launchctl load /usr/local/opt/postgresql/homebrew.mxcl.postgre
 alias tma='tmux attach-session'
 alias tmpdir='perl -le"use File::Spec;print File::Spec->tmpdir"'
 alias vi='vim'
+alias vif='vim $(fzf --preview "head -100 {}")'
 alias view='vim -R'
 
 which ack-grep >/dev/null && alias ack='ack-grep'

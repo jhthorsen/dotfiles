@@ -1,6 +1,9 @@
 export ANSIBLE_NOCOWS=1
 export BROWSER=google-chrome
 export EDITOR=vim
+export FZF_CTRL_T_COMMAND='fd --type f'
+export FZF_DEFAULT_COMMAND='fd --type f'
+export FZF_DEFAULT_OPTS='--height 30 --reverse'
 export GPG_TTY=$(tty)
 export LC_ALL=en_US.UTF-8
 export LESS="-RX -x2"

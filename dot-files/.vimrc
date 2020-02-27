@@ -20,7 +20,6 @@ Plugin 'pangloss/vim-javascript'
 Plugin 'posva/vim-vue'
 Plugin 'skywind3000/asyncrun.vim'
 Plugin 'terryma/vim-multiple-cursors'
-Plugin 'wincent/command-t'
 Plugin 'yko/mojo.vim'
 Plugin 'evanleck/vim-svelte'
 
@@ -87,12 +86,6 @@ highlight clear LineNr
 let g:multi_cursor_start_key  = '<C-d>'
 let g:multi_cursor_next_key = '<C-d>'
 
-" CommandT
-let g:CommandTMatchWindowAtTop = 0
-let g:CommandTMatchWindowReverse = 1
-" let g:CommandTWildIgnore="*/local/*,*/cache/*,*png"
-map <C-p> :CommandT<CR>
-
 " emmet
 let g:user_emmet_expandabbr_key = '<C-e>'
 let g:user_emmet_expandword_key = '<C-E>'
@@ -149,3 +142,8 @@ hi! MatchParen cterm=NONE,bold gui=NONE,bold guibg=#3e3835 guifg=NONE
 
 " nnoremap / :M/
 " nnoremap ,/ /
+
+" fzf
+set rtp+=/usr/local/opt/fzf
+let g:fzf_layout = { 'down': '~30%' }
+map <C-p> :FZF --info=inline<CR>
