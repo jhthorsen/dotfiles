@@ -10,4 +10,4 @@ export LC_ALL=en_US.UTF-8
 export LESS="XFR";
 export LS_COLORS=
 export SSH_KEY_PATH="~/.ssh/id_rsa"
-export TT_HOURS_PER_DAY=6
+export TT_HOURS_PER_MONTH=120
