@@ -106,9 +106,11 @@ let g:user_emmet_complete_tag = 1
 let g:user_emmet_mode = 'i'
 
 " tabs
-map ,e :tabedit <C-R>=expand("%:h")<CR>
+" C-m might be an alias for C-j
 map <C-j> :tabprevious<CR>
+map <C-m> :tabprevious<CR>
 map <C-k> :tabnext<CR>
+map ,e :tabedit <C-R>=expand("%:h")<CR>
 
 " gnome-terminal/something puts weird characters into my files
 map ,f :%s/\%xa0/ /g<CR>

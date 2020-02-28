@@ -99,6 +99,11 @@ elif [ "x$1" = "xdotfiles" ]; then
     DEST_FILE="$2";
     LINK_FILE=$(readlink $DEST_FILE);
 
+    if [ ! -e $SOURCE_FILE ]; then
+      echo "--- Skip $SOURCE_FILE - Not found";
+      return;
+    fi
+
     # Clean up broken links
     [ -L "$DEST_FILE" -a ! -e "$DEST_FILE" ] && rm $DEST_FILE;
 
@@ -106,7 +111,7 @@ elif [ "x$1" = "xdotfiles" ]; then
       echo "--- Installing $DEST_FILE";
       ln -s "$SOURCE_FILE" "$DEST_FILE";
     elif [ "x$LINK_FILE" != "x$SOURCE_FILE" ]; then
-      echo "--- Skip $SOURCE_FILE ($LINK_FILE)";
+      echo "--- Skip $SOURCE_FILE - $LINK_FILE exists";
     else
       echo "--- Installed $DEST_FILE";
     fi
@@ -134,10 +139,17 @@ elif [ "x$1" = "xdotfiles" ]; then
   install_file $ROOT_DIR/aliases.sh $CONFIG_DIR/10-aliases.sh
   install_file $ROOT_DIR/bindkey.sh $CONFIG_DIR/10-bindkey.sh
   install_file $ROOT_DIR/history.sh $CONFIG_DIR/10-history.sh
+  install_file $ROOT_DIR/completion.sh $CONFIG_DIR/15-completion.sh
   install_file $ROOT_DIR/setkeylabel.sh $CONFIG_DIR/30-setkeylabel.sh
-  install_file $ROOT_DIR/.fzf.zsh $CONFIG_DIR/.fzf.zsh
 
-  # scripts
+  # Brew and iTerm
+  install_file /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc $CONFIG_DIR/15-google-cloud-sdk-path.sh
+  install_file /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc $CONFIG_DIR/15-google-cloud-sdk-completion.sh
+  install_file /usr/local/etc/profile.d/z.sh $CONFIG_DIR/15-z.sh
+  install_file /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh $CONFIG_DIR/15-zsh-syntax-highlighting.zsh
+  install_file $HOME/.iterm2_shell_integration.zsh $CONFIG_DIR/15-iterm2_shell_integration.sh
+
+  # Utility scripts
   install_file $ROOT_DIR/../bin $CONFIG_DIR/bin
 
 elif [ "x$1" = "xsettings" ]; then
