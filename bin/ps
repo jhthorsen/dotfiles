@@ -3,12 +3,24 @@ package App::ps;
 use strict;
 use warnings;
 
+# black, blue, cyan, green, magenta, red, yellow, white
+$ENV{PS_COLOR_CMD}    ||= 'green';
+$ENV{PS_COLOR_INDENT} ||= 'yellow';
+$ENV{PS_COLOR_EVEN}   ||= 'bold';
+$ENV{PS_COLOR_ODD}    ||= 'none';
+$ENV{PS_COLOR_PRE}    ||= 'none';
+
 # accessors
 sub argv      { @{shift->{argv}} }
 sub bin       { $ENV{PS_BIN} || '/bin/ps' }
 sub system_ps { $^O ne 'darwin' ? 1 : !$_[0]->{has_f} }
 
 # methods
+sub color {
+  my ($self, $color) = @_;
+  return $self->{color} && $color ne 'none' ? Term::ANSIColor::color($color) : '';
+}
+
 sub make_tree {
   my $self = shift;
   @$self{qw(heading root tree)} = ('', undef, {});
@@ -44,7 +56,7 @@ sub normalize_argv {
   my $self = shift;
   my @argv = $self->argv;
 
-  @$self{qw(has_f has_o has_w)} = (0, -1, 0);
+  @$self{qw(color has_f has_o has_w)} = (-t STDOUT, 0, -1, 0);
 
   # Check if we have "f", "-f" or something in the command
   for (@argv) {
@@ -55,6 +67,7 @@ sub normalize_argv {
 
   # Check if we have "o", "-o" or something in the command
   for my $i (0 .. (@argv - 1)) {
+    $self->{color} = $1 ? 0 : 1 if $argv[$i] =~ s!^--(no-)?color!!;
     $self->{has_o} = $i if $argv[$i]            =~ m!^-?o!;
     $self->{has_o} = -2 if $i == 0 && $argv[$i] =~ s!^([^o]*)o(\w*)$!$1$2!;
     $self->{has_w} += length $2 if $argv[$i] =~ s!(-*[^w]*)(w+)(.*)!$1$3!g;
@@ -76,31 +89,39 @@ sub normalize_argv {
   warn "[App::ps] argv = @argv\n" if $ENV{PS_DEBUG};
   $self->{argv} = [@argv];
 
+  # Check for --color support
+  $self->{color} = eval 'require Term::ANSIColor;1' if $self->{color};
+
   return $self;
 }
 
 sub print_tree {
-  my $self   = shift;
-  my $nodes  = shift || $self->{root}{kids} || [];
-  my $indent = shift || 0;
+  my $self  = shift;
+  my $nodes = shift || $self->{root}{kids} || [];
+  my $depth = shift || 0;
 
-  printf "%s\n", $self->{heading} if !$indent and length $self->{heading};
+  printf "%s\n", $self->{heading} if !$depth and length $self->{heading};
 
   for my $node (@$nodes) {
     my @out = @{$node->{out} || []};
     unshift @out, '' if @out == 1;
+    $out[1] //= '';
 
-    my $tree_prefix = ' ' x ($indent ? ($indent * 4) - 2 : 0);
-    $tree_prefix .= '\\_ ' if $indent;
-    my $line = sprintf "%s%s%s", $out[0] // '', $tree_prefix, $out[1] // '';
+    my $indent = $depth ? ' ' x ($depth * 4 - 2) : '';
+    $indent .= '\_ ' if $depth;
 
-    my $cols
-      = $self->{has_w} == 1 ? 132
-      : $self->{has_w} >= 2 ? length $line
-      : $ENV{COLUMNS} || length $line;
-    printf "%s\n", substr $line, 0, $cols;
+    print $self->color($depth % 2 ? $ENV{PS_COLOR_ODD} : $ENV{PS_COLOR_EVEN});
+    print join '',
+      $self->color($ENV{PS_COLOR_PRE}),
+      $out[0],
+      $self->color($ENV{PS_COLOR_INDENT}),
+      $indent,
+      $self->color($ENV{PS_COLOR_CMD}),
+      $self->shorten_cmd($indent, \@out),
+      $self->color('reset'),
+      "\n";
 
-    $self->print_tree($node->{kids}, $indent + 1) if $node->{kids};
+    $self->print_tree($node->{kids}, $depth + 1) if $node->{kids};
   }
 }
 
@@ -120,6 +141,15 @@ sub run {
 
   # Exit
   return $? || $! || 0;
+}
+
+sub shorten_cmd {
+  my ($self, $indent, $out) = @_;
+  return $out->[1] if $self->{has_w} >= 2;
+
+  my $pre_len = length join '', $out->[0], $indent;
+  return substr $out->[1], 0, 132 - $pre_len if $self->{has_w};
+  return substr $out->[1], 0, $ENV{COLUMNS} - $pre_len;
 }
 
 sub test {
@@ -151,4 +181,4 @@ sub new {
   return bless {argv => [@argv]}, $class;
 }
 
-my $app = App::ps->new(@ARGV)->normalize_argv->run;
+exit App::ps->new(@ARGV)->normalize_argv->run;
