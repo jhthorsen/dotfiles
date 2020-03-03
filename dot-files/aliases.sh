@@ -1,6 +1,7 @@
 alias cpanm='cpanm -M https://cpan.metacpan.org'
 alias ff='find . -type f | grep -v "git\|.nuxt\|node_mo\|packed\|sass-cache\|\.swp" | sort'
 alias gensecret='echo "$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 32)"'
+alias gof='gopass show -c $(gopass list -f | fzf --preview "gopass show {} | tail -n +1")'
 alias gti='git'
 alias limited='ulimit -d 600000 -m 600000 -v 600000 -t 2 -u 5000; ulimit -a'
 alias pcover='perl Makefile.PL; cover -ignore_re="t/.*" -prefer_lib -test; make clean'
