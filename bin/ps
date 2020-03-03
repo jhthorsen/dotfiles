@@ -3,6 +3,20 @@ package App::ps;
 use strict;
 use warnings;
 
+# This application will reformat the output from "ps" if the "f"
+# option is supplied. "f" on Linux will draw the output as a tree,
+# but this is not supported on Mac OSX.
+#
+# This program can/will also add color to the "f" output.
+#
+# All other "ps" options should work as expected.
+#
+# Example usage:
+# ps f
+# ps -af
+# ps f --color -o pid,command | less
+# ps f --no-color -o command
+
 # black, blue, cyan, green, magenta, red, yellow, white
 $ENV{PS_COLOR_CMD}    ||= 'green';
 $ENV{PS_COLOR_INDENT} ||= 'yellow';
@@ -10,9 +24,12 @@ $ENV{PS_COLOR_EVEN}   ||= 'bold';
 $ENV{PS_COLOR_ODD}    ||= 'none';
 $ENV{PS_COLOR_PRE}    ||= 'none';
 
+$ENV{PS_DEBUG} ||= 0;           # Extra debug output
+$ENV{COLUMNS}  ||= 0;           # Default to COLUMNS from the active terminal
+$ENV{PS_BIN}   ||= '/bin/ps';   # Location of the "real" ps command
+
 # accessors
 sub argv      { @{shift->{argv}} }
-sub bin       { $ENV{PS_BIN} || '/bin/ps' }
 sub system_ps { $^O ne 'darwin' ? 1 : !$_[0]->{has_f} }
 
 # methods
@@ -25,7 +42,7 @@ sub make_tree {
   my $self = shift;
   @$self{qw(heading root tree)} = ('', undef, {});
 
-  open my $PS, '-|', $self->bin, $self->argv or die "[App:ps] Could not run ps: $!";
+  open my $PS, '-|', $ENV{PS_BIN}, $self->argv or die "[App:ps] Could not run $ENV{PS_BIN}: $!";
   while (<$PS>) {
     chomp;
     warn "[App::ps] invalid = $_\n" and next unless s!^\s*(\w+)\s+(\w+)!!;    # pid,ppid,...
@@ -132,7 +149,7 @@ sub run {
   return $self->test if grep /^--test/, $self->argv;
 
   # Execute native ps
-  exec $self->bin, $self->argv if $self->system_ps;
+  exec $ENV{PS_BIN}, $self->argv if $self->system_ps;
 
   # Print tree (-f)
   require Term::ReadKey;
