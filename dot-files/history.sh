@@ -1,3 +1,4 @@
+[ -d "$HOME/.config/dot-files" ] || mkdir -p $HOME/.config/dot-files
 export HISTFILE="$HOME/.config/dot-files/zsh_history"
 export HISTSIZE=100000
 export SAVEHIST=100000
