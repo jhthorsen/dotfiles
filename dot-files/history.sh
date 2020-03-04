@@ -1,6 +1,6 @@
-HISTFILE="$HOME/.config/dot-files/zsh_history"
-HISTSIZE=100000
-SAVEHIST=100000
+export HISTFILE="$HOME/.config/dot-files/zsh_history"
+export HISTSIZE=100000
+export SAVEHIST=100000
 
 setopt extended_history          # Write the history file in the ":start:elapsed;command" format.
 setopt inc_append_history        # Write to the history file immediately, not when the shell exits.
