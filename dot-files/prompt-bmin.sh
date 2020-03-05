@@ -33,6 +33,7 @@ function __prompt_bmin () {
 export ORIGINAL_USER=${ORIGINAL_USER:-$USER};
 autoload -U add-zsh-hook;
 add-zsh-hook chpwd __prompt_bmin;
+add-zsh-hook precmd __prompt_bmin;
 __prompt_bmin;
 
 export PROMPT='$PROMPT_BMIN_USERINFO$PROMPT_BMIN_PATH$PROMPT_BMIN_SUFFIX';
