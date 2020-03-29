@@ -5,6 +5,8 @@ export LESS="XFR";
 export LS_COLORS=
 export SSH_KEY_PATH="~/.ssh/id_rsa"
 export TT_HOURS_PER_MONTH=120
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 if command -v fd >/dev/null; then
   export FZF_CTRL_T_COMMAND='fd --type f'
@@ -16,6 +18,4 @@ if [ -z "$SSH_TTY" ]; then
   export FZF_DEFAULT_OPTS='--height 20 --reverse'
 else
   export FZF_DEFAULT_OPTS='--height 10 --reverse'
-  export LANG=en_US.UTF-8
-  export LC_ALL=en_US.UTF-8
 fi
