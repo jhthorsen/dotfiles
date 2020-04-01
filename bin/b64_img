@@ -1,2 +1,3 @@
 #!/bin/sh
-convert $1 -resize 60x60 PNG:- | base64
+# convert $1 -resize 60x60 PNG:- | base64
+convert $@ PNG:- | base64

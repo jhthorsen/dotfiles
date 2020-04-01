@@ -8,8 +8,6 @@ alias pcover='perl Makefile.PL; cover -ignore_re="t/.*" -prefer_lib -test; make 
 alias pipesha10='shasum | cut -c1-10'
 alias tmpdir='perl -le"use File::Spec;print File::Spec->tmpdir"'
 alias vi='vim'
-alias vif='vim $(fzf --preview "head -100 {}")'
-alias view='vim -R'
 
 command -v launchctl  >/dev/null && alias psql.start='launchctl load /usr/local/opt/postgresql/homebrew.mxcl.postgresql.plist'
 command -v pstree     >/dev/null && alias psme='pstree -u jhthorsen -w'

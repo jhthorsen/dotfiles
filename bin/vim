@@ -1,0 +1,16 @@
+#!/usr/bin/env perl
+use strict;
+use Cwd 'abs_path';
+
+my $curr = abs_path $0;
+my @vim = grep { $_ ne $curr } map { chomp; abs_path $_ } qx'which -a vim';
+die "Could not find real vim" unless @vim;
+
+# Normal vim
+exec $vim[0] => @ARGV if @ARGV or !-d '.git';
+
+# Vim from .git directory without arguments
+my $file = qx"fzf --preview 'head -100 {}'";
+chomp $file;
+exec $vim[0] => $file if $file;
+exit 1;
