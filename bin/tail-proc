@@ -1,3 +1,0 @@
-#!/bin/sh
-NAME="$1";
-tail -f /proc/$(ps aux | grep "$NAME" | grep -v grep | cut -d ' ' -f 3)/fd/1;
