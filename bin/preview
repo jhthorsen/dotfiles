@@ -1,0 +1,16 @@
+#!/bin/sh
+FILE="$1";
+IMGCAT="$HOME/.iterm2/imgcat";
+
+if [ -z "$FILE" ]; then
+  echo "Usage: preview <file>";
+  exit 1;
+fi
+
+if echo "$FILE" | grep -q '.pdf$'; then
+  convert -density 150 "$FILE" -background white -alpha remove png:- | $IMGCAT;
+  #for i in $(ls -t "$FILE*$IMGFORMAT"); do echo $i; done
+  #rm "$FILE*$IMGFORMAT";
+else
+  exec $IMGCAT $FILE;
+fi
