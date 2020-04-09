@@ -1,0 +1,4 @@
+#!/bin/sh
+[ -z "$1" ] && exit 1;
+ext="${1##*.}";
+convert -density 120 "$1" -background white -alpha remove "$1-%04d.$ext";
