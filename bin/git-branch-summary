@@ -1,4 +1,6 @@
 #!/bin/sh
-for i in $(git branch -a | sort); do
-  git show -s --format="%cI %h $i %ce %s" $i | cat;
-done
+git branch -a \
+  | perl -ple's!^\W+!!;s!\s+.*!!' \
+  | while read b; do git show -s --format="%cs $b %ce %s" $b; done \
+  | perl -ne'@c=split /\s+/,$_,4;$w=length $c[1] if $w<=length $c[1];push @r,[@c]}{printf "%s %-${w}s %s %s", @$_ for @r' \
+  | sort -r
