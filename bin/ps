@@ -29,8 +29,9 @@ $ENV{COLUMNS}  ||= 0;           # Default to COLUMNS from the active terminal
 $ENV{PS_BIN}   ||= '/bin/ps';   # Location of the "real" ps command
 
 # accessors
-sub argv      { @{shift->{argv}} }
-sub system_ps { $^O ne 'darwin' ? 1 : !$_[0]->{has_f} }
+sub argv            { @{$_[0]->{argv}} }
+sub normalized_argv { @{$_[0]->{normalized_argv} || $_[0]->{argv}} }
+sub system_ps       { $^O ne 'darwin' ? 1 : !$_[0]->{has_f} }
 
 # methods
 sub color {
@@ -42,7 +43,7 @@ sub make_tree {
   my $self = shift;
   @$self{qw(heading root tree)} = ('', undef, {});
 
-  open my $PS, '-|', $ENV{PS_BIN}, $self->argv or die "[App:ps] Could not run $ENV{PS_BIN}: $!";
+  open my $PS, '-|', $ENV{PS_BIN}, $self->normalized_argv or die "[App:ps] Could not run $ENV{PS_BIN}: $!";
   while (<$PS>) {
     chomp;
     warn "[App::ps] invalid = $_\n" and next unless s!^\s*(\w+)\s+(\w+)!!;    # pid,ppid,...
@@ -104,7 +105,7 @@ sub normalize_argv {
 
   @argv = grep length, @argv;
   warn "[App::ps] argv = @argv\n" if $ENV{PS_DEBUG};
-  $self->{argv} = [@argv];
+  $self->{normalized_argv} = [@argv];
 
   # Check for --color support
   $self->{color} = eval 'require Term::ANSIColor;1' if $self->{color};
