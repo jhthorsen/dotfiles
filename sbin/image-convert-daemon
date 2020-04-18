@@ -1,0 +1,91 @@
+#!/usr/bin/env perl
+use Mojo::Base -strict;
+use Mojo::File 'path';
+use Mojo::Log;
+
+my $root   = shift @ARGV;
+my $ext_re = qr{\.(png|jpe?g)$};
+my %mtime_cache;
+
+our $log = Mojo::Log->with_roles("+Color")->new(level => 'debug');
+$log->info("Watching '$root'");
+
+while (1) {
+  path($root)->list({dir => 1})->each(sub {
+    my $dir = shift;
+    return unless -d $dir;
+
+    my $mtime = (stat $dir)[9];
+    $mtime_cache{$dir} //= 0;
+    convert_files_in($dir) if $mtime > $mtime_cache{$dir};
+    $mtime_cache{$dir} = (stat $dir)[9];
+  });
+
+  sleep 1;
+}
+
+sub convert_files_in {
+  my $dir   = shift;
+  my @rules = split /\s+/, $dir->basename;
+  local $log = $log->context(sprintf '[%s]', $dir->basename);
+
+  $dir->list->each(sub {
+    my $file = shift;
+    return unless $file =~ $ext_re;
+
+    my $tmp = $file->sibling(sprintf 'converted-%s', $file->basename);
+    my $ext = lc $1;
+    $ext = 'jpg' if $ext eq 'jpeg';
+    my $size0 = (stat $file)[7];
+
+    jpegoptim($file, $tmp, @rules) if $ext eq 'jpg';
+    run(qw(pngcrush -rem => allb -brute -reduce) => $file => $tmp) if $ext eq 'png';
+    imagemagick($file, $tmp, @rules);
+
+    if (-e $tmp) {
+      unlink $file;
+      rename $tmp => $file;
+    }
+
+    my $size1 = (stat $file)[7];
+    $log->info("Converted $file => size=$size0/$size1");
+  });
+}
+
+sub imagemagick {
+  my ($file, $tmp, @rules) = @_;
+  my @args;
+
+  for my $rule (@rules) {
+    if ($rule =~ m!(\d*)x(\d*)!) {
+      push @args, '-resize' => $rule if $1 or $2;
+    }
+  }
+
+  run(convert => @args => $file => $tmp) if @args;
+}
+
+sub jpegoptim {
+  my ($file, $tmp, @rules) = @_;
+  my @args = qw(-q -p);
+
+  for my $rule (@rules) {
+    if ($rule eq 'strip') {
+      push @args, '-s';
+    }
+    elsif ($rule =~ m!q=(\d+)!) {
+      push @args, "--max=$1";
+    }
+    elsif ($rule =~ m!s=(\d+)!) {
+      push @args, "--size=$1";
+    }
+  }
+
+  run(jpegoptim => @args, $file);
+}
+
+sub run {
+  my @cmd = @_;
+  $log->debug(join ' ', map { /\s/ ? qq('$_') : $_ } @cmd);
+  system @cmd;
+}
