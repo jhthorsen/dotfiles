@@ -1,33 +1,29 @@
-" !perl -MMojo::Util=url_unescape -nle'print url_unescape $_'
+call plug#begin('~/.vim/plugged')
 
-" vundle start
+Plug 'junegunn/vim-easy-align' " https://github.com/junegunn/vim-easy-align
+Plug 'vim-perl/vim-perl'
+Plug 'cakebaker/scss-syntax.vim'
+Plug 'conradirwin/vim-bracketed-paste'
+Plug 'ap/vim-css-color'
+Plug 'gabrielelana/vim-markdown'
+Plug 'hail2u/vim-css3-syntax'
+Plug 'kazark/vim-SimpleSmoothScroll'
+Plug 'mattn/emmet-vim'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'othree/html5.vim'
+Plug 'pangloss/vim-javascript'
+Plug 'posva/vim-vue'
+Plug 'seletskiy/vim-nunu'
+Plug 'skywind3000/asyncrun.vim'
+Plug 'terryma/vim-multiple-cursors'
+Plug 'yko/mojo.vim'
+Plug 'morhetz/gruvbox'
+Plug 'evanleck/vim-svelte'
+
+call plug#end()
+
 set shell=zsh
 set nocompatible
-filetype off
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-
-Plugin 'VundleVim/Vundle.vim'
-Plugin 'vim-perl/vim-perl'
-" Plugin 'altercation/vim-colors-solarized'
-Plugin 'cakebaker/scss-syntax.vim'
-Plugin 'conradirwin/vim-bracketed-paste'
-Plugin 'ap/vim-css-color'
-Plugin 'gabrielelana/vim-markdown'
-Plugin 'hail2u/vim-css3-syntax'
-Plugin 'mattn/emmet-vim'
-Plugin 'othree/html5.vim'
-Plugin 'pangloss/vim-javascript'
-Plugin 'posva/vim-vue'
-Plugin 'skywind3000/asyncrun.vim'
-Plugin 'terryma/vim-multiple-cursors'
-Plugin 'yko/mojo.vim'
-Plugin 'evanleck/vim-svelte'
-
-call vundle#end()
-filetype plugin indent on
-" vundle end
-
 set autoindent
 " set autowrite
 set backspace=indent,eol,start " more powerful backspacing
@@ -36,39 +32,59 @@ set encoding=utf-8
 set expandtab
 set history=100
 set laststatus=2
-set nobackup
 set nofoldenable
+set noincsearch
 set nostartofline
 set noswapfile
 set nowrap
 " set relativenumber
+" set number
 set shiftround
 set shiftwidth=2
 set showcmd
+set smartcase
 set smartindent
 set softtabstop=2
 set statusline=%f\ %{strlen(&fenc)?&fenc:'none'},%{&ff},%{&ft}\ (%B)\ %h%m%r%=%c,%l/%L\ %P"
 set tabstop=8
 set wildignore+=*/.git/*,*/node_modules/*,*/.DS_Store,*/vendor,*.min.*,*.png,*.jpg
 
-" tab completion
 set wildmode=list:longest
 set wildignorecase
-" set wildmenu
-noremap <C-u> 20k
-noremap <C-d> 20j
-noremap <C-h> zz
+
+" movement
+noremap <C-f> <C-d>
+noremap <C-b> <C-u>
+
+noremap <C-h> M
+noremap √ <C-e>h " alt+j
+noremap ª <C-y>h " alt+k
+
+" https://stackoverflow.com/questions/4064651/what-is-the-best-way-to-do-smooth-scrolling-in-vim
+" https://github.com/Kazark/vim-SimpleSmoothScroll
+set mouse=i
+map <ScrollWheelUp> :call SmoothScroll(1)<Enter>
+map <ScrollWheelDown> :call SmoothScroll(0)<Enter>
+
+" noremap ¬ <C-e> " alt+shift+j
+" noremap º <C-y> " alt+shift+k
+" inoremap ª <Esc>:m .+1<CR>==gi
+" inoremap º <Esc>:m .-2<CR>==gi
+" vnoremap ª :m '>+1<CR>gv=gv
+" vnoremap º :m '<-2<CR>gv=gv
 
 " colors
 syntax on
-" let g:solarized_termtrans = 1
-" let g:solarized_bold = 1
-" let g:solarized_italic = 0
-" set background=dark
+" colorscheme pablo
 set background=dark
-" set t_Co=16
-" colorscheme solarized
-highlight clear LineNr
+let g:gruvbox_italic=1
+colorscheme gruvbox
+highlight nonascii guibg=red ctermbg=red
+highlight Normal ctermbg=none
+" highlight Comment ctermbg=gray ctermfg=none
+" highlight LineNr ctermbg=none ctermfg=darkgrey
+" highlight StatusLine ctermbg=darkblue ctermfg=white
+" highlight SignColumn ctermbg=none
 
 " netrw
 " let g:netrw_write_AsyncRun = 1
@@ -119,7 +135,6 @@ map ,f :%s/\%xa0/ /g<CR>
 " autocmd BufEnter,TabEnter,WinEnter * syn match ErrorMsg /[^\x00-\x7F]/
 " autocmd BufEnter,TabEnter,WinEnter * syn match ErrorMsg /\s\+$/
 " syntax match nonascii "[^\x00-\x7F]"
-" highlight nonascii guibg=red ctermbg=red
 
 " using two spaces now in RG:: code
 " autocmd BufRead,BufNewFile /Users/jhthorsen/git/_rg/* setlocal softtabstop=4 shiftwidth=4
@@ -150,3 +165,124 @@ hi! MatchParen cterm=NONE,bold gui=NONE,bold guibg=#3e3835 guifg=NONE
 set rtp+=/usr/local/opt/fzf
 let g:fzf_layout = { 'down': '~30%' }
 map <C-p> :FZF --info=inline<CR>
+
+" coc
+set hidden
+set nobackup
+set nowritebackup
+set cmdheight=2
+set updatetime=250
+set shortmess+=c
+set signcolumn=yes
+
+inoremap <silent><expr> <TAB> pumvisible() ? "\<C-n>" : <SID>check_back_space() ? "\<TAB>" : coc#refresh()
+inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+inoremap <silent><expr> <c-space> coc#refresh()
+
+" Use <cr> to confirm completion, `<C-g>u` means break undo chain at current
+" position. Coc only does snippet and additional edit on confirm.
+if exists('*complete_info')
+  inoremap <expr> <cr> complete_info()["selected"] != "-1" ? "\<C-y>" : "\<C-g>u\<CR>"
+else
+  imap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
+endif
+
+" Use `[g` and `]g` to navigate diagnostics
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+
+" GoTo code navigation.
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+" Use K to show documentation in preview window.
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  else
+    call CocActionAsync('doHover')
+  endif
+endfunction
+
+" Highlight the symbol and its references when holding the cursor.
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+" Symbol renaming.
+nmap <leader>rn <Plug>(coc-rename)
+
+" Formatting selected code.
+xmap <leader>f  <Plug>(coc-format-selected)
+nmap <leader>f  <Plug>(coc-format-selected)
+
+augroup mygroup
+  autocmd!
+  " Setup formatexpr specified filetype(s).
+  autocmd FileType typescript,json setl formatexpr=CocActionAsync('formatSelected')
+  " Update signature help on jump placeholder.
+  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+augroup end
+
+" Applying codeAction to the selected region.
+" Example: `<leader>aap` for current paragraph
+xmap <leader>a  <Plug>(coc-codeaction-selected)
+nmap <leader>a  <Plug>(coc-codeaction-selected)
+
+" Remap keys for applying codeAction to the current line.
+nmap <leader>ac  <Plug>(coc-codeaction)
+" Apply AutoFix to problem on the current line.
+nmap <leader>qf  <Plug>(coc-fix-current)
+
+" Introduce function text object
+" NOTE: Requires 'textDocument.documentSymbol' support from the language server.
+xmap if <Plug>(coc-funcobj-i)
+xmap af <Plug>(coc-funcobj-a)
+omap if <Plug>(coc-funcobj-i)
+omap af <Plug>(coc-funcobj-a)
+
+" Use <TAB> for selections ranges.
+" NOTE: Requires 'textDocument/selectionRange' support from the language server.
+" coc-tsserver, coc-python are the examples of servers that support it.
+nmap <silent> <TAB> <Plug>(coc-range-select)
+xmap <silent> <TAB> <Plug>(coc-range-select)
+
+" Add `:Format` command to format current buffer.
+command! -nargs=0 Format :call CocActionAsync('format')
+
+" Add `:Fold` command to fold current buffer.
+command! -nargs=? Fold :call     CocActionAsync('fold', <f-args>)
+
+" Add `:OR` command for organize imports of the current buffer.
+command! -nargs=0 OR   :call     CocActionAsync('runCommand', 'editor.action.organizeImport')
+
+" Add (Neo)Vim's native statusline support.
+" NOTE: Please see `:h coc-status` for integrations with external plugins that
+" provide custom statusline: lightline.vim, vim-airline.
+set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
+
+" Mappings using CoCList:
+" Show all diagnostics.
+nnoremap <silent> <space>a  :<C-u>CocList diagnostics<cr>
+" Manage extensions.
+nnoremap <silent> <space>e  :<C-u>CocList extensions<cr>
+" Show commands.
+nnoremap <silent> <space>c  :<C-u>CocList commands<cr>
+" Find symbol of current document.
+nnoremap <silent> <space>o  :<C-u>CocList outline<cr>
+" Search workspace symbols.
+nnoremap <silent> <space>s  :<C-u>CocList -I symbols<cr>
+" Do default action for next item.
+nnoremap <silent> <space>j  :<C-u>CocNext<CR>
+" Do default action for previous item.
+nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
+" Resume latest coc list.
+nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
