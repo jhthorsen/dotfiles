@@ -8,6 +8,8 @@ export TT_HOURS_PER_MONTH=120
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
+[ -x "/usr/local/bin/nvim" ] && export VIM_BIN="/usr/local/bin/nvim"
+
 if command -v fd >/dev/null; then
   export FZF_CTRL_T_COMMAND='fd --type f'
   export FZF_DEFAULT_COMMAND='fd --type f'

@@ -3,14 +3,16 @@ use strict;
 use Cwd 'abs_path';
 
 my $curr = abs_path $0;
-my @vim = grep { $_ ne $curr } map { chomp; abs_path $_ } qx'which -a vim';
-die "Could not find real vim" unless @vim;
+my @bin;
+push @bin, $ENV{VIM_BIN} if $ENV{VIM_BIN};
+@bin = grep { $_ ne $curr } map { chomp; abs_path $_ } qx'which -a vim' unless @bin;
+die "Could not find real vim" unless @bin;
 
 # Normal vim
-exec $vim[0] => @ARGV if @ARGV or !-d '.git';
+exec $bin[0] => @ARGV if @ARGV or !-d '.git';
 
 # Vim from .git directory without arguments
 my $file = qx"fzf --preview 'head -100 {}'";
 chomp $file;
-exec $vim[0] => $file if $file;
+exec $bin[0] => $file if $file;
 exit 1;
