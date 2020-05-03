@@ -1,5 +1,11 @@
 let mapleader = "\<Space>"
 
+" copy/paste to clipboard
+vmap <C-c> "+yi
+vmap <C-x> "+c
+vmap <C-v> c<ESC>"+p
+imap <C-v> <ESC>"+pa
+
 " utilites
 noremap ,t :!column -t<CR>
 inoremap ,dd warn Mojo::Util::dumper();<C-o>h
