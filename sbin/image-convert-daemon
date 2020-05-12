@@ -3,7 +3,6 @@ use Mojo::Base -strict;
 use Mojo::File 'path';
 use Mojo::Log;
 
-my $root   = shift @ARGV;
 my $root   = shift @ARGV or die "Usage: $0 /path/to/image/dir\n";
 my $ext_re = qr{\.(png|jpe?g)$}i;
 my %mtime_cache;
