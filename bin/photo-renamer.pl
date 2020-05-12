@@ -75,8 +75,31 @@ app {
   my ($self) = @_;
   my $filter = $self->dff || '.';
 
-  opendir my $DH, $self->source or die $!;
-  my @source_files = sort map { path($self->source, $_) } readdir $DH;
+  my $cannot = sub {
+    warn "! $_[0]\n";
+  };
+
+  my $source = $self->source;
+  path($source)->list_tree->each(sub {
+    my $file = shift;
+    return unless $file =~ m!\.jpe?g$!i;
+    return $cannot->($file) unless my $slug = $self->file_slug($file);
+    return $cannot->($file) unless my $year = $slug =~ m!(\d{4})! ? $1 : '';
+
+    my $parts = $file->dirname->to_string;
+    $parts =~ s!^$source/?!!;
+    $parts =~ s!/! - !g;
+    $parts =~ s!\d{4}_\d{2}_\d{2}!!; # Remove 2006_08_24
+
+    my $dest = path("/mnt/debra/kanematsu/Photos", $parts, $year, $slug);
+    return if -s $dest;
+    $dest->dirname->make_path unless -d $dest->dirname;
+    warn "> $dest\n";
+    die "link $file => $dest: $!" unless link $file => $dest;
+  });
+
+  #opendir my $DH, $self->source or die $!;
+  #my @source_files = sort map { path($self->source, $_) } readdir $DH;
 
   #while (my $file = shift @source_files) {
   #  next unless $file =~ /\.jpe?g$/i;
@@ -90,25 +113,25 @@ app {
   #}
   #return 0;
 
-  while (my $file = shift @source_files) {
-    next unless $file =~ /$filter/;
-    next if -d $file;
-    my $slug = $self->file_slug($file) or next;
-    my $slug_file = path($self->source, $slug);
-    my $uploaded = path($self->drive, $slug =~ m!\b(\d{4})-(\d{2})! ? ($1, $2) : (), $slug);
+  #while (my $file = shift @source_files) {
+  #  next unless $file =~ /$filter/;
+  #  next if -d $file;
+  #  my $slug = $self->file_slug($file) or next;
+  #  my $slug_file = path($self->source, $slug);
+  #  my $uploaded = path($self->drive, $slug =~ m!\b(\d{4})-(\d{2})! ? ($1, $2) : (), $slug);
 
-    if (-e $uploaded) {
-      print "rm $file\n";
-      unlink $file unless $self->dry_run;
-    }
-    elsif (!-e $slug_file) {
-      print "mv $file $slug_file\n";
-      rename $file => $slug_file or die "mv $file $slug_file: $!" unless $self->dry_run;
-    }
-    elsif ($file ne $slug_file) {
-      warn "rm $file # duplicate of $slug_file\n";
-    }
-  }
+  #  if (-e $uploaded) {
+  #    print "rm $file\n";
+  #    unlink $file unless $self->dry_run;
+  #  }
+  #  elsif (!-e $slug_file) {
+  #    print "mv $file $slug_file\n";
+  #    rename $file => $slug_file or die "mv $file $slug_file: $!" unless $self->dry_run;
+  #  }
+  #  elsif ($file ne $slug_file) {
+  #    warn "rm $file # duplicate of $slug_file\n";
+  #  }
+  #}
 
   return 0;
 };
