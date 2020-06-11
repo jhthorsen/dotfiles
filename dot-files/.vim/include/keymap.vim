@@ -1,10 +1,10 @@
 let mapleader = "\<Space>"
 
 " copy/paste to clipboard
-vmap <C-c> "+yi
-vmap <C-x> "+c
-vmap <C-v> c<ESC>"+p
-imap <C-v> <ESC>"+pa
+set clipboard=unnamed
+vmap <C-c> :w !snipclip -i<CR><CR>
+vmap <C-v> c<ESC>:set paste<CR>:r !snipclip -o<CR>:set nopaste<CR>
+imap <C-v> <ESC>:set paste<CR>:r !snipclip -o<CR>:set nopaste<CR>a
 
 " utilites
 noremap ,t :!column -t<CR>

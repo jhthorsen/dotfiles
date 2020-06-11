@@ -1,0 +1,86 @@
+#!/bin/sh
+OP="$1"
+OP_ARG="$2"
+
+CLIPBOARD_FILE="$HOME/.snipclip";
+
+has_command() {
+  command -v $1 >/dev/null || return 1;
+  echo $1 | grep -q "^x" && [ -z "$DISPLAY" ] && return 1;
+  return 0;
+}
+
+clipboard_to_stdout() {
+  if [ -n "$SSH_TTY" ]; then
+    cat $CLIPBOARD_FILE;
+  elif has_command pbpaste; then
+    pbpaste;
+  elif has_command xclip; then
+    xclip -selection clipboard -o;
+  elif has_command xsel; then
+    xsel -o -b;
+  elif [ -e $CLIPBOARD_FILE ]; then
+    cat $CLIPBOARD_FILE;
+  fi
+}
+
+stdin_to_clipboard() {
+  [ -n "$CLIPBOARD_FILE" ] && touch "$CLIPBOARD_FILE" && chmod 600 "$CLIPBOARD_FILE";
+  cat - > "$CLIPBOARD_FILE.tmp";
+  mv "$CLIPBOARD_FILE.tmp" "$CLIPBOARD_FILE";
+
+  if [ -n "$SSH_TTY" ]; then
+    1; # noop
+  elif has_command pbcopy; then
+    cat $CLIPBOARD_FILE | pbcopy;
+  elif has_command xclip; then
+    cat $CLIPBOARD_FILE | xclip -selection clipboard;
+  elif has_command xsel; then
+    cat $CLIPBOARD_FILE | xsel -i -b;
+  fi
+}
+
+sync_from_remote_clipboard() {
+  ssh $1 'cat $HOME/.snipclip' | stdin_to_clipboard;
+}
+
+sync_to_remote_clipboard() {
+  clipboard_to_stdout | ssh $1 'cat - > $HOME/.snipclip';
+}
+
+if [ -n "$OP" -a -e "$OP" ]; then
+  cat "$OP" | stdin_to_clipboard;
+elif [ "x$OP" = "x-i" -o "x$OP" = "x-in" ]; then
+  [ -z "$OP_ARG" ] && stdin_to_clipboard || sync_from_remote_clipboard $OP_ARG;
+elif [ "x$OP" = "x-o" -o "x$OP" = "x-out" ]; then
+  [ -z "$OP_ARG" ] && clipboard_to_stdout || sync_to_remote_clipboard $OP_ARG;
+else
+  NAME="$(basename $0)";
+  cat - <<HERE;
+
+$NAME is a clipboard manager that works across operating systems.
+It will use one of the following "backends" for copy/paste buffers:
+
+  * pbcopy and pbpaste
+  * xclip
+  * xsel
+  * $CLIPBOARD_FILE
+
+  # Read from stdin and write to the clipboard
+  $NAME -i
+
+  # Read /some/file and write to the clipboard
+  $NAME /some/file
+
+
+  # Print clipboard to stdout
+  $NAME -o
+
+  # Copy clipboard from stome.hostname
+  $NAME -i some.hostname
+
+  # Copy clipboard to some.hostname
+  $NAME -o some.hostname
+
+HERE
+fi
