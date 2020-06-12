@@ -30,7 +30,7 @@ stdin_to_clipboard() {
   mv "$CLIPBOARD_FILE.tmp" "$CLIPBOARD_FILE";
 
   if [ -n "$SSH_TTY" ]; then
-    1; # noop
+    :; # noop
   elif has_command pbcopy; then
     cat $CLIPBOARD_FILE | pbcopy;
   elif has_command xclip; then
