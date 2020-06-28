@@ -126,6 +126,7 @@ elif [ "x$1" = "xdotfiles" ]; then
   install_file $ROOT_DIR/.p10k.zsh $CONFIG_DIR/21-p10k.zsh
 
   # dot-files
+  install_file $ROOT_DIR/.ackrc $HOME/.ackrc
   install_file $ROOT_DIR/.gitconfig $HOME/.gitconfig
   install_file $ROOT_DIR/.gitignore_global $HOME/.gitignore_global
   install_file $ROOT_DIR/.perltidyrc $HOME/.perltidyrc
@@ -151,6 +152,10 @@ elif [ "x$1" = "xdotfiles" ]; then
 
   # Utility scripts
   install_file $ROOT_DIR/../bin $CONFIG_DIR/bin
+
+  # misc
+  [ -e "$HOME/.vim/autoload/plug.vim" ] || curl -fLo "$HOME/.vim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  [ -e "$HOME/.pause" ] || cp $ROOT_DIR/.pause $HOME/.pause
 
 elif [ "x$1" = "xsettings" ]; then
   defaults read NSGlobalDomain InitialKeyRepeat # 25

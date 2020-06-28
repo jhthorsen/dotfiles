@@ -1,0 +1,14 @@
+--ignore-dir=_site
+--ignore-dir=.nyc_output
+--ignore-dir=.nuxt
+--ignore-dir=coverage
+--ignore-dir=assets/offline
+--ignore-dir=static/docs
+--ignore-dir=.jekyll-cache/
+
+--ignore-file=is:.tags
+--ignore-file=is:.vstags
+--ignore-file=is:tags
+--ignore-file=is:dictionary.js
+--ignore-file=is:convos.development.css
+--ignore-file=is:convos.development.js
