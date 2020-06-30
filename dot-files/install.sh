@@ -89,6 +89,9 @@ if [ "x$1" = "xapps" ]; then
   cpanm -n App::tt
   cpanm -n Devel::Cover
 
+  rm /usr/local/bin/githook-perltidy;
+  ln -s "$(which githook-perltidy)" /usr/local/bin/githook-perltidy
+
 elif [ "x$1" = "xdotfiles" ]; then
   CONFIG_DIR="$HOME/.config/dot-files";
   ROOT_DIR="${0:a:h}";
