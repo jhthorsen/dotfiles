@@ -172,5 +172,12 @@ elif [ "x$1" = "xsettings" ]; then
   curl -L https://iterm2.com/misc/install_shell_integration.sh | zsh
 
 else
-  echo "Usage: zsh $0 [apps|dotfiles|settings]";
+  cat <<HERE
+# Notes
+initdb /usr/local/var/postgres -E utf8
+brew services restart postgresql
+
+# Usage
+zsh $0 [apps|dotfiles|settings]
+HERE
 fi
