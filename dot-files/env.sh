@@ -4,7 +4,7 @@ export GPG_TTY=$(tty)
 export LESS="XFR";
 export LS_COLORS=
 export SSH_KEY_PATH="~/.ssh/id_rsa"
-export TT_HOURS_PER_MONTH=120
+export TT_HOURS_PER_MONTH=150
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
