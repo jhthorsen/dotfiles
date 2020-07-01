@@ -48,9 +48,7 @@ sync_to_remote_clipboard() {
   clipboard_to_stdout | ssh $1 'cat - > $HOME/.snipclip';
 }
 
-if [ -n "$OP" -a -e "$OP" ]; then
-  cat "$OP" | stdin_to_clipboard;
-elif [ "x$OP" = "x-i" -o "x$OP" = "x-in" ]; then
+if [ "x$OP" = "x-i" -o "x$OP" = "x-in" ]; then
   [ -z "$OP_ARG" ] && stdin_to_clipboard || sync_from_remote_clipboard $OP_ARG;
 elif [ "x$OP" = "x-o" -o "x$OP" = "x-out" ]; then
   [ -z "$OP_ARG" ] && clipboard_to_stdout || sync_to_remote_clipboard $OP_ARG;
@@ -59,28 +57,19 @@ else
   cat - <<HERE;
 
 $NAME is a clipboard manager that works across operating systems.
-It will use one of the following "backends" for copy/paste buffers:
+It will use one of the following "backends" for copy/paste:
 
   * pbcopy and pbpaste
   * xclip
   * xsel
   * $CLIPBOARD_FILE
 
-  # Read from stdin and write to the clipboard
-  $NAME -i
+Usage:
 
-  # Read /some/file and write to the clipboard
-  $NAME /some/file
-
-
-  # Print clipboard to stdout
-  $NAME -o
-
-  # Copy clipboard from stome.hostname
-  $NAME -i some.hostname
-
-  # Copy clipboard to some.hostname
-  $NAME -o some.hostname
+  $NAME -i              # Read from STDIN and write to clipboard
+  $NAME -o              # Read from clipboard and write to STDOUT
+  $NAME -i example.com  # Read remote clipboard from example.com
+  $NAME -o example.com  # Write local clipboard to example.com
 
 HERE
 fi
