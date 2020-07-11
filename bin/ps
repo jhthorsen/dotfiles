@@ -70,6 +70,39 @@ sub make_tree {
   return $self;
 }
 
+sub make_top {
+  my $self = shift;
+  @$self{qw(heading top)} = ('', {});
+
+  require File::Basename;
+  require List::Util;
+  open my $PS, '-|', $ENV{PS_BIN}, $self->normalized_argv or die "[App:ps] Could not run $ENV{PS_BIN}: $!";
+  while (<$PS>) {
+    chomp;
+    warn "[App::ps] out = $_\n" if $ENV{PS_DEBUG};
+    $_ =~ s!^\s+!!;
+    my ($uid, $cpu, $mem, $pid, $command) = split /\s+/, $_, 5;
+    next unless $cpu =~ m!^\d+!;
+
+    my ($comm) = split /\s/, $command, 2;
+    my $item = $self->{top}{"$uid:$comm"} ||= [[], [], $pid, File::Basename::basename($comm)];
+    push @{$item->[0]}, $cpu;
+    push @{$item->[1]}, $mem;
+  }
+
+  $self->{top} = [
+    sort {
+      $b->[0] <=> $a->[0];
+    } map {
+      $_->[0] = List::Util::sum(@{$_->[0]}) / @{$_->[0]};
+      $_->[1] = List::Util::sum(@{$_->[1]}) / @{$_->[1]};
+      $_;
+    } values %{$self->{top}}
+  ];
+
+  return $self;
+}
+
 sub normalize_argv {
   my $self = shift;
   my @argv = $self->argv;
@@ -77,8 +110,14 @@ sub normalize_argv {
   @$self{qw(color has_f has_o has_w)} = (-t STDOUT, 0, -1, 0);
 
   # Check if we have "f", "-f" or something in the command
+  no warnings 'qw';
   for (@argv) {
     $self->{has_f} = 1 if s!(-*\w*)f(.*)!$1$2!g;
+    $self->{has_top} = 1 if m!--top!;
+  }
+
+  if ($self->{has_top}) {
+    $self->{argv} = [map { /^--top/ ? qw(-ww -o uid,%cpu,%mem,pid,command) : $_} @argv];
   }
 
   return $self unless $self->{has_f};
@@ -92,7 +131,6 @@ sub normalize_argv {
   }
 
   # Add default format or prepend -o with "ppid"
-  no warnings 'qw';
   if ($self->{has_o} == -1) {
     push @argv, qw(-o pid,ppid,pid,tty,stat,time,command);
   }
@@ -107,9 +145,34 @@ sub normalize_argv {
   warn "[App::ps] argv = @argv\n" if $ENV{PS_DEBUG};
   $self->{normalized_argv} = [@argv];
 
-  # Check for --color support
-  $self->{color} = eval 'require Term::ANSIColor;1' if $self->{color};
+  return $self;
+}
 
+sub print_top {
+  my ($self, $max_rows) = @_;
+  my $nodes = $self->{top} || [];
+
+  my $r = 0;
+  my $w = $ENV{COLUMNS} - 22;
+  for my $node (@$nodes) {
+    next unless $node->[0] + $node->[1] > 0.1;
+    my $comm = sprintf "%-${w}s", substr $node->[3], 0, $w;
+    printf "%-7s %6.1f %6.1f %s\n", $node->[2], $node->[0], $node->[1], $comm;
+    last if ++$r > $max_rows;
+  }
+
+  print ' ' x ($ENV{COLUMNS}), "\n" for $r..$max_rows;
+  return $self;
+}
+
+sub print_uptime {
+  my $self = shift;
+  my $cols = $ENV{COLUMNS} - 1;
+  my $uptime = qx{uptime};
+  $uptime =~ s!^\s+!!;
+  chomp $uptime;
+  local $| = 1;
+  printf "%-${cols}s", $uptime;
   return $self;
 }
 
@@ -146,15 +209,23 @@ sub print_tree {
 sub run {
   my $self = shift;
 
+  # Check for --color support
+  $self->{color} = eval 'require Term::ANSIColor;1' if $self->{color};
+
+  require Term::ReadKey;
+  $ENV{COLUMNS} ||= (Term::ReadKey::GetTerminalSize())[0];
+  $ENV{ROWS}    ||= (Term::ReadKey::GetTerminalSize())[1];
+
   # Run unit tests
   return $self->test if grep /^--test/, $self->argv;
+
+  # top alternative
+  return $self->top if $self->{has_top};
 
   # Execute native ps
   exec $ENV{PS_BIN}, $self->argv if $self->system_ps;
 
   # Print tree (-f)
-  require Term::ReadKey;
-  $ENV{COLUMNS} ||= (Term::ReadKey::GetTerminalSize())[0];
   $self->make_tree->print_tree;
 
   # Exit
@@ -191,6 +262,25 @@ sub test_ok {
   my $app  = App::ps->new(@$argv)->normalize_argv;
   Test::More::is_deeply([$app->{has_f}, $app->{has_o}, $app->argv], @_)
     or Test::More::diag(join ' ', $app->argv);
+}
+
+sub top {
+  my $self = shift;
+
+  my $clear_screen = "\033[2J";
+  my $top_left     = "\033[0;0H";
+  $ENV{TOP_INTERVAL} ||= 3;
+
+  print $clear_screen;
+  while (1) {
+    print $top_left;
+    print "\n";
+    $self->make_top;
+    $self->print_top($ENV{ROWS} - 4);
+    print "\n";
+    $self->print_uptime;
+    sleep $ENV{TOP_INTERVAL};
+  }
 }
 
 # constructor
