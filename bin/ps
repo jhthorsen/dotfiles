@@ -117,6 +117,7 @@ sub normalize_argv {
   }
 
   if ($self->{has_top}) {
+    push @argv, '-e' if @argv == 1;
     $self->{argv} = [map { /^--top/ ? qw(-ww -o uid,%cpu,%mem,pid,command) : $_} @argv];
   }
 
@@ -152,12 +153,15 @@ sub print_top {
   my ($self, $max_rows) = @_;
   my $nodes = $self->{top} || [];
 
+  printf "%-7s  %6s  %6s   %s\n", 'PID', 'CPU', 'MEM', 'COMMAND';
+  printf "%s\n", ('-' x $ENV{COLUMNS});
+
   my $r = 0;
-  my $w = $ENV{COLUMNS} - 22;
+  my $w = $ENV{COLUMNS} - 27;
   for my $node (@$nodes) {
     next unless $node->[0] + $node->[1] > 0.1;
     my $comm = sprintf "%-${w}s", substr $node->[3], 0, $w;
-    printf "%-7s %6.1f %6.1f %s\n", $node->[2], $node->[0], $node->[1], $comm;
+    printf "%-7s  %6.1f  %6.1f   %s\n", $node->[2], $node->[0], $node->[1], $comm;
     last if ++$r > $max_rows;
   }
 
@@ -274,10 +278,9 @@ sub top {
   print $clear_screen;
   while (1) {
     print $top_left;
-    print "\n";
     $self->make_top;
-    $self->print_top($ENV{ROWS} - 4);
-    print "\n";
+    $self->print_top($ENV{ROWS} - 6);
+    printf "%s\n", ('-' x $ENV{COLUMNS});
     $self->print_uptime;
     sleep $ENV{TOP_INTERVAL};
   }
