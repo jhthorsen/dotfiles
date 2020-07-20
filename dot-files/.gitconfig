@@ -65,3 +65,6 @@
 [user]
   name = Jan Henning Thorsen
   email = jhthorsen@cpan.org
+	signingkey = 4B747C8EC747C46B
+[commit]
+	gpgsign = true
