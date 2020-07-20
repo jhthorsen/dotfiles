@@ -21,6 +21,7 @@ Plug 'terryma/vim-multiple-cursors'
 Plug 'yko/mojo.vim'
 Plug 'morhetz/gruvbox'
 Plug 'evanleck/vim-svelte'
+Plug 'jeetsukumaran/vim-buffergator'
 
 call plug#end()
 

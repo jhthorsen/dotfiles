@@ -1,5 +1,24 @@
 let mapleader = "\<Space>"
 
+" terminal navigation
+let termKeys = [
+  \ {'key': '<C-h>', 'to': '<C-w>h'},
+  \ {'key': '<C-l>', 'to': '<C-w>l'},
+  \ {'key': '<C-j>', 'to': ':tabprevious<CR>'},
+  \ {'key': '<C-m>', 'to': ':tabprevious<CR>'},
+  \ {'key': '<C-k>', 'to': ':tabnext<CR>'},
+  \ {'key': '<A-j>', 'to': '<C-w>j'},
+  \ {'key': '√',     'to': '<C-w>j'},
+  \ {'key': '<A-k>', 'to': '<C-w>k'},
+  \ {'key': 'ª',     'to': '<C-w>k'},
+\]
+
+for item in termKeys
+  exe 'nnoremap ' . item.key . ' ' . item.to
+  exe 'inoremap ' . item.key . ' <C-\><C-N>' . item.to
+  exe 'tnoremap ' . item.key . ' <C-\><C-N>' . item.to
+endfor
+
 " copy/paste to clipboard
 set clipboard=unnamed
 vmap <C-c> :w !snipclip -i<CR><CR>
@@ -17,11 +36,7 @@ noremap <C-b> <C-u>
 " ctrl+h moves cursor to center of screen
 noremap <C-h> M
 
-" ctrl+j and ctrl+k changes to previous/next tab
-" ctrl+m might be an alias for C-j
-noremap <C-j> :tabprevious<CR>
-noremap <C-m> :tabprevious<CR>
-noremap <C-k> :tabnext<CR>
+" edit file in new tab
 noremap ,e :tabedit <C-R>=expand("%:h")<CR>
 
 " for some reason <CR> seems to be mapped to :tabprevious (?)
@@ -29,10 +44,6 @@ unmap <CR>
 
 " gnome-terminal/something puts weird characters into my files
 noremap ,f :%s/\%xa0/ /g<CR>
-
-" alt+j and alt+k scrolls the window
-noremap √ <C-e>
-noremap ª <C-y>
 
 " alt+e reloads the current file
 noremap é :e!<Enter>

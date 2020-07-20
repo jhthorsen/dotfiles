@@ -96,6 +96,7 @@ elif [ "x$1" = "xdotfiles" ]; then
   CONFIG_DIR="$HOME/.config/dot-files";
   ROOT_DIR="${0:a:h}";
   [ "x$ROOT_DIR" = "x" ] && exit 1;
+  [ -d "$HOME/.config/alacritty" ] || mkdir -p $HOME/.config/alacritty
 
   function install_file() {
     SOURCE_FILE="$1";
@@ -136,6 +137,7 @@ elif [ "x$1" = "xdotfiles" ]; then
   install_file $ROOT_DIR/.tmux.conf $HOME/.tmux.conf
   install_file $ROOT_DIR/.vimrc $HOME/.vimrc
   install_file $ROOT_DIR/.zshrc $HOME/.zshrc
+  install_file $ROOT_DIR/alacritty.yml $HOME/.config/alacritty/alacritty.yml
 
   # .zshrc dependencies
   install_file $ROOT_DIR/path.sh $CONFIG_DIR/00-path.sh
