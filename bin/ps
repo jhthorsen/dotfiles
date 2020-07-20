@@ -39,70 +39,6 @@ sub color {
   return $self->{color} && $color ne 'none' ? Term::ANSIColor::color($color) : '';
 }
 
-sub make_tree {
-  my $self = shift;
-  @$self{qw(heading root tree)} = ('', undef, {});
-
-  open my $PS, '-|', $ENV{PS_BIN}, $self->normalized_argv or die "[App:ps] Could not run $ENV{PS_BIN}: $!";
-  while (<$PS>) {
-    chomp;
-    warn "[App::ps] invalid = $_\n" and next unless s!^\s*(\w+)\s+(\w+)!!;    # pid,ppid,...
-    warn "[App::ps] out = $_\n" if $ENV{PS_DEBUG};
-    my ($pid, $ppid, $out) = ($1, $2, $_);
-
-    # Parse heading PID, PPID, ...
-    unless ($pid =~ /^\d+$/) {
-      $self->{heading} = $out;
-      my @chunks = $out =~ m!(\s*\w+\s+)!g;
-      my $len = 0;
-      $len += length $chunks[$_] for 0 .. (@chunks - 1);
-      $self->{re} = qr/^(.{$len})(.*)/;
-      next;
-    }
-
-    # Create process tree
-    $self->{tree}{$pid}{out} = [$out =~ $self->{re}];
-    $self->{tree}{$pid}{pid} = $pid;
-    push @{$self->{tree}{$ppid}{kids}}, $self->{tree}{$pid};
-    $self->{root} ||= $self->{tree}{$ppid};
-  }
-
-  return $self;
-}
-
-sub make_top {
-  my $self = shift;
-  @$self{qw(heading top)} = ('', {});
-
-  require File::Basename;
-  require List::Util;
-  open my $PS, '-|', $ENV{PS_BIN}, $self->normalized_argv or die "[App:ps] Could not run $ENV{PS_BIN}: $!";
-  while (<$PS>) {
-    chomp;
-    warn "[App::ps] out = $_\n" if $ENV{PS_DEBUG};
-    $_ =~ s!^\s+!!;
-    my ($uid, $cpu, $mem, $pid, $command) = split /\s+/, $_, 5;
-    next unless $cpu =~ m!^\d+!;
-
-    my ($comm) = split /\s/, $command, 2;
-    my $item = $self->{top}{"$uid:$comm"} ||= [[], [], $pid, File::Basename::basename($comm)];
-    push @{$item->[0]}, $cpu;
-    push @{$item->[1]}, $mem;
-  }
-
-  $self->{top} = [
-    sort {
-      $b->[0] <=> $a->[0];
-    } map {
-      $_->[0] = List::Util::sum(@{$_->[0]}) / @{$_->[0]};
-      $_->[1] = List::Util::sum(@{$_->[1]}) / @{$_->[1]};
-      $_;
-    } values %{$self->{top}}
-  ];
-
-  return $self;
-}
-
 sub normalize_argv {
   my $self = shift;
   my @argv = $self->argv;
@@ -149,67 +85,6 @@ sub normalize_argv {
   return $self;
 }
 
-sub print_top {
-  my ($self, $max_rows) = @_;
-  my $nodes = $self->{top} || [];
-
-  printf "%-7s  %6s  %6s   %s\n", 'PID', 'CPU', 'MEM', 'COMMAND';
-  printf "%s\n", ('-' x $ENV{COLUMNS});
-
-  my $r = 0;
-  my $w = $ENV{COLUMNS} - 27;
-  for my $node (@$nodes) {
-    next unless $node->[0] + $node->[1] > 0.1;
-    my $comm = sprintf "%-${w}s", substr $node->[3], 0, $w;
-    printf "%-7s  %6.1f  %6.1f   %s\n", $node->[2], $node->[0], $node->[1], $comm;
-    last if ++$r > $max_rows;
-  }
-
-  print ' ' x ($ENV{COLUMNS}), "\n" for $r..$max_rows;
-  return $self;
-}
-
-sub print_uptime {
-  my $self = shift;
-  my $cols = $ENV{COLUMNS} - 1;
-  my $uptime = qx{uptime};
-  $uptime =~ s!^\s+!!;
-  chomp $uptime;
-  local $| = 1;
-  printf "%-${cols}s", $uptime;
-  return $self;
-}
-
-sub print_tree {
-  my $self  = shift;
-  my $nodes = shift || $self->{root}{kids} || [];
-  my $depth = shift || 0;
-
-  printf "%s\n", $self->{heading} if !$depth and length $self->{heading};
-
-  for my $node (@$nodes) {
-    my @out = @{$node->{out} || []};
-    unshift @out, '' if @out == 1;
-    $out[1] //= '';
-
-    my $indent = $depth ? ' ' x ($depth * 4 - 2) : '';
-    $indent .= '\_ ' if $depth;
-
-    print $self->color($depth % 2 ? $ENV{PS_COLOR_ODD} : $ENV{PS_COLOR_EVEN});
-    print join '',
-      $self->color($ENV{PS_COLOR_PRE}),
-      $out[0],
-      $self->color($ENV{PS_COLOR_INDENT}),
-      $indent,
-      $self->color($ENV{PS_COLOR_CMD}),
-      $self->shorten_cmd($indent, \@out),
-      $self->color('reset'),
-      "\n";
-
-    $self->print_tree($node->{kids}, $depth + 1) if $node->{kids};
-  }
-}
-
 sub run {
   my $self = shift;
 
@@ -224,13 +99,13 @@ sub run {
   return $self->test if grep /^--test/, $self->argv;
 
   # top alternative
-  return $self->top if $self->{has_top};
+  return $self->top_command if $self->{has_top};
 
   # Execute native ps
   exec $ENV{PS_BIN}, $self->argv if $self->system_ps;
 
   # Print tree (-f)
-  $self->make_tree->print_tree;
+  $self->tree_make->tree_print;
 
   # Exit
   return $? || $! || 0;
@@ -268,7 +143,7 @@ sub test_ok {
     or Test::More::diag(join ' ', $app->argv);
 }
 
-sub top {
+sub top_command {
   my $self = shift;
 
   my $clear_screen = "\033[2J";
@@ -278,12 +153,137 @@ sub top {
   print $clear_screen;
   while (1) {
     print $top_left;
-    $self->make_top;
-    $self->print_top($ENV{ROWS} - 6);
+    $self->top_make;
+    $self->top_print($ENV{ROWS} - 6);
     printf "%s\n", ('-' x $ENV{COLUMNS});
-    $self->print_uptime;
+    $self->uptime_print;
     sleep $ENV{TOP_INTERVAL};
   }
+}
+
+sub top_make {
+  my $self = shift;
+  @$self{qw(heading top)} = ('', {});
+
+  require File::Basename;
+  require List::Util;
+  open my $PS, '-|', $ENV{PS_BIN}, $self->normalized_argv or die "[App:ps] Could not run $ENV{PS_BIN}: $!";
+  while (<$PS>) {
+    chomp;
+    warn "[App::ps] out = $_\n" if $ENV{PS_DEBUG};
+    $_ =~ s!^\s+!!;
+    my ($uid, $cpu, $mem, $pid, $command) = split /\s+/, $_, 5;
+    next unless $cpu =~ m!^\d+!;
+
+    my ($comm) = split /\s/, $command, 2;
+    my $item = $self->{top}{"$uid:$comm"} ||= [[], [], $pid, File::Basename::basename($comm)];
+    push @{$item->[0]}, $cpu;
+    push @{$item->[1]}, $mem;
+  }
+
+  $self->{top} = [
+    sort {
+      $b->[0] <=> $a->[0];
+    } map {
+      $_->[0] = List::Util::sum(@{$_->[0]}) / @{$_->[0]};
+      $_->[1] = List::Util::sum(@{$_->[1]}) / @{$_->[1]};
+      $_;
+    } values %{$self->{top}}
+  ];
+
+  return $self;
+}
+
+sub top_print {
+  my ($self, $max_rows) = @_;
+  my $nodes = $self->{top} || [];
+
+  printf "%-7s  %6s  %6s   %s\n", 'PID', 'CPU', 'MEM', 'COMMAND';
+  printf "%s\n", ('-' x $ENV{COLUMNS});
+
+  my $r = 0;
+  my $w = $ENV{COLUMNS} - 27;
+  for my $node (@$nodes) {
+    next unless $node->[0] + $node->[1] > 0.1;
+    my $comm = sprintf "%-${w}s", substr $node->[3], 0, $w;
+    printf "%-7s  %6.1f  %6.1f   %s\n", $node->[2], $node->[0], $node->[1], $comm;
+    last if ++$r > $max_rows;
+  }
+
+  print ' ' x ($ENV{COLUMNS}), "\n" for $r..$max_rows;
+  return $self;
+}
+
+sub tree_make {
+  my $self = shift;
+  @$self{qw(heading root tree)} = ('', undef, {});
+
+  open my $PS, '-|', $ENV{PS_BIN}, $self->normalized_argv or die "[App:ps] Could not run $ENV{PS_BIN}: $!";
+  while (<$PS>) {
+    chomp;
+    warn "[App::ps] invalid = $_\n" and next unless s!^\s*(\w+)\s+(\w+)!!;    # pid,ppid,...
+    warn "[App::ps] out = $_\n" if $ENV{PS_DEBUG};
+    my ($pid, $ppid, $out) = ($1, $2, $_);
+
+    # Parse heading PID, PPID, ...
+    unless ($pid =~ /^\d+$/) {
+      $self->{heading} = $out;
+      my @chunks = $out =~ m!(\s*\w+\s+)!g;
+      my $len = 0;
+      $len += length $chunks[$_] for 0 .. (@chunks - 1);
+      $self->{re} = qr/^(.{$len})(.*)/;
+      next;
+    }
+
+    # Create process tree
+    $self->{tree}{$pid}{out} = [$out =~ $self->{re}];
+    $self->{tree}{$pid}{pid} = $pid;
+    push @{$self->{tree}{$ppid}{kids}}, $self->{tree}{$pid};
+    $self->{root} ||= $self->{tree}{$ppid};
+  }
+
+  return $self;
+}
+
+sub tree_print {
+  my $self  = shift;
+  my $nodes = shift || $self->{root}{kids} || [];
+  my $depth = shift || 0;
+
+  printf "%s\n", $self->{heading} if !$depth and length $self->{heading};
+
+  for my $node (@$nodes) {
+    my @out = @{$node->{out} || []};
+    unshift @out, '' if @out == 1;
+    $out[1] //= '';
+
+    my $indent = $depth ? ' ' x ($depth * 4 - 2) : '';
+    $indent .= '\_ ' if $depth;
+
+    print $self->color($depth % 2 ? $ENV{PS_COLOR_ODD} : $ENV{PS_COLOR_EVEN});
+    print join '',
+      $self->color($ENV{PS_COLOR_PRE}),
+      $out[0],
+      $self->color($ENV{PS_COLOR_INDENT}),
+      $indent,
+      $self->color($ENV{PS_COLOR_CMD}),
+      $self->shorten_cmd($indent, \@out),
+      $self->color('reset'),
+      "\n";
+
+    $self->tree_print($node->{kids}, $depth + 1) if $node->{kids};
+  }
+}
+
+sub uptime_print {
+  my $self = shift;
+  my $cols = $ENV{COLUMNS} - 1;
+  my $uptime = qx{uptime};
+  $uptime =~ s!^\s+!!;
+  chomp $uptime;
+  local $| = 1;
+  printf "%-${cols}s", $uptime;
+  return $self;
 }
 
 # constructor
