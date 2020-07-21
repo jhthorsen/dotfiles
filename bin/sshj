@@ -1,10 +1,16 @@
 #!/bin/sh
 
+[ -r .sshj.conf ] && source .sshj.conf;
+
 MISSING="";
 [ -z "$SSHJ_JUMP_HOST"    ] && MISSING="SSHJ_JUMP_HOST $MISSING";
 [ -z "$SSHJ_MOUNT_POINT"  ] && MISSING="SSHJ_MOUNT_POINT $MISSING";
 [ -z "$SSHJ_SSHFS_URI"    ] && MISSING="SSHJ_SSHFS_URI $MISSING";
 [ -z "$SSHJ_SSHUTTLE_URI" ] && MISSING="SSHJ_SSHUTTLE_URI $MISSING";
+
+[ -z "$SSHJ_HOME"        ] && SSHJ_HOME="$HOME/.local/share/sshj";
+[ -d "$SSHJ_HOME/cache"  ] || mkdir -p "$SSHJ_HOME/cache";
+[ -z "$SSHJ_IGNORE_DIRS" ] && SSHJ_IGNORE_DIRS=".git:.sass-cache:cache:cover_db:node_modules";
 
 if [ -n "$MISSING" ]; then
   echo "Missing environment variables: $MISSING";
@@ -15,12 +21,36 @@ is_connected="ps -A | grep $SSHJ_JUMP_HOST | grep -vq grep";
 is_inside_sshfs="pwd | grep -q $SSHJ_MOUNT_POINT";
 is_mounted="mount | grep -q $SSHJ_MOUNT_POINT";
 
+populate_sshj_files() {
+  local IFS=":";
+  FIND_NOT="";
+  for d in $SSHJ_IGNORE_DIRS; do
+    FIND_NOT="$FIND_NOT -not -path '*/$d/*'";
+  done
+
+  local IFS=" ";
+  FIND_DIR="$(echo $SSHJ_SSHFS_URI | cut -d: -f2)";
+  sshj $SSHJ_TARGET_HOST "find $FIND_DIR -type f$FIND_NOT" > "$SSHJ_CACHE_FILE";
+}
+
 if [ "x$1" = "x" -o "x$1" = "xhelp" ]; then
   echo "Usage:";
-  echo "  sshj mount   : Set up jump host, then mount sshfs disk"
-  echo "  sshj [host]  : Set up jump host, then ssh to [host]"
-  echo "  sshj unmount : Unmount sshfs disk"
-  echo "  sshj stop    : Unmount and kill ssh connections"
+  echo "  sshj mount       : Set up jump host, then mount sshfs disk"
+  echo "  sshj [host]      : Set up jump host, then ssh to [host]"
+  echo "  sshj edit [host] : Edit file on host"
+  echo "  sshj unmount     : Unmount sshfs disk"
+  echo "  sshj stop        : Unmount and kill ssh connections"
+
+elif [ "x$1" = "xedit" ]; then
+  eval $is_connected || ssh $SSHJ_JUMP_HOST
+  eval $is_connected || exit 1;
+
+  SSHJ_TARGET_HOST="$2";
+  [ -z "$SSHJ_TARGET_HOST" ] && echo $SSHJ_HOME/cache && exit 1;
+  SSHJ_CACHE_FILE="$SSHJ_HOME/cache/$SSHJ_TARGET_HOST.files"
+  [ -f "$SSHJ_CACHE_FILE" ] || populate_sshj_files;
+  SSHJ_EDIT="$(cat $SSHJ_CACHE_FILE | fzf)";
+  [ -n "$SSHJ_EDIT" ] && exec vim "scp://$SSHJ_TARGET_HOST/$SSHJ_EDIT";
 
 elif [ "x$1" = "xstop" ]; then
   eval $is_inside_sshfs && cd;
