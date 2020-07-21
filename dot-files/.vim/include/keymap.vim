@@ -6,9 +6,9 @@ let termKeys = [
   \ {'key': '<C-j>', 'to': '<C-w>j'},
   \ {'key': '<C-k>', 'to': '<C-w>k'},
   \ {'key': '<C-l>', 'to': '<C-w>l'},
-  \ {'key': '<F2>', 'to': ':tabprevious<CR>'},
-  \ {'key': '<F3>', 'to': ':tabnext<CR>'},
-  \ {'key': '<F4>', 'to': ':tabnew<CR>'},
+  \ {'key': '<C-j>', 'to': ':tabprevious<CR>'},
+  \ {'key': '<C-m>', 'to': ':tabprevious<CR>'},
+  \ {'key': '<C-k>', 'to': ':tabnext<CR>'},
 \]
 
 for item in termKeys
@@ -38,7 +38,7 @@ noremap <C-h> M
 noremap ,e :tabedit <C-R>=expand("%:h")<CR>
 
 " for some reason <CR> seems to be mapped to :tabprevious (?)
-" unmap <CR>
+unmap <CR>
 
 " gnome-terminal/something puts weird characters into my files
 noremap ,f :%s/\%xa0/ /g<CR>
