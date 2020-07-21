@@ -44,7 +44,7 @@ elif [ "x$1" = "xshuttle" ]; then
 
 elif [ "x$1" = "xmount" ]; then
   eval $is_connected || ssh $SSHJ_JUMP_HOST
-  eval $is_mounted   || sshfs -o cache_timeout=60 -o compression=yes -o reconnect $SSHJ_SSHFS_URI $SSHJ_MOUNT_POINT;
+  eval $is_mounted   || sshfs -o cache_stat_timeout=600 -o cache_dir_timeout=600 -o cache_link_timeout=600 -o cache_timeout=60 -o compression=yes -o reconnect $SSHJ_SSHFS_URI $SSHJ_MOUNT_POINT;
   eval $is_mounted   && cd $SSHJ_MOUNT_POINT && echo "\$ ls $PWD" && ls;
 
 else

@@ -3,14 +3,12 @@ let mapleader = "\<Space>"
 " terminal navigation
 let termKeys = [
   \ {'key': '<C-h>', 'to': '<C-w>h'},
+  \ {'key': '<C-j>', 'to': '<C-w>j'},
+  \ {'key': '<C-k>', 'to': '<C-w>k'},
   \ {'key': '<C-l>', 'to': '<C-w>l'},
-  \ {'key': '<C-j>', 'to': ':tabprevious<CR>'},
-  \ {'key': '<C-m>', 'to': ':tabprevious<CR>'},
-  \ {'key': '<C-k>', 'to': ':tabnext<CR>'},
-  \ {'key': '<A-j>', 'to': '<C-w>j'},
-  \ {'key': '√',     'to': '<C-w>j'},
-  \ {'key': '<A-k>', 'to': '<C-w>k'},
-  \ {'key': 'ª',     'to': '<C-w>k'},
+  \ {'key': '<F2>', 'to': ':tabprevious<CR>'},
+  \ {'key': '<F3>', 'to': ':tabnext<CR>'},
+  \ {'key': '<F4>', 'to': ':tabnew<CR>'},
 \]
 
 for item in termKeys
@@ -40,7 +38,7 @@ noremap <C-h> M
 noremap ,e :tabedit <C-R>=expand("%:h")<CR>
 
 " for some reason <CR> seems to be mapped to :tabprevious (?)
-unmap <CR>
+" unmap <CR>
 
 " gnome-terminal/something puts weird characters into my files
 noremap ,f :%s/\%xa0/ /g<CR>

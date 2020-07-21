@@ -64,6 +64,13 @@ set shortmess+=c
 set signcolumn=yes
 set updatetime=250
 
+" netrw
+let g:netrw_banner = 0
+let g:netrw_liststyle = 0
+let g:netrw_fastbrowse = 1
+let g:netrw_winsize = 25
+let g:netrw_altv = 1
+
 " Misc config
 execute "source " . g:DOT_FILES_PATH . "/.vim/include/ft.vim"
 execute "source " . g:DOT_FILES_PATH . "/.vim/include/keymap.vim"
