@@ -7,7 +7,9 @@ let termKeys = [
   \ {'key': '<C-k>', 'to': '<C-w>k'},
   \ {'key': '<C-l>', 'to': '<C-w>l'},
   \ {'key': '<C-j>', 'to': ':tabprevious<CR>'},
+  \ {'key': '<C-h>', 'to': ':tabprevious<CR>'},
   \ {'key': '<C-k>', 'to': ':tabnext<CR>'},
+  \ {'key': '<C-l>', 'to': ':tabnext<CR>'},
 \]
 
 for item in termKeys
@@ -29,9 +31,6 @@ inoremap ,dd warn Mojo::Util::dumper();<C-o>h
 " ctrl+f and ctrl+b moves cursor half screen up/down
 noremap <C-f> <C-d>
 noremap <C-b> <C-u>
-
-" ctrl+h moves cursor to center of screen
-noremap <C-h> M
 
 " edit file in new tab
 noremap ,e :tabedit <C-R>=expand("%:h")<CR>
