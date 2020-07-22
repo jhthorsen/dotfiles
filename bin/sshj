@@ -42,11 +42,8 @@ if [ "x$1" = "x" -o "x$1" = "xhelp" ]; then
   echo "  sshj stop        : Unmount and kill ssh connections"
 
 elif [ "x$1" = "xedit" ]; then
-  eval $is_connected || ssh $SSHJ_JUMP_HOST
-  eval $is_connected || exit 1;
-
   SSHJ_TARGET_HOST="$2";
-  [ -z "$SSHJ_TARGET_HOST" ] && echo $SSHJ_HOME/cache && exit 1;
+  [ -z "$SSHJ_TARGET_HOST" ] && ls -l $SSHJ_HOME/cache && exit 1;
   SSHJ_CACHE_FILE="$SSHJ_HOME/cache/$SSHJ_TARGET_HOST.files"
   [ -f "$SSHJ_CACHE_FILE" ] || populate_sshj_files;
   SSHJ_EDIT="$(cat $SSHJ_CACHE_FILE | fzf)";
