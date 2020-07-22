@@ -7,7 +7,6 @@ let termKeys = [
   \ {'key': '<C-k>', 'to': '<C-w>k'},
   \ {'key': '<C-l>', 'to': '<C-w>l'},
   \ {'key': '<C-j>', 'to': ':tabprevious<CR>'},
-  \ {'key': '<C-m>', 'to': ':tabprevious<CR>'},
   \ {'key': '<C-k>', 'to': ':tabnext<CR>'},
 \]
 
@@ -36,9 +35,6 @@ noremap <C-h> M
 
 " edit file in new tab
 noremap ,e :tabedit <C-R>=expand("%:h")<CR>
-
-" for some reason <CR> seems to be mapped to :tabprevious (?)
-unmap <CR>
 
 " gnome-terminal/something puts weird characters into my files
 noremap ,f :%s/\%xa0/ /g<CR>
