@@ -13,6 +13,7 @@ window:
   dynamic_padding: false
   decorations: buttonless
   startup_mode: SimpleFullscreen
+  #startup_mode: Windowed
 
 #scrolling:
   #history: 10000
@@ -25,18 +26,15 @@ font:
     style: Regular
 
 key_bindings:
-  - { key: 26,          mods: Alt,       chars: "|"    }
-  - { key: 26,          mods: Alt|Shift, chars: "\\"   }
-  - { key: Apostrophe,  mods: Alt,       chars: "'" }
-  - { key: Caret,       mods: Alt,       chars: "\x60" }
-  - { key: Key5,        mods: Alt,       chars: "\x7E" }
-  - { key: Return,      chars: "\x0d" }
-  - { key: Semicolon,   mods: Alt,       chars: "\x40" }
-  - { key: Space,       mods: Control,   chars: "\x00" }
-  - { key: LBracket,    mods: Alt,       chars: "["    }
-  - { key: RBracket,    mods: Alt,       chars: "]"    }
-  - { key: LBracket,    mods: Alt|Shift, chars: "{"    }
-  - { key: RBracket,    mods: Alt|Shift, chars: "}"    }
+  - { key: 26,          mods: Alt,        chars: "|"    }
+  - { key: 26,          mods: Alt|Shift,  chars: "\\"   }
+  - { key: Apostrophe,  mods: Alt,        chars: "'"    }
+  - { key: Return,                        chars: "\x0d" }
+  - { key: Space,       mods: Control,    chars: "\x00" }
+  - { key: LBracket,    mods: Alt,        chars: "["    }
+  - { key: RBracket,    mods: Alt,        chars: "]"    }
+  - { key: LBracket,    mods: Alt|Shift,  chars: "{"    }
+  - { key: RBracket,    mods: Alt|Shift,  chars: "}"    }
   - { key: N,           mods: Alt|Shift|Command, command: { program: "open", args: ["-n", "/Applications/Alacritty.app"] } }
 
 bell:
@@ -69,4 +67,3 @@ colors:
     magenta: '#d3869b'
     cyan:    '#8ec07c'
     white:   '#ebdbb2'
-
