@@ -34,7 +34,16 @@ sub convert_files_in {
     return unless $file =~ $ext_re;
 
     my $tmp = $file->sibling(sprintf 'converted-%s', $file->basename);
-    my $ext = lc $1;
+    my $ext;
+    for my $rule (@rules) {
+      next unless $rule =~ m!ext=(.+)!;
+      $ext = $1;
+      my $basename = $file->basename;
+      $basename =~ s!\.\w+$!.$ext!;
+      $tmp = $file->sibling(sprintf 'converted-%s', $basename);
+    }
+
+    $ext ||= lc $1;
     $ext = 'jpg' if $ext eq 'jpeg';
     my $size0 = (stat $file)[7];
 
@@ -44,6 +53,7 @@ sub convert_files_in {
 
     if (-e $tmp) {
       unlink $file;
+      $file =~ s!\.\w+$!.$ext!;
       rename $tmp => $file;
     }
 
