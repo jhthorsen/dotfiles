@@ -38,6 +38,9 @@
   diff = auto
   status = auto
 
+[commit]
+  gpgsign = true
+
 [core]
   excludesfile = ~/.gitignore_global
 
@@ -65,6 +68,4 @@
 [user]
   name = Jan Henning Thorsen
   email = jhthorsen@cpan.org
-	signingkey = 4B747C8EC747C46B
-[commit]
-	gpgsign = true
+  signingkey = 4B747C8EC747C46B
