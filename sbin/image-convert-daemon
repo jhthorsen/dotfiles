@@ -4,7 +4,7 @@ use Mojo::File 'path';
 use Mojo::Log;
 
 my $root   = shift @ARGV or die "Usage: $0 /path/to/image/dir\n";
-my $ext_re = qr{\.(png|jpe?g)$}i;
+my $ext_re = qr{\.(pdf|png|jpe?g)$}i;
 my %mtime_cache;
 
 our $log = Mojo::Log->with_roles("+Color")->new(level => 'debug');
@@ -32,6 +32,7 @@ sub convert_files_in {
   $dir->list->each(sub {
     my $file = shift;
     return unless $file =~ $ext_re;
+    return pdfsplit($file) if lc $1 eq 'pdf';
 
     my $tmp = $file->sibling(sprintf 'converted-%s', $file->basename);
     my $ext;
@@ -73,6 +74,13 @@ sub imagemagick {
   }
 
   run(convert => @args => $file => $tmp) if @args;
+}
+
+sub pdfsplit {
+  my $file = shift;
+  my $out = "$file";
+  $out =~ s!\.pdf$!!i;
+  run(convert => -density => 120, "$file", -background => 'white', -alpha => 'remove', "$out-%04d.png");
 }
 
 sub jpegoptim {
