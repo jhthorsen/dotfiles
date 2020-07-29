@@ -29,10 +29,14 @@ sub convert_files_in {
   my @rules = split /\s+/, $dir->basename;
   local $log = $log->context(sprintf '[%s]', $dir->basename);
 
-  $dir->list->each(sub {
-    my $file = shift;
-    return unless $file =~ $ext_re;
-    return pdfsplit($file) if lc $1 eq 'pdf';
+  for my $file ($dir->list->each) {
+    next unless $file =~ $ext_re;
+    pdfsplit($file) if lc $1 eq 'pdf';
+  }
+
+  for my $file ($dir->list->each) {
+    next unless $file =~ $ext_re;
+    next if lc $1 eq 'pdf';
 
     my $tmp = $file->sibling(sprintf 'converted-%s', $file->basename);
     my $ext;
@@ -60,7 +64,7 @@ sub convert_files_in {
 
     my $size1 = (stat $file)[7];
     $log->info("Converted $file => size=$size0/$size1");
-  });
+  }
 }
 
 sub imagemagick {
@@ -79,8 +83,13 @@ sub imagemagick {
 sub pdfsplit {
   my $file = shift;
   my $out = "$file";
+
   $out =~ s!\.pdf$!!i;
-  run(convert => -density => 120, "$file", -background => 'white', -alpha => 'remove', "$out-%04d.png");
+  run(convert => -density => 160, "$file", -background => 'white', -alpha => 'remove', "$out-%04d.png");
+  run(montage => -mode => 'concatenate', -tile => '1x', "$out-0*.png", "$out-1x.png");
+  run(montage => -mode => 'concatenate', -tile => 'x1', "$out-0*.png", "$out-x1.png");
+
+  $log->info("Converted $file => $out-%%%%.png");
 }
 
 sub jpegoptim {
