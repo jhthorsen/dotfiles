@@ -1,118 +1,127 @@
 #!/usr/bin/env perl
 use Mojo::Base -strict;
+
+use Linux::Inotify2;
 use Mojo::File 'path';
+use Mojo::JSON 'encode_json';
 use Mojo::Log;
 
 my $root   = shift @ARGV or die "Usage: $0 /path/to/image/dir\n";
 my $ext_re = qr{\.(pdf|png|jpe?g)$}i;
-my %mtime_cache;
 
-our $log = Mojo::Log->with_roles("+Color")->new(level => 'debug');
-$log->info("Watching '$root'");
+my $log = Mojo::Log->with_roles('+Color')->new(level => 'debug');
+my $inotify = Linux::Inotify2->new or die "Unable to construct a Linux::Inotify2 object: $!";
+my (%mtime, %watched);
 
-while (1) {
-  path($root)->list({dir => 1})->each(sub {
-    my $dir = shift;
-    return unless -d $dir;
+$root = path $root;
+watch_directory($root);
+watch_directory($_) for grep { -d } $root->list({dir => 1})->each;
+$inotify->poll while 1;
 
-    my $mtime = (stat $dir)[9];
-    $mtime_cache{$dir} //= $mtime;
-    convert_files_in($dir) if $mtime > $mtime_cache{$dir};
-    $mtime_cache{$dir} = (stat $dir)[9];
-  });
+sub convert_file {
+  my ($file, $rules) = @_;
+  my $tmp = $file->sibling(sprintf 'converted-%s', $file->basename);
+  my $ext;
 
-  sleep 1;
-}
-
-sub convert_files_in {
-  my $dir   = shift;
-  my @rules = split /\s+/, $dir->basename;
-  local $log = $log->context(sprintf '[%s]', $dir->basename);
-
-  for my $file ($dir->list->each) {
-    next unless $file =~ $ext_re;
-    pdfsplit($file) if lc $1 eq 'pdf';
+  # Convert filetype
+  if ($ext = $rules->{ext}) {
+    my $basename = $file->basename;
+    $basename =~ s!\.\w+$!.$ext!;
+    $tmp = $file->sibling(sprintf 'converted-%s', $basename);
   }
 
-  for my $file ($dir->list->each) {
-    next unless $file =~ $ext_re;
-    next if lc $1 eq 'pdf';
+  $ext ||= $file =~ $ext_re ? $1 : 'jpg';
+  $ext = 'jpg' if $ext eq 'jpeg';
+  my $size0 = (stat $file)[7];
 
-    my $tmp = $file->sibling(sprintf 'converted-%s', $file->basename);
-    my $ext;
-    for my $rule (@rules) {
-      next unless $rule =~ m!ext=(.+)!;
-      $ext = $1;
-      my $basename = $file->basename;
-      $basename =~ s!\.\w+$!.$ext!;
-      $tmp = $file->sibling(sprintf 'converted-%s', $basename);
-    }
+  jpegoptim($file, $tmp, $rules) if $ext eq 'jpg';
+  run(qw(pngcrush -rem allb -brute -reduce) => $file => $tmp) if $ext eq 'png';
+  imagemagick($file, $tmp, $rules);
 
-    $ext ||= lc $1;
-    $ext = 'jpg' if $ext eq 'jpeg';
-    my $size0 = (stat $file)[7];
-
-    jpegoptim($file, $tmp, @rules) if $ext eq 'jpg';
-    run(qw(pngcrush -rem => allb -brute -reduce) => $file => $tmp) if $ext eq 'png';
-    imagemagick($file, $tmp, @rules);
-
-    if (-e $tmp) {
-      unlink $file;
-      $file =~ s!\.\w+$!.$ext!;
-      rename $tmp => $file;
-    }
-
-    my $size1 = (stat $file)[7];
-    $log->info("Converted $file => size=$size0/$size1");
+  if (-e $tmp) {
+    unlink $file;
+    $file =~ s!\.\w+$!.$ext!;
+    rename $tmp => $file;
   }
+
+  my $size1 = (stat $file)[7];
+  $log->info("Converted $file => size=$size0/$size1");
 }
 
 sub imagemagick {
-  my ($file, $tmp, @rules) = @_;
+  my ($file, $tmp, $rules) = @_;
   my @args;
-
-  for my $rule (@rules) {
-    if ($rule =~ m!(\d*)x(\d*)!) {
-      push @args, '-resize' => $rule if $1 or $2;
-    }
-  }
-
+  push @args, '-resize' => $rules->{dimensions} if $rules->{dimensions};
   run(convert => @args => $file => $tmp) if @args;
 }
 
 sub pdfsplit {
-  my $file = shift;
+  my ($file, $rules) = @_;
   my $out = "$file";
 
   $out =~ s!\.pdf$!!i;
   run(convert => -density => 160, "$file", -background => 'white', -alpha => 'remove', "$out-%04d.png");
-  run(montage => -mode => 'concatenate', -tile => '1x', "$out-0*.png", "$out-1x.png");
-  run(montage => -mode => 'concatenate', -tile => 'x1', "$out-0*.png", "$out-x1.png");
+  run(montage => -mode => 'concatenate', -tile => $rules->{tile}, "$out-0*.png", "$out-$rules->{tile}.png") if $rules->{tile};
 
   $log->info("Converted $file => $out-%%%%.png");
 }
 
 sub jpegoptim {
-  my ($file, $tmp, @rules) = @_;
+  my ($file, $tmp, $rules) = @_;
   my @args = qw(-q -p);
-
-  for my $rule (@rules) {
-    if ($rule eq 'strip') {
-      push @args, '-s';
-    }
-    elsif ($rule =~ m!q=(\d+)!) {
-      push @args, "--max=$1";
-    }
-    elsif ($rule =~ m!s=(\d+)!) {
-      push @args, "--size=$1";
-    }
-  }
-
+  push @args, "-s"                      if $rules->{strip};
+  push @args, "--max=$rules->{quality}" if $rules->{quality};
+  push @args, "--size=$rules->{size}"   if $rules->{size};
   run(jpegoptim => @args, $file);
+}
+
+sub parse_rules {
+  local $_ = shift;
+  my %rules;
+
+  $rules{dimensions} = $1 if /(?:^|\s)(\d*x\d+|\d+x\d*)/;
+  $rules{ext}        = $1 if /\b(?:ext|format|type)=([a-z]{2,5})/;
+  $rules{quality}    = $1 if /\b(?:q|quality)=(\d+)/;
+  $rules{size}       = $1 if /\b(?:s|size)=(\d+)\b/;
+  $rules{strip}      = 1  if /\bstrip\b/;
+  $rules{tile}       = $1 if /\btile=(\w+)/;
+
+  return \%rules;
 }
 
 sub run {
   my @cmd = @_;
   $log->debug(join ' ', map { /\s/ ? qq('$_') : $_ } @cmd);
   system @cmd;
+}
+
+sub watch_directory {
+  my $path = shift;
+  return if $watched{$path};
+
+  my $rules = parse_rules($path->basename);
+  $watched{$path} = $inotify->watch("$path", IN_ALL_EVENTS, sub {
+    my $e = shift;
+
+    my $file = path($e->fullname);
+    return watch_directory($file) if -d $file;
+    return unwatch_directory($file) if !-e $file;
+
+    return unless my $mtime = eval { $file->stat->mtime };
+    return if $mtime{$file} and $mtime{$file} >= $mtime;
+
+    my $type = $file =~ $ext_re ? lc $1 : '';
+    pdfsplit($file, $rules) if $type eq 'pdf';
+    convert_file($file, $rules) if $type ne 'pdf';
+    $mtime{$file} = $mtime;
+  });
+
+  $log->info(sprintf 'Watching "%s" with rules %s', $path, encode_json($rules));
+}
+
+sub unwatch_directory {
+  my $path = shift;
+  return unless my $watch = delete $watched{$path};
+  $watch->cancel;
+  $log->info(sprintf 'Not watching "%s" anymore', $path);
 }
