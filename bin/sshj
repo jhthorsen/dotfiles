@@ -43,7 +43,7 @@ if [ "x$1" = "x" -o "x$1" = "xhelp" ]; then
 
 elif [ "x$1" = "xedit" ]; then
   export SSHJ_TARGET_HOST="$2";
-  [ -z "$SSHJ_TARGET_HOST" ] && ls -l $SSHJ_HOME/cache && exit 1;
+  [ -z "$SSHJ_TARGET_HOST" ] && find $SSHJ_HOME/cache -type f && exit 1;
   export SSHJ_CACHE_FILE="$SSHJ_HOME/cache/$SSHJ_TARGET_HOST.files"
   [ -f "$SSHJ_CACHE_FILE" ] || populate_sshj_files;
   SSHJ_EDIT="$(cat $SSHJ_CACHE_FILE | fzf)";
