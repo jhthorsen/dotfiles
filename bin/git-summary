@@ -3,16 +3,30 @@ use strict;
 use warnings;
 use Time::Piece;
 
-my $last_month = gmtime() - 86400 * 30;
-my @git_argv   = grep { !/^--author=all/ } @ARGV;
+$ENV{GIT_DIR} ||= '.git';
+my @git_argv = git_argv(@ARGV);
+-d '.git' ? run_single(@git_argv) : run_multiple(@git_argv);
 
-push @git_argv, '--pretty=format:%C(cyan)%cd%Creset %C(green)%ad%Creset %C(yellow)%h%Creset %s';
-push @git_argv, '--date=short' unless grep {/^--date/} @ARGV;
-push @git_argv, '--color' unless grep {/^--no-color/} @ARGV;
-push @git_argv, sprintf '--author=%s', git_config('user.email') unless grep {/^--author/} @ARGV;
-push @git_argv, sprintf '--since=%s-%02s-01', $last_month->year, $last_month->mon unless grep {/^--since/} @ARGV;
+sub git_argv {
+  my @git_argv   = grep { !/^--author=all/ } @_;
+  my $last_month = gmtime() - 86400 * 30;
 
-print "$_\n" for sort { $a cmp $b } uniq(git(log => '--reverse' => @git_argv), git(reflog => @git_argv));
+  push @git_argv, '--pretty=format:%C(cyan)%cd%Creset %C(green)%ad%Creset %C(yellow)%h%Creset %s';
+  push @git_argv, '--date=short' unless grep {/^--date/} @ARGV;
+  push @git_argv, '--color' unless grep {/^--no-color/} @ARGV;
+  push @git_argv, sprintf '--author=%s', git_config('user.email') unless grep {/^--author/} @ARGV;
+  push @git_argv, sprintf '--since=%s-%02s-01', $last_month->year, $last_month->mon unless grep {/^--since/} @ARGV;
+
+  return @git_argv;
+}
+
+sub git_capture {
+  warn "\$ git @_ ($ENV{GIT_DIR})\n" if $ENV{DEBUG};
+  open my $GIT, '-|', git => @_ or die "git @_: $!";
+  my @out;
+  while (<$GIT>) { s!\s+$!!; push @out, $_ }
+  return @out;
+}
 
 sub git_config {
   my $key = shift;
@@ -21,19 +35,33 @@ sub git_config {
   return $val;
 }
 
-sub git {
-  warn "\$ git @_\n" if $ENV{DEBUG};
-  open my $GIT, '-|', git => @_ or die "git @_: $!";
-  my @out;
-  s!\s+$!! && push @out, $_ while <$GIT>;
-  return @out;
+sub run_multiple {
+  my @git_argv = @_;
+  my ($len, @summary) = (0);
+
+  opendir my $DH, '.' or die "opendir .: $!";
+  while (my $dir = readdir $DH) {
+    next unless -d "$dir/.git";
+    local $ENV{GIT_DIR} = "$ENV{PWD}/$dir/.git";
+    my @captured = (git_capture(log => '--reverse' => @git_argv), git_capture(reflog => @git_argv));
+    $len = length $dir if @captured and $len < length $dir;
+    push @summary, [$dir, $_] for @captured;
+  }
+
+  print "$_\n" for uniq_sort([0, 2], map { sprintf "%-${len}s %s", @$_ } @summary);
 }
 
-sub uniq {
+sub run_single {
+  print "$_\n" for uniq_sort([2], git_capture(log => '--reverse' => @_), git_capture(reflog => @_));
+}
+
+sub uniq_sort {
+  my $splice = shift;
   my %uniq;
-  return grep {
-    my @l = split /\s/, $_, 4;
-    splice @l, 2, 1; # remove the hash
-    !$uniq{"@l"}++;
+
+  return map { $_->[1] } sort { $a->[0] cmp $b->[0] } grep { !$uniq{$_->[0]}++ } map {
+    my @l = split /\s+/, $_;
+    splice @l, $_, 1 for @$splice;
+    ["@l", $_];
   } @_;
 }
