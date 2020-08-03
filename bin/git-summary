@@ -1,45 +1,39 @@
-#!/bin/sh
-[ -z $BRANCH ] && BRANCH=$(git symbolic-ref --short -q HEAD);
-FROM="$1";
-shift 2>/dev/null;
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use Time::Piece;
 
-# Whole month
-# $ git-date
-# $ git-date 2019-06
-# $ git-date 2019-06 --author=Jan
-if echo $FROM | grep -q "^\d\d\d\d-\d\d\$"; then
-  YYYYMM=${FROM:-$(date +%Y-%m)};
-  for DD in $(seq 01 31); do
-    git-date "$YYYYMM-$DD" $*;
-  done | less
+my $last_month = gmtime() - 86400 * 30;
+my @git_argv   = grep { !/^--author=all/ } @ARGV;
 
-# Individual day
-# $ git-date 2019-06-04
-# $ git-date 2019-06-04 --author=Jan
-elif echo $FROM | grep -qe "^\d\d\d\d-\d\+-\d\+\$"; then
-  [ -t 1 ] && OUT_CMD="less" || OUT_CMD="cat";
+push @git_argv, '--pretty=format:%C(cyan)%cd%Creset %C(green)%ad%Creset %C(yellow)%h%Creset %s';
+push @git_argv, '--date=short' unless grep {/^--date/} @ARGV;
+push @git_argv, '--color' unless grep {/^--no-color/} @ARGV;
+push @git_argv, sprintf '--author=%s', git_config('user.email') unless grep {/^--author/} @ARGV;
+push @git_argv, sprintf '--since=%s-%02s-01', $last_month->year, $last_month->mon unless grep {/^--since/} @ARGV;
 
-  # Partial date
-  if ! echo $FROM | grep -q -- "-"; then
-    FROM="$(date +%Y-%m)-$FROM";
-  fi
+print "$_\n" for sort { $a cmp $b } uniq(git(log => '--reverse' => @git_argv), git(reflog => @git_argv));
 
-  LOG_FORMAT="- %s - %an";
-  TO="$(date -d "$FROM + 1 days" +%Y-%m-%d)";
-  (
-    echo "$(tput setaf 3)# git diff $BRANCH $* @{$FROM}..@{$TO}$(tput sgr0)";
-    echo "";
-    echo "git log $BRANCH --pretty=format:$LOG_FORMAT --color $* @{$FROM}..@{$TO} | cat";
-    echo "";
-    echo "";
-    #git diff $BRANCH --color $* "@{$FROM}..@{$TO}" | cat
-  ) | $OUT_CMD;
+sub git_config {
+  my $key = shift;
+  my $val = qx{git config --get $key};
+  chomp $val;
+  return $val;
+}
 
-# Invalid date
-else
-  echo "Usage:";
-  echo "> git-date 2019-07-10";
-  echo "> git-date 2019-07";
-  echo "> git-date 2019-07 --author=Jan";
-  echo;
-fi
+sub git {
+  warn "\$ git @_\n" if $ENV{DEBUG};
+  open my $GIT, '-|', git => @_ or die "git @_: $!";
+  my @out;
+  s!\s+$!! && push @out, $_ while <$GIT>;
+  return @out;
+}
+
+sub uniq {
+  my %uniq;
+  return grep {
+    my @l = split /\s/, $_, 4;
+    splice @l, 2, 1; # remove the hash
+    !$uniq{"@l"}++;
+  } @_;
+}
