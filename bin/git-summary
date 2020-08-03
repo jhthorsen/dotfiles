@@ -14,7 +14,7 @@ sub git_argv {
   push @git_argv, '--pretty=format:%C(cyan)%cd%Creset %C(green)%ad%Creset %C(yellow)%h%Creset %s';
   push @git_argv, '--date=short' unless grep {/^--date/} @ARGV;
   push @git_argv, '--color' unless grep {/^--no-color/} @ARGV;
-  push @git_argv, sprintf '--author=%s', git_config('user.email') unless grep {/^--author/} @ARGV;
+  push @git_argv, sprintf '--author=%s', git_config('user.name') unless grep {/^--author/} @ARGV;
   push @git_argv, sprintf '--since=%s-%02s-01', $last_month->year, $last_month->mon unless grep {/^--since/} @ARGV;
 
   return @git_argv;
