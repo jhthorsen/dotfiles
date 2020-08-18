@@ -9,8 +9,7 @@
   dd = !/bin/bash -c 'git diff --color -C $(echo $0 | grep -q "/bin/" && echo "HEAD^" || echo "$0") -w | diff-so-fancy --color | less -RX -x2 -F'
   ds = diff --shortstat --numstat HEAD^
   gl = log --graph --pretty='format:%C(yellow)%h%Cred%d%Creset %s %C(white) %C(cyan)%an%Creset, %C(green)%ar%Creset'
-  ls = log --pretty='format:%h %Cgreen%as%Creset %s'
-  lsr = log --pretty='format:%h %Cgreen%as%Creset %s' --reverse
+  lg = log --pretty='format:%Cblue%h%Creset %s (%Cgreen%ar%Creset)'
   rh = !git reset HEAD^ && git reset --hard
   sh = !git show $(git log --color --pretty=format:'%Cred%h%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset %C(yellow)%d%Creset' | fzf --reverse --ansi --preview='git show {1} | head -n100' | cut -d' ' -f1)
 
