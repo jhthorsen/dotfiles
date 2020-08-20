@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 use Time::Piece;
+use Mojo::Util 'tablify';
 
 $ENV{GIT_DIR} ||= '.git';
 my @git_argv = git_argv(@ARGV);
@@ -11,7 +12,7 @@ sub git_argv {
   my @git_argv   = grep { !/^--author=all/ } @_;
   my $last_month = gmtime() - 86400 * 30;
 
-  push @git_argv, '--pretty=format:%C(cyan)%cd%Creset %C(green)%ad%Creset %C(yellow)%h%Creset %s';
+  push @git_argv, '--pretty=format:%h %cd %ad %s';
   push @git_argv, '--date=short' unless grep {/^--date/} @ARGV;
   push @git_argv, '--color' unless grep {/^--no-color/} @ARGV;
   push @git_argv, sprintf '--author=%s', git_config('user.name') unless grep {/^--author/} @ARGV;
@@ -21,10 +22,11 @@ sub git_argv {
 }
 
 sub git_capture {
+  my $sub_command = $_[0];
   warn "\$ git @_ ($ENV{GIT_DIR})\n" if $ENV{DEBUG};
   open my $GIT, '-|', git => @_ or die "git @_: $!";
   my @out;
-  while (<$GIT>) { s!\s+$!!; push @out, $_ }
+  while (<$GIT>) { s!\s+$!!; push @out, [$sub_command => split /\s/, $_, 4] }
   return @out;
 }
 
@@ -37,31 +39,31 @@ sub git_config {
 
 sub run_multiple {
   my @git_argv = @_;
-  my ($len, @summary) = (0);
+  my @all;
 
   opendir my $DH, '.' or die "opendir .: $!";
   while (my $dir = readdir $DH) {
     next unless -d "$dir/.git";
     local $ENV{GIT_DIR} = "$ENV{PWD}/$dir/.git";
-    my @captured = (git_capture(log => '--reverse' => @git_argv), git_capture(reflog => @git_argv));
-    $len = length $dir if @captured and $len < length $dir;
-    push @summary, [$dir, $_] for @captured;
+    push @all, map { splice @$_, 4, 0, $dir; $_ } (git_capture(log => @git_argv), git_capture(reflog => @git_argv));
   }
 
-  print "$_\n" for uniq_sort([0, 2], map { sprintf "%-${len}s %s", @$_ } @summary);
+  my @headers = qw(Type Hash Committed Authored Project Subject);
+  print tablify([\@headers, uniq_sort([2, 5], @all)]);
 }
 
 sub run_single {
-  print "$_\n" for uniq_sort([2], git_capture(log => '--reverse' => @_), git_capture(reflog => @_));
+  my @headers = qw(Type Hash Committed Authored Subject);
+  print tablify([\@headers, uniq_sort([2, 4], git_capture(log => @_), git_capture(reflog => @_))]);
 }
 
 sub uniq_sort {
-  my $splice = shift;
+  my $uniq_indexes = shift;
   my %uniq;
 
   return map { $_->[1] } sort { $a->[0] cmp $b->[0] } grep { !$uniq{$_->[0]}++ } map {
-    my @l = split /\s+/, $_;
-    splice @l, $_, 1 for @$splice;
-    ["@l", $_];
+    my $i = $_;
+    my $key = join ':', map { $i->[$_] } @$uniq_indexes;
+    [$key, $i];
   } @_;
 }

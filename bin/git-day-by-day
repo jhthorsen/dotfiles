@@ -1,8 +1,0 @@
-#!/bin/bash
-NEXT=$(date +%F)
-git log --no-merges --format="%cd" --date=short $@ | uniq | while read DATE ; do
-  echo "";
-  echo "[$DATE]";
-  GIT_PAGER=cat git log --no-merges --format=" * %s" --since=$DATE --until=$NEXT
-  NEXT=$DATE
-done
