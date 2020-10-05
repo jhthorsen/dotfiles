@@ -3,6 +3,7 @@
   d = diff HEAD^
 
   ca = commit --amend -C HEAD
+  co = commit
   cl = ship clean
   cp = !/bin/bash -c 'git show "$0":"$1" > "$1"'
   dc = diff --cached
