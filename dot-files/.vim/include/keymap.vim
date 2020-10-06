@@ -12,11 +12,13 @@ let termKeys = [
   \ {'key': '<C-l>', 'to': ':tabnext<CR>'},
 \]
 
-for item in termKeys
-  exe 'nnoremap ' . item.key . ' ' . item.to
-  exe 'inoremap ' . item.key . ' <C-\><C-N>' . item.to
-  exe 'tnoremap ' . item.key . ' <C-\><C-N>' . item.to
-endfor
+if has("nvim")
+  for item in termKeys
+    exe 'nnoremap ' . item.key . ' ' . item.to
+    exe 'inoremap ' . item.key . ' <C-\><C-N>' . item.to
+    exe 'tnoremap ' . item.key . ' <C-\><C-N>' . item.to
+  endfor
+endif
 
 " copy/paste to clipboard
 set clipboard=unnamed

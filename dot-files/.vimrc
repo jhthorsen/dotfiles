@@ -1,6 +1,11 @@
 call plug#begin('~/.vim/plugged')
 
-Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+if has("nvim")
+  Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+else
+  Plug 'junegunn/fzf'
+endif
+
 Plug 'junegunn/fzf.vim'
 Plug 'junegunn/vim-easy-align' " https://github.com/junegunn/vim-easy-align
 Plug 'vim-perl/vim-perl'
@@ -11,7 +16,6 @@ Plug 'gabrielelana/vim-markdown'
 Plug 'hail2u/vim-css3-syntax'
 Plug 'kazark/vim-SimpleSmoothScroll'
 Plug 'mattn/emmet-vim'
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'othree/html5.vim'
 Plug 'pangloss/vim-javascript'
 Plug 'posva/vim-vue'
@@ -22,6 +26,15 @@ Plug 'yko/mojo.vim'
 Plug 'morhetz/gruvbox'
 Plug 'evanleck/vim-svelte'
 Plug 'jeetsukumaran/vim-buffergator'
+
+if has("nvim")
+  Plug 'neoclide/coc.nvim', {'branch': 'release'}
+  set cmdheight=2
+  set hidden
+  set shortmess+=c
+  set signcolumn=yes
+  set updatetime=250
+endif
 
 call plug#end()
 
@@ -36,12 +49,14 @@ set expandtab
 set history=100
 set laststatus=2
 set mouse=i
+set nobackup
 set nocompatible
 set nofoldenable
 set noincsearch
 set nostartofline
 set noswapfile
 set nowrap
+set nowritebackup
 set shell=zsh
 set shiftround
 set shiftwidth=2
@@ -54,15 +69,6 @@ set tabstop=8
 set wildignore+=*/.git/*,*/node_modules/*,*/.DS_Store,*/vendor,*.min.*,*.png,*.jpg
 set wildignorecase
 set wildmode=list:longest
-
-" required by neoclide/coc.nvim
-set cmdheight=2
-set hidden
-set nobackup
-set nowritebackup
-set shortmess+=c
-set signcolumn=yes
-set updatetime=250
 
 " netrw
 let g:netrw_banner = 0
@@ -82,7 +88,11 @@ execute "source " . g:DOT_FILES_PATH . "/.vim/include/lastpos.vim"
 execute "source " . g:DOT_FILES_PATH . "/.vim/include/mkdir.vim"
 execute "source " . g:DOT_FILES_PATH . "/.vim/include/spelling.vim"
 
-" Plugin config
-execute "source " . g:DOT_FILES_PATH . "/.vim/include/coc.vim"
+" Vim plugins
 execute "source " . g:DOT_FILES_PATH . "/.vim/include/emmet.vim"
 execute "source " . g:DOT_FILES_PATH . "/.vim/include/multiple-cursors.vim"
+
+" Neovim plugins
+if has("nvim")
+  execute "source " . g:DOT_FILES_PATH . "/.vim/include/coc.vim"
+endif
