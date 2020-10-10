@@ -1,7 +1,6 @@
 alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
 alias cpanm='cpanm -M https://cpan.metacpan.org'
 alias doctl='doctl --access-token=$DO_API_TOKEN'
-alias ff='find . -type f | grep -v "git\|.nuxt\|node_mo\|packed\|sass-cache\|\.swp" | sort'
 alias gensecret='echo "$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 32)"'
 alias gof='gopass show -c $(gopass list -f | fzf --preview "gopass show {} | tail -n +1")'
 alias gti='git'

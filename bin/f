@@ -1,0 +1,57 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+my $ignore = $ENV{IGNORE} || '\.DS_Store|\.nuxt|\.swp|git|node_modules|packed|sass-cache';
+my (%opts, @cmd) = (type => 'f');
+parse() while @ARGV;
+
+delete $opts{type} if $opts{type} eq 'a';
+$opts{$_} and unshift @cmd, "-$_" => $opts{$_}
+  for reverse qw(type atime ctime mtime size maxdepth);
+
+unshift @cmd, find => $opts{dir} || '.';
+die "@cmd\n" if $ENV{TEST};
+
+open my $FIND, '-|', @cmd or die "Could not execute @cmd: $!";
+my @output = <$FIND>;
+print sort grep { !/$ignore/ } @output;
+
+sub add {
+  my ($key, $val) = @_;
+  warn "# add $key = $val\n" if $ENV{TEST};
+  $opts{$key} = $val;
+}
+
+sub parse {
+  my $arg = shift @ARGV;
+  return usage()                      if $arg eq '-h';
+  return add(dir => $arg)             if -d $arg;
+  return add(maxdepth => shift @ARGV) if $arg eq '-d';
+  return add(size => $1)              if $arg =~ m!^([0-9]+[kMGTP])$!;
+  return add(type => $arg)            if $arg =~ m!^([abcdflps])$!;
+  return add("${1}time" => "-$2")     if $arg =~ m!^([acm])([0-9]+[smhdw])$!;
+  return push @cmd, $arg;
+}
+
+sub usage {
+  die <<"HERE"
+
+  Example:
+
+  \$ f bin f c1d 1k -d 1
+    => find bin -type f -ctime -1d -size 1k -maxdepth 1
+
+  - [0-9]+[kMGTP]  = -size <arg>
+  - [bcdflps]      = -type <arg>
+  - a[0-9]+[smhdw] = -atime -<arg>
+  - c[0-9]+[smhdw] = -ctime -<arg>
+  - m[0-9]+[smhdw] = -mtime -<arg>
+  - -a             = Find all kinds of files, and not just "-type f"
+  - -d <arg>       = -depth <arg>
+  - -h             = Will show this help screen
+  - Any arg that is a directory will be used as location to find in.
+  - Any other argument wil be passed on to "find"
+
+HERE
+}
