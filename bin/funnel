@@ -1,3 +1,36 @@
 #!/bin/sh
-SSHUTTLE_HOST="$1";
-sshuttle -r $SSHUTTLE_HOST --dns 0/0
+OPTION="$1";
+
+if [ "x$OPTION" = "xforward" -o "x$OPTION" = "xcancel" ]; then
+  LPORT="$2";
+  DHOST="$(echo "$3" | cut -d ':' -f1)";
+  DPORT="$(echo "$3" | cut -d ':' -f2)";
+  DPORT="${DPORT:-$LPORT}";
+
+  echo "# ssh -O $OPTION -L $LPORT:localhost:$DPORT $DHOST";
+  if ssh -O check $DHOST; then
+    ssh -O $OPTION -L $LPORT:localhost:$DPORT $DHOST;
+  elif [ "$OPTION" = "forward" ]; then
+    ssh -fN -L $LPORT:localhost:$DPORT $DHOST;
+  fi
+
+elif [ "x$OPTION" = "xall" ]; then
+  echo "# sshuttle -r $2 --dns 0/0";
+  sshuttle -r $2 --dns 0/0;
+
+else
+  cat <<HERE
+
+  Usage:
+
+  \$ funnel forward <local-port> <dest-host>
+  \$ funnel forward <local-port> <dest-host>:<dest-port>
+  \$ funnel cancel <local-port> <dest-host>
+  \$ funnel cancel <local-port> <dest-host>:<dest-port>
+  \$ funnel all <dest-host>
+
+HERE
+
+fi
+
+exit $?;
