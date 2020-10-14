@@ -144,6 +144,17 @@ elif [ "x$1" = "xdotfiles" -o "x$DOTFILES_FROM_WEB" = "x1" ]; then
   [ -e "$HOME/.pause" -a -e "$ROOT_DIR/.pause" ] || $DRY_RUN cp $ROOT_DIR/.pause $HOME/.pause
   install_file $ROOT_DIR/proxy.sh $CONFIG_DIR/50-proxy.sh
 
+elif [ "x$1" = "xpush" -a -n "$2" ]; then
+  DEST_HOST="$2";
+  rsync -va $HOME/.config $DEST_HOST:~/;
+  rsync -va \
+    $HOME/.ackrc \
+    $HOME/.git* \
+    $HOME/.perltidyrc \
+    $HOME/.zshrc \
+    $HOME/.vim* \
+    $DEST_HOST:~/;
+
 elif [ "x$1" = "xsettings" ]; then
   defaults read NSGlobalDomain InitialKeyRepeat # 25
   defaults write NSGlobalDomain InitialKeyRepeat -int 12
@@ -164,6 +175,7 @@ else
 
 # Usage
   ./dot-files [apps|dotfiles|settings]
+  ./dot-files push <dest-host>
   DRY_RUN=echo ./dot-files/install.sh dotfiles
   curl -sL https://raw.githubusercontent.com/jhthorsen/snippets/master/dot-files/install.sh | DOTFILES_FROM_WEB=1 sh -
 HERE
