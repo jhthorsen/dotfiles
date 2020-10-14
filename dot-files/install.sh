@@ -87,10 +87,10 @@ elif [ "x$1" = "xdotfiles" -o "x$DOTFILES_FROM_WEB" = "x1" ]; then
     if [ ! -d "$CONFIG_DIR/powerlevel10k" ]; then
       $DRY_RUN git clone https://github.com/romkatv/powerlevel10k.git $CONFIG_DIR/powerlevel10k
     fi
-  fi
 
-  install_file $CONFIG_DIR/powerlevel10k/powerlevel10k.zsh-theme $CONFIG_DIR/20-theme-powerlevel10k.sh
-  install_file $ROOT_DIR/.p10k.zsh $CONFIG_DIR/21-p10k.zsh
+    install_file $CONFIG_DIR/powerlevel10k/powerlevel10k.zsh-theme $CONFIG_DIR/20-theme-powerlevel10k.sh
+    install_file $ROOT_DIR/.p10k.zsh $CONFIG_DIR/21-p10k.zsh
+  fi
 
   # dot-files
   install_file $ROOT_DIR/.ackrc $HOME/.ackrc
