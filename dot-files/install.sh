@@ -43,6 +43,7 @@ if [ "x$1" = "xapps" ]; then
   ln -s "$(which githook-perltidy)" /usr/local/bin/githook-perltidy;
 
 elif [ "x$1" = "xdotfiles" ]; then
+  BASE_WEB_URL="https://raw.githubusercontent.com/jhthorsen/snippets/master/dot-files";
   CONFIG_DIR="$HOME/.config/dot-files";
   ROOT_DIR="${0:a:h}";
   [ "x$ROOT_DIR" = "x" ] && exit 1;
@@ -52,6 +53,7 @@ elif [ "x$1" = "xdotfiles" ]; then
     SOURCE_FILE="$1";
     DEST_FILE="$2";
     LINK_FILE=$(readlink $DEST_FILE);
+    WEB_PATH="$SOURCE_FILE";
 
     if [ ! -e $SOURCE_FILE ]; then
       echo "--- Skip $SOURCE_FILE - Not found";
@@ -59,11 +61,15 @@ elif [ "x$1" = "xdotfiles" ]; then
     fi
 
     # Clean up broken links
-    [ -L "$DEST_FILE" -a ! -e "$DEST_FILE" ] && rm $DEST_FILE;
+    [ "x$FETCH_APP" = "xcurl" ] && WEB_PATH=$(echo $SOURCE_FILE | sed "s#^$ROOT_DIR##");
+    [ -L "$DEST_FILE" -a ! -e "$DEST_FILE" ] && $DRY_RUN rm $DEST_FILE;
 
-    if [ ! -e "$DEST_FILE" ]; then
+    if [ $WEB_PATH != $SOURCE_FILE ]; then
       echo "--- Installing $DEST_FILE";
-      ln -s "$SOURCE_FILE" "$DEST_FILE";
+      $DRY_RUN curl -L $BASE_WEB_URL$WEB_PATH -o "$DEST_FILE";
+    elif [ ! -e "$DEST_FILE" ]; then
+      echo "--- Installing $DEST_FILE";
+      $DRY_RUN ln -s "$SOURCE_FILE" "$DEST_FILE";
     elif [ "x$LINK_FILE" != "x$SOURCE_FILE" ]; then
       echo "--- Skip $SOURCE_FILE - $LINK_FILE exists";
     else
@@ -73,7 +79,7 @@ elif [ "x$1" = "xdotfiles" ]; then
 
   # powerlevel10k
   if [ ! -d "$CONFIG_DIR/powerlevel10k" ]; then
-    git clone https://github.com/romkatv/powerlevel10k.git $CONFIG_DIR/powerlevel10k
+    $DRY_RUN git clone https://github.com/romkatv/powerlevel10k.git $CONFIG_DIR/powerlevel10k
   fi
 
   install_file $CONFIG_DIR/powerlevel10k/powerlevel10k.zsh-theme $CONFIG_DIR/20-theme-powerlevel10k.sh
@@ -109,8 +115,8 @@ elif [ "x$1" = "xdotfiles" ]; then
   install_file $ROOT_DIR/../bin $CONFIG_DIR/bin
 
   # misc
-  [ -e "$HOME/.vim/autoload/plug.vim" ] || curl -fLo "$HOME/.vim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  [ -e "$HOME/.pause" ] || cp $ROOT_DIR/.pause $HOME/.pause
+  [ -e "$HOME/.vim/autoload/plug.vim" ] || $DRY_RUN curl -fLo "$HOME/.vim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  [ -e "$HOME/.pause" ] || $DRY_RUN cp $ROOT_DIR/.pause $HOME/.pause
 
 elif [ "x$1" = "xsettings" ]; then
   defaults read NSGlobalDomain InitialKeyRepeat # 25
@@ -126,10 +132,12 @@ elif [ "x$1" = "xsettings" ]; then
 else
   cat <<HERE
 # Notes
-initdb /usr/local/var/postgres -E utf8
-brew services restart postgresql
+  initdb /usr/local/var/postgres -E utf8
+  brew services restart postgresql
 
 # Usage
-zsh $0 [apps|dotfiles|settings]
+  ./dot-files [apps|dotfiles|settings]
+  DRY_RUN=echo ./dot-files/install.sh dotfiles
+  curl -L https://raw.githubusercontent.com/jhthorsen/snippets/master/dot-files/install.sh | FETCH_APP=curl sh - dotfiles
 HERE
 fi
