@@ -39,6 +39,9 @@ endif
 call plug#end()
 
 let g:DOT_FILES_PATH=fnamemodify(resolve(expand("<sfile>:p")), ":h")
+if ! isdirectory(g:DOT_FILES_PATH)
+  DOT_FILES_PATH="~/"
+endif
 
 set autoindent
 set autoread

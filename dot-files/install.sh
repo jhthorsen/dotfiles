@@ -117,6 +117,24 @@ elif [ "x$1" = "xdotfiles" -o "x$DOTFILES_FROM_WEB" = "x1" ]; then
   # Utility scripts
   install_file $ROOT_DIR/../bin $CONFIG_DIR/bin
 
+  # Vim includes
+  if [ "x$DOTFILES_FROM_WEB" = "x1" ]; then
+    [ -d "$HOME/.vim/ftplugin" ] || mkdir -p "$HOME/.vim/ftplugin";
+    [ -d "$HOME/.vim/include" ] || mkdir -p "$HOME/.vim/include";
+    install_file $ROOT_DIR/.vim/ftplugin/perl.vim $HOME/.vim/ftplugin/perl.vim
+    install_file $ROOT_DIR/.vim/include/coc.vim $HOME/.vim/include/coc.vim
+    install_file $ROOT_DIR/.vim/include/colors.vim $HOME/.vim/include/colors.vim
+    install_file $ROOT_DIR/.vim/include/emmet.vim $HOME/.vim/include/emmet.vim
+    install_file $ROOT_DIR/.vim/include/ft.vim $HOME/.vim/include/ft.vim
+    install_file $ROOT_DIR/.vim/include/fzf.vim $HOME/.vim/include/fzf.vim
+    install_file $ROOT_DIR/.vim/include/keymap.vim $HOME/.vim/include/keymap.vim
+    install_file $ROOT_DIR/.vim/include/lastpos.vim $HOME/.vim/include/lastpos.vim
+    install_file $ROOT_DIR/.vim/include/mkdir.vim $HOME/.vim/include/mkdir.vim
+    install_file $ROOT_DIR/.vim/include/multiple-cursors.vim $HOME/.vim/include/multiple-cursors.vim
+    install_file $ROOT_DIR/.vim/include/spelling.vim $HOME/.vim/include/spelling.vim
+    install_file $ROOT_DIR/.vim/include/template.vim $HOME/.vim/include/template.vim
+  fi
+
   # misc
   [ -e "$HOME/.vim/autoload/plug.vim" ] || $DRY_RUN curl -sfLo "$HOME/.vim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   [ -e "$HOME/.pause" -a -e "$ROOT_DIR/.pause" ] || $DRY_RUN cp $ROOT_DIR/.pause $HOME/.pause
