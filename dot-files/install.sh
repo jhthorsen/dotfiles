@@ -42,11 +42,12 @@ if [ "x$1" = "xapps" ]; then
   rm /usr/local/bin/githook-perltidy;
   ln -s "$(which githook-perltidy)" /usr/local/bin/githook-perltidy;
 
-elif [ "x$1" = "xdotfiles" ]; then
+elif [ "x$1" = "xdotfiles" -o "x$DOTFILES_FROM_WEB" = "x1" ]; then
   BASE_WEB_URL="https://raw.githubusercontent.com/jhthorsen/snippets/master/dot-files";
   CONFIG_DIR="$HOME/.config/dot-files";
   ROOT_DIR="${0:a:h}";
-  [ "x$ROOT_DIR" = "x" ] && exit 1;
+  ROOT_DIR="${ROOT_DIR:-HTTPS}";
+  [ "x$ROOT_DIR" = "x" -a "x$DOTFILES_FROM_WEB" != "x1" ] && exit 1;
   [ -d "$HOME/.config/alacritty" ] || mkdir -p $HOME/.config/alacritty
 
   function install_file() {
@@ -55,18 +56,20 @@ elif [ "x$1" = "xdotfiles" ]; then
     LINK_FILE=$(readlink $DEST_FILE);
     WEB_PATH="$SOURCE_FILE";
 
-    if [ ! -e $SOURCE_FILE ]; then
+    # Clean up broken links
+    [ -L "$DEST_FILE" -a ! -e "$DEST_FILE" ] && $DRY_RUN rm $DEST_FILE;
+
+    [ "x$DOTFILES_FROM_WEB" = "x1" -a -e "$DEST_FILE" ] && $DRY_RUN rm $DEST_FILE;
+    [ "x$DOTFILES_FROM_WEB" = "x1" ] && WEB_PATH=$(echo $SOURCE_FILE | sed "s#^$ROOT_DIR##");
+
+    if [ ! -e $SOURCE_FILE -a "x$WEB_PATH" = "x$SOURCE_FILE" ]; then
       echo "--- Skip $SOURCE_FILE - Not found";
       return;
     fi
 
-    # Clean up broken links
-    [ "x$FETCH_APP" = "xcurl" ] && WEB_PATH=$(echo $SOURCE_FILE | sed "s#^$ROOT_DIR##");
-    [ -L "$DEST_FILE" -a ! -e "$DEST_FILE" ] && $DRY_RUN rm $DEST_FILE;
-
     if [ $WEB_PATH != $SOURCE_FILE ]; then
       echo "--- Installing $DEST_FILE";
-      $DRY_RUN curl -L $BASE_WEB_URL$WEB_PATH -o "$DEST_FILE";
+      $DRY_RUN curl -sL $BASE_WEB_URL$WEB_PATH -o "$DEST_FILE";
     elif [ ! -e "$DEST_FILE" ]; then
       echo "--- Installing $DEST_FILE";
       $DRY_RUN ln -s "$SOURCE_FILE" "$DEST_FILE";
@@ -115,8 +118,8 @@ elif [ "x$1" = "xdotfiles" ]; then
   install_file $ROOT_DIR/../bin $CONFIG_DIR/bin
 
   # misc
-  [ -e "$HOME/.vim/autoload/plug.vim" ] || $DRY_RUN curl -fLo "$HOME/.vim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  [ -e "$HOME/.pause" ] || $DRY_RUN cp $ROOT_DIR/.pause $HOME/.pause
+  [ -e "$HOME/.vim/autoload/plug.vim" ] || $DRY_RUN curl -sfLo "$HOME/.vim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  [ -e "$HOME/.pause" -a -e "$ROOT_DIR/.pause" ] || $DRY_RUN cp $ROOT_DIR/.pause $HOME/.pause
 
 elif [ "x$1" = "xsettings" ]; then
   defaults read NSGlobalDomain InitialKeyRepeat # 25
@@ -127,7 +130,7 @@ elif [ "x$1" = "xsettings" ]; then
   defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
   # killall SystemUIServer
 
-  curl -L https://iterm2.com/misc/install_shell_integration.sh | zsh
+  curl -sL https://iterm2.com/misc/install_shell_integration.sh | zsh
 
 else
   cat <<HERE
@@ -139,6 +142,6 @@ else
 # Usage
   ./dot-files [apps|dotfiles|settings]
   DRY_RUN=echo ./dot-files/install.sh dotfiles
-  curl -L https://raw.githubusercontent.com/jhthorsen/snippets/master/dot-files/install.sh | FETCH_APP=curl sh - dotfiles
+  curl -sL https://raw.githubusercontent.com/jhthorsen/snippets/master/dot-files/install.sh | DOTFILES_FROM_WEB=1 sh -
 HERE
 fi
