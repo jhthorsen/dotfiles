@@ -2,95 +2,45 @@
 
 if [ "x$1" = "xapps" ]; then
   # ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-  brew update;
-  brew install \
-    ack \
-    bindfs \
-    chromedriver \
-    cloc \
-    coreutils \
-    cowsay \
-    cpanm \
-    ctags \
-    diff-so-fancy \
-    docker \
-    docker-compose \
-    docker-machine \
-    doctl \
-    exiftool \
-    fd \
-    ffmpeg \
-    figlet \
-    fontconfig \
-    freetype \
-    fswatch \
-    geckodriver \
-    geoip \
-    git \
-    git-secret \
-    glances \
-    gnupg \
-    gnutls \
-    go \
-    gopass \
-    homebrew/completions/tmuxinator-completion \
-    imagemagick \
-    ircd-hybrid \
-    jpeg \
-    jpegoptim \
-    kubernetes-cli \
-    less \
-    mkcert \
-    mysql \
-    mysql-client \
-    nginx \
-    nmap \
-    node \
-    openssl \
-    perl \
-    pinentry \
-    pngcrush \
-    postgresql \
-    psgrep \
-    pstree \
-    python \
-    redis \
-    rename \
-    ruby \
-    rust \
-    sqlite \
-    ssh-copy-id \
-    sshfs \
-    sshuttle \
-    telnet \
-    terraform \
-    terraform-docs \
-    tesseract \
-    tmux \
-    tmuxinator-completion \
-    tree \
-    vim \
-    wget \
-    z \
-    zsh \
-    zsh-completions \
-    zsh-git-prompt \
-    zsh-lovers \
-    zsh-syntax-highlighting \
-  ;
+  brew update && brew install                                                            \
+    ack                      bindfs          chromedriver                                \
+    cloc                     coreutils       cowsay                                      \
+    cpanm                    ctags           diff-so-fancy                               \
+    docker                   docker-compose  docker-machine                              \
+    doctl                    exiftool        fd                                          \
+    ffmpeg                   figlet          fontconfig                                  \
+    freetype                 fswatch         geckodriver                                 \
+    geoip                    git             git-secret                                  \
+    glances                  gnupg           gnutls                                      \
+    go                       gopass          homebrew/completions/tmuxinator-completion  \
+    imagemagick              ircd-hybrid     jpeg                                        \
+    jpegoptim                kubernetes-cli  less                                        \
+    mkcert                   mysql           mysql-client                                \
+    nginx                    nmap            node                                        \
+    openssl                  perl            pinentry                                    \
+    pngcrush                 postgresql      psgrep                                      \
+    pstree                   python          redis                                       \
+    rename                   ruby            rust                                        \
+    sqlite                   ssh-copy-id     sshfs                                       \
+    sshuttle                 telnet          terraform                                   \
+    terraform-docs           tesseract       tmux                                        \
+    tmuxinator-completion    tree            vim                                         \
+    wget                     z               zsh                                         \
+    zsh-completions          zsh-git-prompt  zsh-lovers                                  \
+    zsh-syntax-highlighting                                                              ;
 
-  cpanm -n App::errno
-  cpanm -n App::git::ship
-  cpanm -n App::githook_perltidy
-  cpanm -n App::githook::perltidy
-  cpanm -n App::pause
-  cpanm -n App::podify
-  cpanm -n App::prowess
-  cpanm -n App::tt
-  cpanm -n Devel::Cover
+  cpanm -n App::errno;
+  cpanm -n App::git::ship;
+  cpanm -n App::githook_perltidy;
+  cpanm -n App::githook::perltidy;
+  cpanm -n App::pause;
+  cpanm -n App::podify;
+  cpanm -n App::prowess;
+  cpanm -n App::tt;
+  cpanm -n Devel::Cover;
 
   rm /usr/local/bin/githook-perltidy;
-  ln -s "$(which githook-perltidy)" /usr/local/bin/githook-perltidy
+  ln -s "$(which githook-perltidy)" /usr/local/bin/githook-perltidy;
 
 elif [ "x$1" = "xdotfiles" ]; then
   CONFIG_DIR="$HOME/.config/dot-files";
