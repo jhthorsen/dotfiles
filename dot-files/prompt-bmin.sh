@@ -12,9 +12,17 @@ export PROMPT_BMIN_USERINFO="";
 
 # http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html
 function __prompt_bmin () {
+  __prompt_ssh_color="$fg[magenta]";
   if [ -d '.git' ]; then
-    export PROMPT_BMIN_PATH="%{$fg[green]%}%1d%{$reset_color%}";
     export PROMPT_BMIN_SUFFIX="$(git_super_status) ";
+    __prompt_file_owner="$(stat --format '%U' '.git')";
+
+    if [ "x$__prompt_file_owner" = "x$USER" ]; then
+      export PROMPT_BMIN_PATH="%{$fg[green]%}%1d%{$reset_color%}";
+    else
+      export PROMPT_BMIN_PATH="%{$fg[red]%}~$__prompt_file_owner:%1d%{$reset_color%}";
+      __prompt_ssh_color="$fg[red]";
+    fi
   else
     export PROMPT_BMIN_PATH="%{$fg[green]%}%(4~|.../%3~|%~)%{$reset_color%}";
     export PROMPT_BMIN_SUFFIX=" ";
@@ -23,7 +31,7 @@ function __prompt_bmin () {
   PROMPT_BMIN_USERINFO="";
   if [ "x$USER" = "x$ORIGINAL_USER" ]; then                     # original login user
     if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then          # connnected over ssh
-      PROMPT_BMIN_USERINFO="%{$fg[magenta]%}%m%{$reset_color%} ";
+      PROMPT_BMIN_USERINFO="%{$__prompt_ssh_color%}%m%{$reset_color%} ";
     fi
   else                                                          # changed user
     PROMPT_BMIN_USERINFO="%{$fg[red]%}%n@%m%{$reset_color%} ";
