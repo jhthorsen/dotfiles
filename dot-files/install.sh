@@ -80,9 +80,13 @@ elif [ "x$1" = "xdotfiles" -o "x$DOTFILES_FROM_WEB" = "x1" ]; then
     fi
   }
 
-  # powerlevel10k
-  if [ ! -d "$CONFIG_DIR/powerlevel10k" ]; then
-    $DRY_RUN git clone https://github.com/romkatv/powerlevel10k.git $CONFIG_DIR/powerlevel10k
+  # prompt
+  if ! autoload -Uz is-at-least || ! is-at-least 5.1; then
+    install_file $ROOT_DIR/prompt-bmin.sh $CONFIG_DIR/02-prompt-bmin.sh
+  else
+    if [ ! -d "$CONFIG_DIR/powerlevel10k" ]; then
+      $DRY_RUN git clone https://github.com/romkatv/powerlevel10k.git $CONFIG_DIR/powerlevel10k
+    fi
   fi
 
   install_file $CONFIG_DIR/powerlevel10k/powerlevel10k.zsh-theme $CONFIG_DIR/20-theme-powerlevel10k.sh
