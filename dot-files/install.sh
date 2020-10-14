@@ -134,6 +134,7 @@ else
 # Notes
   initdb /usr/local/var/postgres -E utf8
   brew services restart postgresql
+  git config --global commit.gpgsign false
 
 # Usage
   ./dot-files [apps|dotfiles|settings]
