@@ -5,6 +5,7 @@ use Linux::Inotify2;
 use Mojo::File 'path';
 use Mojo::JSON 'encode_json';
 use Mojo::Log;
+use Time::HiRes qw(sleep);
 
 my $root   = shift @ARGV or die "Usage: $0 /path/to/image/dir\n";
 my $ext_re = qr{\.(pdf|png|jpe?g)$}i;
@@ -108,7 +109,15 @@ sub watch_directory {
     return unwatch_directory($file) if !-e $file;
 
     return unless my $mtime = eval { $file->stat->mtime };
-    return if $mtime{$file} and $mtime{$file} >= $mtime;
+    return if $mtime{$file} and $mtime{$file} + 30 >= $mtime;
+
+    my $size = $file->stat->size;
+    my $guard = 20;
+    while ($guard--) {
+      sleep 0.4;
+      last if $size == (my $curr_size = $file->stat->size);
+      $size = $curr_size;
+    }
 
     my $type = $file =~ $ext_re ? lc $1 : '';
     pdfsplit($file, $rules) if $type eq 'pdf';
