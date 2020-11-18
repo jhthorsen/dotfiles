@@ -1,15 +1,19 @@
 #!/bin/zsh
 
+function brew {
+  arch -x86_64 /usr/local/bin/brew $*;
+}
+
 if [ "x$1" = "xapps" ]; then
   # ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
   brew update && brew install                                                            \
-    ack                      bindfs          chromedriver                                \
+    ack                      browserpass                                                 \
     cloc                     coreutils       cowsay                                      \
     cpanm                    ctags           diff-so-fancy                               \
     docker                   docker-compose  docker-machine                              \
     doctl                    exiftool        fd                                          \
     ffmpeg                   figlet          fontconfig                                  \
-    freetype                 fswatch         geckodriver                                 \
+    freetype                 fzf             gh                                          \
     geoip                    git             git-secret                                  \
     glances                  gnupg           gnutls                                      \
     go                       gopass          homebrew/completions/tmuxinator-completion  \
@@ -17,11 +21,12 @@ if [ "x$1" = "xapps" ]; then
     jpegoptim                kubernetes-cli  less                                        \
     mkcert                   mysql           mysql-client                                \
     nginx                    nmap            node                                        \
+    neovim                                                                               \
     openssl                  perl            pinentry                                    \
     pngcrush                 postgresql      psgrep                                      \
     pstree                   python          redis                                       \
     rename                   ruby            rust                                        \
-    sqlite                   ssh-copy-id     sshfs                                       \
+    sqlite                   ssh-copy-id                                                 \
     sshuttle                 telnet          terraform                                   \
     terraform-docs           tesseract       tmux                                        \
     tmuxinator-completion    tree            vim                                         \
@@ -116,7 +121,6 @@ elif [ "x$1" = "xdotfiles" -o "x$DOTFILES_FROM_WEB" = "x1" ]; then
   install_file /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc $CONFIG_DIR/15-google-cloud-sdk-completion.sh
   install_file /usr/local/etc/profile.d/z.sh $CONFIG_DIR/15-z.sh
   install_file /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh $CONFIG_DIR/15-zsh-syntax-highlighting.zsh
-  install_file $HOME/.iterm2_shell_integration.zsh $CONFIG_DIR/15-iterm2_shell_integration.sh
 
   # Utility scripts
   install_file $ROOT_DIR/../bin $CONFIG_DIR/bin
@@ -163,8 +167,6 @@ elif [ "x$1" = "xsettings" ]; then
   defaults write com.apple.screencapture location /Users/jhthorsen/Downloads
   defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
   # killall SystemUIServer
-
-  curl -sL https://iterm2.com/misc/install_shell_integration.sh | zsh
 
 else
   cat <<HERE
