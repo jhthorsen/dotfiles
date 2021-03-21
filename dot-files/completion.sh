@@ -26,6 +26,12 @@ if [ -d $FZF_HOME ]; then
   source "$FZF_HOME/shell/key-bindings.zsh"
 fi
 
+# ubuntu
+[ -r "/usr/share/doc/fzf/examples/completion.zsh" ] && source "/usr/share/doc/fzf/examples/completion.zsh";
+[ -r "/usr/share/doc/fzf/examples/key-bindings.zsh" ] && source "/usr/share/doc/fzf/examples/key-bindings.zsh";
+
+which rg &>/dev/null && export FZF_DEFAULT_COMMAND='rg --files';
+
 if command -v gopass >/dev/null; then
   GOPASS_COMPLETION_FILE=$HOME/.config/dot-files/gopass-completion.zsh
   gopass completion zsh > $GOPASS_COMPLETION_FILE

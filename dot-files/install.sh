@@ -44,6 +44,8 @@ if [ "x$1" = "xapps" ]; then
   cpanm -n App::tt;
   cpanm -n Devel::Cover;
 
+  npm install -g pnpm
+
   rm /usr/local/bin/githook-perltidy;
   ln -s "$(which githook-perltidy)" /usr/local/bin/githook-perltidy;
 
@@ -124,6 +126,9 @@ elif [ "x$1" = "xdotfiles" -o "x$DOTFILES_FROM_WEB" = "x1" ]; then
 
   # Utility scripts
   install_file $ROOT_DIR/../bin $CONFIG_DIR/bin
+
+  curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
   # Vim includes
   if [ "x$DOTFILES_FROM_WEB" = "x1" ]; then
