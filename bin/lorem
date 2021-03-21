@@ -1,0 +1,12 @@
+#!/bin/sh
+export N_WORDS="${1:-100}";
+
+make_lorem () {
+  perl -MList::Util=shuffle -nle'push @w, grep {/^[a-z]\w+$/} split /[\t\s\r\n]/}{$n=$ENV{N_WORDS}-1; $n>@w && ($n=@w); print join " ", shuffle @w[0..$n]';
+}
+
+if [ ! -t 0 ]; then
+  cat - | make_lorem;
+else
+  man $(ls /usr/bin | shuf -n1) | make_lorem;
+fi
