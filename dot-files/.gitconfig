@@ -1,6 +1,6 @@
 [alias]
   b = branch
-  d = diff HEAD^
+  d = !git diff HEAD^ | diff-so-fancy | less -XFR
   t = !git tag | sort -n
 
   ca = commit --amend -C HEAD
@@ -14,7 +14,7 @@
   lg = log --pretty='format:%Cblue%h%Creset %s (%Cgreen%ar%Creset)'
   rh = !git reset HEAD^ && git reset --hard
   sh = !git show $(git log --color --pretty=format:'%Cred%h%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset %C(yellow)%d%Creset' | fzf --reverse --ansi --preview='git show {1} | head -n100' | cut -d' ' -f1)
-  tl = !git tag | sort -n | tail
+  tl = !git tag --sort=authordate | tail
 
   lgg = !git lg --graph
   lgh = log -n5 --pretty=format:'%Cred%h%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset %C(yellow)%d%Creset'
