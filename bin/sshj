@@ -10,7 +10,7 @@ MISSING="";
 
 [ -z "$SSHJ_HOME"        ] && SSHJ_HOME="$HOME/.local/share/sshj";
 [ -d "$SSHJ_HOME/cache"  ] || mkdir -p "$SSHJ_HOME/cache";
-[ -z "$SSHJ_IGNORE_DIRS" ] && SSHJ_IGNORE_DIRS=".git:.sass-cache:cache:cover_db:node_modules";
+[ -z "$SSHJ_IGNORE_DIRS" ] && SSHJ_IGNORE_DIRS="inc:.git:.sass-cache:cache:cover_db:node_modules";
 
 if [ -n "$MISSING" ]; then
   echo "Missing environment variables: $MISSING";
