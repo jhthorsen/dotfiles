@@ -38,6 +38,7 @@ if [ "x$1" = "xapps" ]; then
   cpanm -n App::git::ship;
   cpanm -n App::githook_perltidy;
   cpanm -n App::githook::perltidy;
+  cpanm -n App::httpstatus
   cpanm -n App::pause;
   cpanm -n App::podify;
   cpanm -n App::prowess;
