@@ -6,6 +6,8 @@ else
   Plug 'junegunn/fzf'
 endif
 
+Plug 'itchyny/lightline.vim'
+Plug 'andis-sprinkis/lightline-gruvbox-dark.vim'
 Plug 'junegunn/fzf.vim'
 Plug 'junegunn/vim-easy-align' " https://github.com/junegunn/vim-easy-align
 Plug 'vim-perl/vim-perl'
@@ -26,7 +28,6 @@ Plug 'terryma/vim-multiple-cursors'
 Plug 'yko/mojo.vim'
 Plug 'morhetz/gruvbox'
 Plug 'evanleck/vim-svelte'
-Plug 'jeetsukumaran/vim-buffergator'
 
 if has("nvim")
   Plug 'neoclide/coc.nvim', {'branch': 'release'}
@@ -57,6 +58,7 @@ set nobackup
 set nocompatible
 set nofoldenable
 set noincsearch
+set noshowmode
 set nostartofline
 set noswapfile
 set nowrap
