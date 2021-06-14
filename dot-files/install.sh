@@ -170,6 +170,7 @@ elif [ "x$1" = "xsettings" ]; then
   defaults write NSGlobalDomain InitialKeyRepeat -int 12
   defaults read NSGlobalDomain KeyRepeat # 2
   defaults write NSGlobalDomain KeyRepeat -int 0
+  defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool TRUE
   defaults write com.apple.screencapture location /Users/jhthorsen/Downloads
   defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
   # killall SystemUIServer
