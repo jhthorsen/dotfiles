@@ -2,10 +2,12 @@
 use Mojo::Base -strict;
 
 use Linux::Inotify2;
-use Mojo::File 'path';
-use Mojo::JSON 'encode_json';
+use Mojo::JSON qw(encode_json);
 use Mojo::Log;
 use Time::HiRes qw(sleep);
+
+use Mojo::File qw(path);
+sub tempfile { Mojo::File::tempfile(SUFFIX => sprintf '.%s', shift) }
 
 my $root   = shift @ARGV or die "Usage: $0 /path/to/image/dir\n";
 my $ext_re = qr{\.(pdf|png|jpe?g)$}i;
@@ -21,28 +23,22 @@ $inotify->poll while 1;
 
 sub convert_file {
   my ($file, $rules) = @_;
-  my $tmp = $file->sibling(sprintf 'converted-%s', $file->basename);
-  my $ext;
+  return pdfsplit($file, $rules) if $file->extname eq 'pdf';
 
-  # Convert filetype
-  if ($ext = $rules->{ext}) {
-    my $basename = $file->basename;
-    $basename =~ s!\.\w+$!.$ext!;
-    $tmp = $file->sibling(sprintf 'converted-%s', $basename);
-  }
-
-  $ext ||= $file =~ $ext_re ? $1 : 'jpg';
+  my $ext = $rules->{ext} || $file->extname;
   $ext = 'jpg' if $ext eq 'jpeg';
+  my $tmp = tempfile($ext);
   my $size0 = (stat $file)[7];
 
-  jpegoptim($file, $tmp, $rules) if $ext eq 'jpg';
-  run(qw(pngcrush -rem allb -brute -reduce) => $file => $tmp) if $ext eq 'png';
   imagemagick($file, $tmp, $rules);
+  jpegoptim($tmp, $rules) if $ext eq 'jpg';
+  pngcrush($tmp, qw(-rem allb -brute -reduce)) if $ext eq 'png';
 
-  if (-e $tmp) {
-    unlink $file;
+  if (-s $tmp) {
+    $file->remove;
+    $file = "$file";
     $file =~ s!\.\w+$!.$ext!;
-    rename $tmp => $file;
+    $tmp->move_to($file);
   }
 
   my $size1 = (stat $file)[7];
@@ -53,7 +49,18 @@ sub imagemagick {
   my ($file, $tmp, $rules) = @_;
   my @args;
   push @args, '-resize' => $rules->{dimensions} if $rules->{dimensions};
-  run(convert => @args => $file => $tmp) if @args;
+  return $file unless @args;
+  return $file unless run(convert => @args => $file => $tmp);
+  return $tmp;
+}
+
+sub jpegoptim {
+  my ($file, $rules) = @_;
+  my @args = qw(-q -p);
+  push @args, "-s"                      if $rules->{strip};
+  push @args, "--max=$rules->{quality}" if $rules->{quality};
+  push @args, "--size=$rules->{size}"   if $rules->{size};
+  run(jpegoptim => @args, $file);
 }
 
 sub pdfsplit {
@@ -67,13 +74,11 @@ sub pdfsplit {
   $log->info("Converted $file => $out-%%%%.png");
 }
 
-sub jpegoptim {
-  my ($file, $tmp, $rules) = @_;
-  my @args = qw(-q -p);
-  push @args, "-s"                      if $rules->{strip};
-  push @args, "--max=$rules->{quality}" if $rules->{quality};
-  push @args, "--size=$rules->{size}"   if $rules->{size};
-  run(jpegoptim => @args, $file);
+sub pngcrush {
+  my ($file, @args) = @_;
+  my $tmp = tempfile($file->extname);
+  return run(pngcrush => @args => $file => $tmp) ? $tmp : $file;
+  $tmp->move_to($file);
 }
 
 sub parse_rules {
@@ -94,6 +99,7 @@ sub run {
   my @cmd = @_;
   $log->debug(join ' ', map { /\s/ ? qq('$_') : $_ } @cmd);
   system @cmd;
+  return $? ? 0 : 1;
 }
 
 sub watch_directory {
@@ -101,6 +107,8 @@ sub watch_directory {
   return if $watched{$path};
 
   my $rules = parse_rules($path->basename);
+  return unless %$rules;
+
   $watched{$path} = $inotify->watch("$path", IN_ALL_EVENTS, sub {
     my $e = shift;
 
@@ -108,20 +116,23 @@ sub watch_directory {
     return watch_directory($file) if -d $file;
     return unwatch_directory($file) if !-e $file;
 
+    # Check that we have a valid file that has not already been processed
+    return unless $file->basename =~ $ext_re;
+    return if $file->basename =~ m!^\.!;
     return unless my $mtime = eval { $file->stat->mtime };
     return if $mtime{$file} and $mtime{$file} + 30 >= $mtime;
 
-    my $size = $file->stat->size;
+    my $size = $file->stat->size || -1;
     my $guard = 20;
     while ($guard--) {
-      sleep 0.4;
-      last if $size == (my $curr_size = $file->stat->size);
+      sleep 1;
+      next unless my $curr_size = $file->stat->size;
+      last if $size == $curr_size;
       $size = $curr_size;
     }
 
-    my $type = $file =~ $ext_re ? lc $1 : '';
-    pdfsplit($file, $rules) if $type eq 'pdf';
-    convert_file($file, $rules) if $type ne 'pdf';
+    $log->info("Going to convert $file => size=$size");
+    convert_file($file, $rules);
     $mtime{$file} = $mtime;
   });
 
