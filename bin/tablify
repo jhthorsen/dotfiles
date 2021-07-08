@@ -1,0 +1,51 @@
+#!/usr/bin/env perl
+use Applify;
+
+option int    => columns => 'Number of columns', 3, alias => 'n';
+option string => after   => 'String after each row';
+option string => before  => 'String before each row';
+option string => spacer  => 'String between columns', '  ';
+
+sub input_to_rows {
+  my ($self, $FH) = @_;
+  my @before = defined $self->before ? ($self->before) : ();
+  my @after  = defined $self->after  ? ($self->after)  : ();
+  my $nc     = $self->columns;
+
+  my (@rows, @curr);
+  while (<$FH>) {
+    push @curr, grep length, split /\s+/;
+    push @rows, [@before, splice(@curr, 0, $nc), @after] while @curr >= $nc;
+  }
+
+  push @curr, '' while @curr and @curr < $nc;
+  push @rows, [@before, @curr, @after] if @curr;
+
+  return \@rows;
+}
+
+# From Mojo::Util::tablify()
+sub tablify {
+  my ($self, $rows) = @_;
+  my $spacer = $self->spacer;
+
+  my @spec;
+  for my $row (@$rows) {
+    for my $i (0 .. $#$row) {
+      ($row->[$i] //= '') =~ y/\r\n//d;
+      my $len = length $row->[$i];
+      $spec[$i] = $len if $len >= ($spec[$i] // 0);
+    }
+  }
+
+  my @fm = (map({"\%-${_}s"} @spec[0 .. $#spec - 1]), '%s');
+  return join '', map { sprintf join($spacer, @fm[0 .. $#$_]) . "\n", @$_ } @$rows;
+}
+
+app {
+  my ($self, $file) = @_;
+  my $FH = \*STDIN;
+  open $FH, '<', $file if $file;
+  print $self->tablify($self->input_to_rows($FH));
+  return 0;
+};
