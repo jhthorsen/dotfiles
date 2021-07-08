@@ -1,3 +1,5 @@
 *swp
 local/
-dot-files/jhthorsen.sh
+dotfiles/shell/jhthorsen.sh
+dotfiles/vim/plugged
+dotfiles/vim/autoload/plug.vim

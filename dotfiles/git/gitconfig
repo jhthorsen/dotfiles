@@ -1,6 +1,6 @@
 [alias]
   b = branch
-  d = !git diff HEAD^ | diff-so-fancy | less -XFR
+  d = diff HEAD^
   t = !git tag | sort -n
 
   ca = commit --amend -C HEAD
@@ -9,6 +9,7 @@
   cp = !/bin/bash -c 'git show "$0":"$1" > "$1"'
   dc = diff --cached
   dd = !/bin/bash -c 'git diff --color -C $(echo $0 | grep -q "/bin/" && echo "HEAD^" || echo "$0") -w | diff-so-fancy --color | less -RX -x2 -F'
+  df = !git diff HEAD^ | diff-so-fancy | less -XFR
   ds = diff --shortstat --numstat HEAD^
   gl = log --graph --pretty='format:%C(yellow)%h%Cred%d%Creset %s %C(white) %C(cyan)%an%Creset, %C(green)%ar%Creset'
   lg = log --pretty='format:%Cblue%h%Creset %s (%Cgreen%ar%Creset)'
@@ -55,6 +56,9 @@
 [diff-so-fancy]
   markEmptyLines = false
 
+[gpg]
+  program = gpg
+
 [filter "lfs"]
   clean = git-lfs clean -- %f
   process = git-lfs filter-process
@@ -62,7 +66,7 @@
   smudge = git-lfs smudge -- %f
 
 [merge]
-  tool = vimdiff
+  tool = meld
 
 [pull]
   rebase = true

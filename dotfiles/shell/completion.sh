@@ -33,7 +33,7 @@ fi
 which rg &>/dev/null && export FZF_DEFAULT_COMMAND='rg --files';
 
 if command -v gopass >/dev/null; then
-  GOPASS_COMPLETION_FILE=$HOME/.config/dot-files/gopass-completion.zsh
+  GOPASS_COMPLETION_FILE="$(dirname $ZSH_SOURCE)/gopass-completion.zsh";
   gopass completion zsh > $GOPASS_COMPLETION_FILE
   fpath=($GOPASS_COMPLETION_FILE $fpath)
 fi

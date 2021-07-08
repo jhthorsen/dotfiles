@@ -15,9 +15,12 @@ compinit
 # End of lines added by compinstall
 
 umask 0002
+# setopt ignore_eof # disable ^D
 setopt notify
 unsetopt extendedglob # Allow "git show HEAD^"
 
-for DOT_FILE in $(find $HOME/.config/dot-files -maxdepth 1 | grep '/dot-files/[0-9]\+-' | sort); do
-  source $DOT_FILE;
+for ZSH_SOURCE in $(find $HOME/.config/zsh -maxdepth 1 | grep '/zsh/[0-9]\+-' | sort); do
+  export ZSH_SOURCE;
+  source $ZSH_SOURCE;
+  unset ZSH_SOURCE;
 done

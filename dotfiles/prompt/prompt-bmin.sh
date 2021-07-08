@@ -1,6 +1,6 @@
 # Requires https://github.com/olivierverdier/zsh-git-prompt
 export ZSH_THEME_GIT_PROMPT_CACHE=1;
-ZSH_GIT_PROMPT_HOME=${ZSH_GIT_PROMPT_HOME:-$HOME/.config/dot-files/zsh-git-prompt};
+ZSH_GIT_PROMPT_HOME=${ZSH_GIT_PROMPT_HOME:-$HOME/.config/zsh/zsh-git-prompt};
 source $ZSH_GIT_PROMPT_HOME/zshrc.sh;
 
 # magenta, red, white, yellow, black, blue, cyan, green

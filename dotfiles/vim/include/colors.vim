@@ -31,8 +31,8 @@ function! LightlineFilename()
 endfunction
 
 syntax on
-set termguicolors
 set background=dark
+set termguicolors
 let g:gruvbox_italic=1
 let g:lightline.colorscheme = 'gruvboxdark'
 colorscheme gruvbox

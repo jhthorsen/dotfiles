@@ -16,7 +16,6 @@ alias vi='vim'
 alias vij='sshj edit'
 
 command -v launchctl  >/dev/null && alias psql.start='launchctl load /usr/local/opt/postgresql/homebrew.mxcl.postgresql.plist'
-command -v pstree     >/dev/null && alias psme='pstree -u jhthorsen -w'
-command -v tmux       >/dev/null && alias tma='tmux attach-session'
+command -v tmux       >/dev/null && alias tma='tmux attach-session -t'
 command -v ack-grep   >/dev/null && alias ack='ack-grep'
 command -v gopass     >/dev/null && alias gopass='LESS=rXx2 gopass'

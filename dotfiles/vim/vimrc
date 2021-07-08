@@ -7,7 +7,6 @@ else
 endif
 
 Plug 'itchyny/lightline.vim'
-Plug 'andis-sprinkis/lightline-gruvbox-dark.vim'
 Plug 'junegunn/fzf.vim'
 Plug 'junegunn/vim-easy-align' " https://github.com/junegunn/vim-easy-align
 Plug 'vim-perl/vim-perl'
@@ -26,7 +25,8 @@ Plug 'seletskiy/vim-nunu'
 Plug 'skywind3000/asyncrun.vim'
 Plug 'terryma/vim-multiple-cursors'
 Plug 'yko/mojo.vim'
-Plug 'morhetz/gruvbox'
+Plug 'gruvbox-community/gruvbox'
+Plug 'andis-sprinkis/lightline-gruvbox-dark.vim'
 Plug 'evanleck/vim-svelte'
 
 if has("nvim")
@@ -39,11 +39,6 @@ if has("nvim")
 endif
 
 call plug#end()
-
-let g:DOT_FILES_PATH=fnamemodify(resolve(expand("<sfile>:p")), ":h")
-if ! isdirectory(g:DOT_FILES_PATH)
-  DOT_FILES_PATH="~/"
-endif
 
 set autoindent
 set autoread
@@ -84,21 +79,21 @@ let g:netrw_winsize = 25
 let g:netrw_altv = 1
 
 " Misc config
-execute "source " . g:DOT_FILES_PATH . "/.vim/include/ft.vim"
-execute "source " . g:DOT_FILES_PATH . "/.vim/include/keymap.vim"
-execute "source " . g:DOT_FILES_PATH . "/.vim/include/colors.vim"
-execute "source " . g:DOT_FILES_PATH . "/.vim/include/fzf.vim"
+source ~/.vim/include/ft.vim
+source ~/.vim/include/keymap.vim
+source ~/.vim/include/colors.vim
+source ~/.vim/include/fzf.vim
 
 " Utilities
-execute "source " . g:DOT_FILES_PATH . "/.vim/include/lastpos.vim"
-execute "source " . g:DOT_FILES_PATH . "/.vim/include/mkdir.vim"
-execute "source " . g:DOT_FILES_PATH . "/.vim/include/spelling.vim"
+source ~/.vim/include/lastpos.vim
+source ~/.vim/include/mkdir.vim
+source ~/.vim/include/spelling.vim
 
 " Vim plugins
-execute "source " . g:DOT_FILES_PATH . "/.vim/include/emmet.vim"
-execute "source " . g:DOT_FILES_PATH . "/.vim/include/multiple-cursors.vim"
+source ~/.vim/include/emmet.vim
+source ~/.vim/include/multiple-cursors.vim
 
 " Neovim plugins
 if has("nvim")
-  execute "source " . g:DOT_FILES_PATH . "/.vim/include/coc.vim"
+  source ~/.vim/include/coc.vim
 endif
