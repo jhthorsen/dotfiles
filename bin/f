@@ -28,7 +28,7 @@ sub parse {
   return usage()                      if $arg eq '-h';
   return add(dir => $arg)             if -d $arg;
   return add(maxdepth => shift @ARGV) if $arg eq '-d';
-  return add(size => $1)              if $arg =~ m!^([0-9]+[kMGTP])$!;
+  return add(size => $1)              if $arg =~ m!^([+-]?[0-9]+[kMGTP])$!;
   return add(type => $arg)            if $arg =~ m!^([abcdflps])$!;
   return add("${1}time" => "-$2")     if $arg =~ m!^([acm])([0-9]+[smhdw])$!;
   return push @cmd, $arg;
