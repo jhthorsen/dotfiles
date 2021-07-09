@@ -19,8 +19,13 @@ umask 0002
 setopt notify
 unsetopt extendedglob # Allow "git show HEAD^"
 
+export UNAME=$(uname);
+function readlink_f() {
+  [ "x$UNAME" = "xDarwin" ] && readlink $* || readlink -f $*;
+}
+
 for ZSH_SOURCE in $(find $HOME/.config/zsh -maxdepth 1 | grep '/zsh/[0-9]\+-' | sort); do
-  export ZSH_SOURCE="$(readlink -f $ZSH_SOURCE)";
+  export ZSH_SOURCE="$(readlink_f $ZSH_SOURCE)";
   source $ZSH_SOURCE;
   unset ZSH_SOURCE;
 done
