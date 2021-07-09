@@ -20,7 +20,7 @@ setopt notify
 unsetopt extendedglob # Allow "git show HEAD^"
 
 for ZSH_SOURCE in $(find $HOME/.config/zsh -maxdepth 1 | grep '/zsh/[0-9]\+-' | sort); do
-  export ZSH_SOURCE;
+  export ZSH_SOURCE="$(readlink -f $ZSH_SOURCE)";
   source $ZSH_SOURCE;
   unset ZSH_SOURCE;
 done
