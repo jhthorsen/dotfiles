@@ -6,37 +6,29 @@ else
   Plug 'junegunn/fzf'
 endif
 
+Plug 'skywind3000/asyncrun.vim'
 Plug 'itchyny/lightline.vim'
-Plug 'junegunn/fzf.vim'
-Plug 'junegunn/vim-easy-align' " https://github.com/junegunn/vim-easy-align
-Plug 'vim-perl/vim-perl'
-Plug 'cakebaker/scss-syntax.vim'
+Plug 'gruvbox-community/gruvbox'
+Plug 'andis-sprinkis/lightline-gruvbox-dark.vim'
+
+" helpers
 Plug 'conradirwin/vim-bracketed-paste'
+Plug 'jeetsukumaran/vim-buffergator'
+Plug 'junegunn/fzf.vim'
+Plug 'terryma/vim-multiple-cursors'
+
+" syntax
 Plug 'ap/vim-css-color'
+Plug 'cakebaker/scss-syntax.vim'
+Plug 'evanleck/vim-svelte'
 Plug 'gabrielelana/vim-markdown'
 Plug 'hail2u/vim-css3-syntax'
-Plug 'kazark/vim-SimpleSmoothScroll'
-Plug 'jeetsukumaran/vim-buffergator'
 Plug 'mattn/emmet-vim'
 Plug 'othree/html5.vim'
 Plug 'pangloss/vim-javascript'
 Plug 'posva/vim-vue'
-Plug 'seletskiy/vim-nunu'
-Plug 'skywind3000/asyncrun.vim'
-Plug 'terryma/vim-multiple-cursors'
+Plug 'vim-perl/vim-perl'
 Plug 'yko/mojo.vim'
-Plug 'gruvbox-community/gruvbox'
-Plug 'andis-sprinkis/lightline-gruvbox-dark.vim'
-Plug 'evanleck/vim-svelte'
-
-if has("nvim")
-  Plug 'neoclide/coc.nvim', {'branch': 'release'}
-  set cmdheight=2
-  set hidden
-  set shortmess+=c
-  set signcolumn=yes
-  set updatetime=250
-endif
 
 call plug#end()
 
@@ -47,21 +39,26 @@ set complete=.,w,b,u,t,kspell
 set encoding=utf-8
 set expandtab
 set history=100
+set incsearch
 set laststatus=2
 set mouse=i
 set nobackup
 set nocompatible
 set nofoldenable
-set noincsearch
+set nohlsearch
 set noshowmode
 set nostartofline
 set noswapfile
 set nowrap
 set nowritebackup
+set number
+set relativenumber
+set scrolloff=8
 set shell=zsh
 set shiftround
 set shiftwidth=2
 set showcmd
+set signcolumn=yes
 set smartcase
 set smartindent
 set softtabstop=2
@@ -92,8 +89,3 @@ source ~/.vim/include/spelling.vim
 " Vim plugins
 source ~/.vim/include/emmet.vim
 source ~/.vim/include/multiple-cursors.vim
-
-" Neovim plugins
-if has("nvim")
-  source ~/.vim/include/coc.vim
-endif
