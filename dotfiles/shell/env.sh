@@ -8,6 +8,8 @@ export TT_HOURS_PER_MONTH=150
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
+[ "$(uname)" = "Linux" ] && export GPG_TTY=$(tty)
+
 [ -x "/usr/bin/nvim" ] && export VIM_BIN="/usr/bin/nvim"
 [ -x "/usr/local/bin/nvim" ] && export VIM_BIN="/usr/local/bin/nvim"
 

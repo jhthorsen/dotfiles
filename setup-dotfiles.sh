@@ -9,7 +9,7 @@ function abort() {
 function lnk() {
   FROM="$(readlink -f $1)";
   TO="$2";
-  [ ! -e $1 ] && echo "# ERROR $1 cannot be found." && return 1;
+  [ ! -e $1 ] && echo "# ERROR $1 cannot be found" && return 1;
   [ -L $TO -a ! -r $TO ] && run rm $TO; # Remove broken links
   [ -e $TO ] && echo "# INFO $TO exists" || run ln -s $FROM $TO;
   [ "x$IMPORT" = "x1" -a ! -L $TO ] && run cp $TO $FROM;
