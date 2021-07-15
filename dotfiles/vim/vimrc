@@ -97,5 +97,5 @@ source ~/.vim/include/emmet.vim
 source ~/.vim/include/multiple-cursors.vim
 
 if has("nvim")
-  source ~/.vim/include/lsp.vim
+  lua require'lsp'
 endif
