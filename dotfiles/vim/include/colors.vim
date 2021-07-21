@@ -36,8 +36,10 @@ set termguicolors
 let g:gruvbox_italic=1
 let g:lightline.colorscheme = 'gruvboxdark'
 colorscheme gruvbox
-highlight NonText ctermbg=none guifg=250 guifg=none
-highlight Normal ctermbg=none guifg=252 guibg=none
+
+highlight Comment ctermbg=darkgray guibg=darkgray ctermfg=black guifg=black
+highlight NonText ctermbg=none guibg=none guifg=250
+highlight Normal ctermbg=none guibg=none guifg=252
 
 highlight NonASCII ctermbg=red guibg=red
 syntax match NonASCII "[^\x00-\x7F]"
