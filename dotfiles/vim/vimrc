@@ -1,7 +1,8 @@
 call plug#begin('~/.vim/plugged')
 
 if has("nvim")
-  Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+  Plug 'ibhagwan/nvim-fzf'
+  Plug 'ibhagwan/fzf-lua'
 else
   Plug 'junegunn/fzf'
 endif
@@ -13,8 +14,6 @@ Plug 'andis-sprinkis/lightline-gruvbox-dark.vim'
 
 " helpers
 Plug 'conradirwin/vim-bracketed-paste'
-Plug 'jeetsukumaran/vim-buffergator'
-Plug 'junegunn/fzf.vim'
 Plug 'terryma/vim-multiple-cursors'
 
 " syntax

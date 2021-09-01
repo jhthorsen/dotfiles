@@ -1,19 +1,21 @@
-let g:fzf_layout = { 'down': '~30%' }
-map <C-p> :FZF --info=inline<CR>
+lua <<EOF
+require'fzf-lua'.setup {
+  files = {
+    previewer = false,
+  },
+  winopts = {
+    win_height = 0.40,
+    win_width = 0.85,
+    win_row = 0.85,
+  },
+}
+EOF
 
-function! FzfEditScp(lines)
-  if len(a:lines) < 2
-    return
-  endif
-
-  if a:lines[0] == 'ctrl-t'
-    exec 'tabedit scp://' . $SSHJ_TARGET_HOST . '/' . a:lines[1]
-  else
-    exec 'edit scp://' . $SSHJ_TARGET_HOST . '/' . a:lines[1]
-  endif
-endfunction
+nnoremap <Leader>b <cmd>lua require('fzf-lua').buffers()<CR>
+nnoremap <Leader>g <cmd>lua require('fzf-lua').grep()<CR>
 
 if $SSHJ_CACHE_FILE =~ '/'
-  unmap <C-P>
-  map <C-p> :call fzf#run({'down': '~30%', 'options': ' --expect=ctrl-t,enter', 'source': 'cat ' . $SSHJ_CACHE_FILE, 'sink*': funcref('FzfEditScp')})<CR>
-endif
+  nnoremap <c-P> <cmd>lua require('fzf-sshj').files()<CR>
+else
+  nnoremap <c-P> <cmd>lua require('fzf-lua').files()<CR>
+end
