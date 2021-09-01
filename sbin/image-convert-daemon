@@ -1,147 +1,272 @@
 #!/usr/bin/env perl
-use Mojo::Base -strict;
+BEGIN {
+  eval "require $_;1" or exec perldoc => __FILE__
+    for qw(Applify Linux::Inotify2 Mojo::Base Mojo::IOLoop::ReadWriteFork);
+}
 
+use Applify;
+use Mojo::Base -async_await;
+
+use File::Temp ();
 use Linux::Inotify2;
+use Mojo::File qw(path);
+use Mojo::IOLoop;
+use Mojo::IOLoop::ReadWriteFork;
 use Mojo::JSON qw(encode_json);
 use Mojo::Log;
-use Time::HiRes qw(sleep);
 
-use Mojo::File qw(path);
-sub tempfile { Mojo::File::tempfile(SUFFIX => sprintf '.%s', shift) }
+documentation __FILE__;
+version '2.00';
 
-my $root   = shift @ARGV or die "Usage: $0 /path/to/image/dir\n";
-my $ext_re = qr{\.(pdf|png|jpe?g)$}i;
+option string => convert_delay => 'Delay before processing the file',                          1;
+option string => unlock_delay  => 'Delay before allowing the same file to be processed again', 3;
+option string => ext           => 'jpg,jpeg,pdf,png,...',                                      'jpg,jpeg,pdf,png';
+option string => log_level     => 'debug, info, warn, error',                                  'debug';
+option string => test          => '500x500,format=jpg,size=500,strip,tile=3';
 
-my $log = Mojo::Log->with_roles('+Color')->new(level => 'debug');
-my $inotify = Linux::Inotify2->new or die "Unable to construct a Linux::Inotify2 object: $!";
-my (%mtime, %watched);
+# ATTRIBUTES ==================================================================
+sub inotify { $_[0]->{inotify} //= $_[0]->_build_inotify }
+sub root { shift->{root} }
 
-$root = path $root;
-watch_directory($root);
-watch_directory($_) for grep { -d } $root->list({dir => 1})->each;
-$inotify->poll while 1;
-
-sub convert_file {
-  my ($file, $rules) = @_;
-  return pdfsplit($file, $rules) if $file->extname eq 'pdf';
-
-  my $ext = $rules->{ext} || $file->extname;
-  $ext = 'jpg' if $ext eq 'jpeg';
-  my $tmp = tempfile($ext);
-  my $size0 = (stat $file)[7];
-
-  imagemagick($file, $tmp, $rules);
-  jpegoptim($tmp, $rules) if $ext eq 'jpg';
-  pngcrush($tmp, qw(-rem allb -brute -reduce)) if $ext eq 'png';
-
-  if (-s $tmp) {
-    $file->remove;
-    $file = "$file";
-    $file =~ s!\.\w+$!.$ext!;
-    $tmp->move_to($file);
-  }
-
-  my $size1 = (stat $file)[7];
-  $log->info("Converted $file => size=$size0/$size1");
-}
-
-sub imagemagick {
-  my ($file, $tmp, $rules) = @_;
-  my @args;
-  push @args, '-resize' => $rules->{dimensions} if $rules->{dimensions};
-  return $file unless @args;
-  return $file unless run(convert => @args => $file => $tmp);
-  return $tmp;
-}
-
-sub jpegoptim {
-  my ($file, $rules) = @_;
-  my @args = qw(-q -p);
-  push @args, "-s"                      if $rules->{strip};
-  push @args, "--max=$rules->{quality}" if $rules->{quality};
-  push @args, "--size=$rules->{size}"   if $rules->{size};
-  run(jpegoptim => @args, $file);
-}
-
-sub pdfsplit {
-  my ($file, $rules) = @_;
-  my $out = "$file";
-
-  $out =~ s!\.pdf$!!i;
-  run(convert => -density => 160, "$file", -background => 'white', -alpha => 'remove', "$out-%04d.png");
-  run(montage => -mode => 'concatenate', -tile => $rules->{tile}, "$out-0*.png", "$out-$rules->{tile}.png") if $rules->{tile};
-
-  $log->info("Converted $file => $out-%%%%.png");
-}
-
-sub pngcrush {
-  my ($file, @args) = @_;
-  my $tmp = tempfile($file->extname);
-  return run(pngcrush => @args => $file => $tmp) ? $tmp : $file;
-  $tmp->move_to($file);
+# METHODS =====================================================================
+sub logf {
+  my ($self, $level, $format, @args) = @_;
+  my $log = $self->{log} //= $self->_build_log;
+  $log->$level(sprintf $format, @args);
 }
 
 sub parse_rules {
-  local $_ = shift;
+  local $_ = pop;
   my %rules;
-
   $rules{dimensions} = $1 if /(?:^|\s)(\d*x\d+|\d+x\d*)/;
   $rules{ext}        = $1 if /\b(?:ext|format|type)=([a-z]{2,5})/;
   $rules{quality}    = $1 if /\b(?:q|quality)=(\d+)/;
   $rules{size}       = $1 if /\b(?:s|size)=(\d+)\b/;
   $rules{strip}      = 1  if /\bstrip\b/;
   $rules{tile}       = $1 if /\btile=(\w+)/;
-
   return \%rules;
 }
 
-sub run {
-  my @cmd = @_;
-  $log->debug(join ' ', map { /\s/ ? qq('$_') : $_ } @cmd);
-  system @cmd;
-  return $? ? 0 : 1;
+async sub process_file_p {
+  my ($self, $rules, $event) = @_;
+
+  my $file = path($event->fullname);
+  return if -d $file;                                       # Do not watch sub directories
+  return if !grep { $file->extname eq $_ } @{$self->ext};
+  return if $file->basename =~ m!^\.!;                      # tempfile() files start with dot
+
+  # Wait a bit to let the file "settle"
+  my $lock = ++$self->{file_id}{$file};
+  await Mojo::Promise->timer($self->convert_delay);
+  return if $lock != $self->{file_id}{$file};
+  return if $self->{file_lock}{$file}++;
+
+  my $size0 = $file->stat->size;
+  $self->logf(debug => 'Processing %s (%0.2fkB) with rules %s', $file, $size0 / 1000, encode_json $rules);
+  lc($file->extname) eq 'pdf' ? await $self->process_pdf_p($file, $rules) : await $self->process_image_p($file, $rules);
+  $self->logf(info => 'Converted %s: %0.2fkB => %0.2fkB', $file, $size0 / 1000, $file->stat->size / 1000);
+
+  # Unlock the file later
+  await Mojo::Promise->timer($self->unlock_delay)->then(sub { delete $self->{file_lock}{$file} });
+}
+
+async sub process_image_p {
+  my ($self, $file, $rules) = @_;
+
+  my $has_ext    = lc $file->extname;
+  my $wanted_ext = lc($rules->{ext} || $file->extname);
+  $wanted_ext = 'jpg' if $wanted_ext eq 'jpeg';
+
+  if ($rules->{dimensions} or $wanted_ext ne $has_ext) {
+    my $tmp = $self->tempfile($file, $wanted_ext);
+    my @args;
+    push @args, (-resize => $rules->{dimensions}) if $rules->{dimensions};
+    await $self->run_p(convert => @args => "$file" => "$tmp");
+    die "Could not write $tmp" unless -s $tmp;
+    $file = $wanted_ext eq $has_ext ? $tmp->move_to($file) : $file->move_to("$file.$wanted_ext");
+  }
+
+  if ($wanted_ext eq 'jpg') {
+    my @args = qw(-q -p);
+    push @args, "-s"                      if $rules->{strip};
+    push @args, "--max=$rules->{quality}" if $rules->{quality};
+    push @args, "--size=$rules->{size}"   if $rules->{size};
+    await $self->run_p(jpegoptim => @args, $file);
+  }
+
+  if ($wanted_ext eq 'png') {
+    my $tmp = $self->tempfile($file, $wanted_ext);
+    await $self->run_p(pngcrush => qw(-rem allb -brute -reduce) => "$file" => "$tmp");
+    die "Could not write $tmp" unless -s $tmp;
+    $tmp->move_to($file);
+  }
+}
+
+async sub process_pdf_p {
+  my ($self, $file, $rules) = @_;
+  my $out = "$file";
+  $out =~ s!\.pdf$!!i;
+  await $self->run_p(convert => -density => 160, "$file", -background => 'white', -alpha => 'remove', "$out-%04d.png");
+  await $self->run_p(montage => -mode => 'concatenate', -tile => $rules->{tile}, "$out-0*.png",
+    "$out-$rules->{tile}.png") if $rules->{tile};
+}
+
+sub run_p {
+  my ($self, @cmd) = @_;
+
+  my $out    = '';
+  my $report = sub {
+    my ($level, $error) = @_;
+    $out =~ s!\s+! !g;
+    $self->logf($level => '$ %s == %s (%s)', join(' ', @cmd), $out, $error // 'SUCCESS') if $error or $out;
+  };
+
+  my $fork = Mojo::IOLoop::ReadWriteFork->new;
+  $fork->on(read => sub { $out .= $_[1] });
+  my $p = $fork->run_p(@cmd);
+  $p->then(sub { $report->('info') }, sub { $report->(error => @_) });
+  return $p;
+}
+
+sub tempfile {
+  my ($self, $file, $ext) = @_;
+  return $file->dirname->child(sprintf '.%s.%s',
+    substr(Mojo::Util::md5_sum(join ':', $file, Mojo::Util::steady_time()), 0, 10), $ext);
 }
 
 sub watch_directory {
-  my $path = shift;
-  return if $watched{$path};
+  my ($self, $path, $event) = @_;
 
-  my $rules = parse_rules($path->basename);
+  unless (-d $path) {
+    $event->w->cancel if $event;
+    $self->logf(warn => '%s is not a directory.', $path);
+    return;
+  }
+
+  my $rules = $self->parse_rules($path->basename);
+  $self->logf(info => '%s has rules %s', $path, encode_json $rules);
   return unless %$rules;
 
-  $watched{$path} = $inotify->watch("$path", IN_ALL_EVENTS, sub {
-    my $e = shift;
-
-    my $file = path($e->fullname);
-    return watch_directory($file) if -d $file;
-    return unwatch_directory($file) if !-e $file;
-
-    # Check that we have a valid file that has not already been processed
-    return unless $file->basename =~ $ext_re;
-    return if $file->basename =~ m!^\.!;
-    return unless my $mtime = eval { $file->stat->mtime };
-    return if $mtime{$file} and $mtime{$file} + 30 >= $mtime;
-
-    my $size = $file->stat->size || -1;
-    my $guard = 20;
-    while ($guard--) {
-      sleep 1;
-      next unless my $curr_size = $file->stat->size;
-      last if $size == $curr_size;
-      $size = $curr_size;
+  $self->inotify->watch(
+    "$path",
+    IN_CLOSE_WRITE,
+    sub {
+      $self->process_file_p($rules, @_)->catch(sub {
+        $self->logf(error => 'Unable to process image: %s', shift);
+      });
     }
-
-    $log->info("Going to convert $file => size=$size");
-    convert_file($file, $rules);
-    $mtime{$file} = $mtime;
-  });
-
-  $log->info(sprintf 'Watching "%s" with rules %s', $path, encode_json($rules));
+  );
 }
 
-sub unwatch_directory {
-  my $path = shift;
-  return unless my $watch = delete $watched{$path};
-  $watch->cancel;
-  $log->info(sprintf 'Not watching "%s" anymore', $path);
+sub write_help_file {
+  my $self = shift;
+
+  my $HELP = $self->root->child('convert-help.txt')->open('>');
+  open my $SCRIPT, '<', __FILE__;
+  while (<$SCRIPT>) {
+    print { $HELP } $_ if /^=head1\s/ .. eof;
+  }
 }
+
+sub _build_inotify {
+  my $self    = shift;
+  my $inotify = Linux::Inotify2->new or die "Linux::Inotify2 FAILED $!";
+  $inotify->blocking(0);
+  open my $fh, "<&=", $inotify->fileno or die "Dup fileno FAILED $!";
+  Mojo::IOLoop->singleton->reactor->io($fh => sub { $fh, $inotify->poll });
+  Mojo::IOLoop->singleton->reactor->watch($fh, 1, 0);
+  return $inotify;
+}
+
+sub _build_log {
+  my $self = shift;
+  my $log = Mojo::Log->new(level => $self->log_level);
+  $log->path($self->root->child('convert-log.txt')->to_string) unless $ENV{LOG_STDERR};
+  return $log;
+}
+
+app {
+  my ($self, $path) = @_;
+
+  # Test rule
+  if ($self->test) {
+    printf "%s\n", encode_json($self->parse_rules($self->test));
+    return 0;
+  }
+
+  # Path missing
+  return $self->_script->print_help, 0 unless $path;
+
+  # Start daemon
+  $self->{root} = $path = path $path;
+  $self->ext([split /\W+/, $self->ext]);
+  $self->write_help_file;
+  $self->inotify->watch(
+    "$path",
+    IN_DELETE | IN_CREATE | IN_MOVED_FROM | IN_MOVED_TO,
+    sub { $self->watch_directory(path($_[0]->fullname), $_[0]) }
+  );
+
+  -d and $self->watch_directory($_) for $path->list({dir => 1})->each;
+  Mojo::IOLoop->start;
+
+  return 0;
+};
+
+__END__
+=encoding utf8
+
+=head1 NAME
+
+image-convert-daemon - Convert most image formats and pdf files
+
+=head1 SYNOPSIS
+
+  # Prepare a root directory
+  $ mkdir -p $HOME/Pictures/convert
+
+  # Make rule directory:
+  $ mkdir "$HOME/Pictures/convert/500x500"
+  $ mkdir "$HOME/Pictures/convert/600x strip quality=80"
+
+  # Start the daemon
+  $ image-convert-daemon $HOME/Pictures/convert
+
+  # The directories inside the root directory can have these names:
+  # 500x500    - Resize to 500x500, but maintain ratio
+  # 320x       - Width 320x, keep ratio
+  # x200       - Height 200x, keep ratio
+  # format=jpg - Convert to JPEG
+  # format=png - Convert to PNG
+  # quality=80 - Set JPEG quality to 80 (0-100)
+  # size=400   - Set JPEG file size to 400kB
+  # strip      - Strip all markers from JPEG file
+  # tile=3     - Number of tiles per row and column for PDF
+
+  # And they can be combined with spaces:
+  # "600x strip quality=80"
+
+Each JPEG file will be optimized with "jpegoptim" and PNG files will be
+optimized with "pngcrush". Examples:
+
+  $ jpegoptim -s --max=80 --size=400 ...
+  $ pngcrush -rem allb -brute -reduce ...
+
+=head1 INSTALLATION
+
+Need to install the dependencies below with "cpanm":
+
+  $ cpanm Applify Future::AsyncAwait Linux::Inotify2 Mojolicious Mojo::IOLoop::ReadWriteFork
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) Jan Henning Thorsen
+
+This program is free software, you can redistribute it and/or modify it under
+the terms of the Artistic License version 2.0.
+
+=head1 AUTHOR
+
+Jan Henning Thorsen - C<jhthorsen@cpan.org>
+
+=cut
