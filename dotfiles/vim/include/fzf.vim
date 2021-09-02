@@ -1,5 +1,8 @@
 lua <<EOF
 require'fzf-lua'.setup {
+  buffers = {
+    previewer = false,
+  },
   files = {
     previewer = false,
   },
