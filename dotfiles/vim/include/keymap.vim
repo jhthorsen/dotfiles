@@ -27,6 +27,10 @@ vmap <C-c> :w !snipclip -i<CR><CR>
 vmap <C-v> c<ESC>:set paste<CR>:r !snipclip -o<CR>:set nopaste<CR>
 imap <C-v> <ESC>:set paste<CR>:r !snipclip -o<CR>:set nopaste<CR>a
 
+" 0dd, 0de, ... does not cut - it just deletes
+nnoremap 0d "_d
+vnoremap 0d "_d
+
 " utilites
 noremap ,t :!column -t<CR>
 inoremap ,dd warn Mojo::Util::dumper();<C-o>h
