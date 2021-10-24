@@ -1,0 +1,100 @@
+#!/opt/bin/perl
+use strict;
+use warnings;
+use Time::HiRes qw(alarm);
+
+$ENV{PATH} = '/bin:/sbin:/opt/bin:/opt/sbin';
+$ENV{DB_FILE} ||= '/tmp/opt-hostlist.csv';
+
+my @COLUMNS = qw(online changed mac ip hostname);
+my $FORMAT= "%-6s  %-7s  %-17s  %-15s %s\n";
+
+exit print_hosts(dump_database(arp_to_hosts(load_database($ENV{DB_FILE})))) if @ARGV and $ARGV[0] eq '-u';
+exit print_hosts(load_database($ENV{DB_FILE}));
+
+sub arp_to_hosts {
+  my $hosts = shift;
+
+  my @cmd = qw(arp -n);
+  push @cmd, -i => $ENV{INTERFACE} || 'br0';
+  my $look_for = $cmd[-1] =~ m!(\d+)! ? $1 : '';
+
+  warn "\$ @cmd\n" if $ENV{DEBUG};
+  open my $ARP, '-|', @cmd or die $!;
+  while (<$ARP>) {
+    chomp;
+    next if /incomplete/;
+    next unless my ($ip, $mac) = /\((\S+)\) at (\S+)/;
+    my $host = $hosts->{$mac} ||= {changed => 'changed'};
+    my $online = is_online($ip) ? 'yes' : 'no';
+    $host->{changed} = '' if $host->{ip} && $host->{ip} eq $ip && $host->{online} && $host->{online} eq $online;
+    $host->{ip} = $ip;
+    $host->{mac} = $mac;
+    $host->{online} = $online;
+  }
+
+  return $hosts;
+}
+
+sub dump_database {
+  my $hosts = shift;
+  return $hosts unless grep { $_->{changed} } values %$hosts;
+
+  warn "Save $ENV{DB_FILE}\n" if $ENV{DEBUG};
+  open my $DB, '>', "$ENV{DB_FILE}.tmp" or die $!;
+  print { $DB } join(',', @COLUMNS), "\n";
+  for my $mac (sort keys %$hosts) {
+    print { $DB } join(',', map { $hosts->{$mac}{$_} // '' } @COLUMNS), "\n";
+  }
+
+  rename "$ENV{DB_FILE}.tmp", $ENV{DB_FILE} or die $!;;
+
+  return $hosts;
+}
+
+sub is_online {
+  my @cmd = (qw(ping -c 1 -w 1 -W 1), @_);
+  warn "\$ @cmd\n" if $ENV{DEBUG};
+  my $pid = open my $PING, '-|', @cmd;
+  local $SIG{ALRM} = sub { $pid && kill $pid; $pid = 0 };
+  alarm 0.2;
+  1 while <$PING>;
+  alarm 0;
+  return !$pid || $? ? 0 : 1;
+}
+
+sub load_database {
+  warn "Load $ENV{DB_FILE}\n" if $ENV{DEBUG};
+  return {} unless open my $DB, '<', $ENV{DB_FILE};
+  my $columns = read_row($DB); # remove header
+
+  my %hosts;
+  while (my $row = read_row($DB)) {
+    my %row = map { ($_ => shift @$row) } @$columns;
+    $hosts{$row{mac}} = \%row;
+    $hosts{$row{mac}}{changed} = 'changed';
+  }
+
+  return \%hosts;
+}
+
+sub print_hosts {
+  my $hosts = shift;
+  my $changed = 0;
+
+  printf $FORMAT, @COLUMNS;
+  for my $mac (sort keys %$hosts) {
+    printf $FORMAT, map { $hosts->{$mac}{$_} // '' } @COLUMNS;
+    $changed = 1 if $hosts->{$mac}{changed};
+  }
+
+  return $changed ? 1 : 0;
+}
+
+sub read_row {
+  my $FH = shift;
+  local $_ = <$FH>;
+  return undef unless defined $_;
+  chomp;
+  return [split /,/, $_, int @COLUMNS];
+}
