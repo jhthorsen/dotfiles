@@ -1,0 +1,16 @@
+#!/bin/sh
+CMD="$1";
+PAYLOAD="$2";
+BASE_URL="http://192.168.50.104";
+
+abort () {
+  echo $@;
+  exit 1;
+}
+
+[ -z "$CMD" ] && abort "$0 [IRsend|LedPwmMode|...] <payload> # https://tasmota.github.io/docs/Commands/";
+[ -z "$PAYLOAD" ] && abort "$0 $CMD '<payload>'";
+
+PAYLOAD=$(echo $PAYLOAD | perl -MURI::Escape -ne 'print uri_escape($_)')
+RECEIVED=$(curl -s "$BASE_URL/cm?cmnd=$CMD%20$PAYLOAD");
+echo $RECEIVED;
