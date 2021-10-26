@@ -3,13 +3,19 @@ CMD="$1";
 PAYLOAD="$2";
 BASE_URL="http://192.168.50.104";
 
-abort () {
-  echo $@;
-  exit 1;
-}
+[ -z "$CMD" ] && exec echo "$0 [IRsend|LedPwmMode|...] <payload> # https://tasmota.github.io/docs/Commands/";
 
-[ -z "$CMD" ] && abort "$0 [IRsend|LedPwmMode|...] <payload> # https://tasmota.github.io/docs/Commands/";
-[ -z "$PAYLOAD" ] && abort "$0 $CMD '<payload>'";
+# Predefined profiles
+[ "$CMD" = "MainLightSwitch:AllLightsOn" ] && \
+  exec $0 IRsend '{"Protocol":"SYMPHONY","Bits":12,"Data":"0xD04","DataLSB":"0xB020","Repeat":0}';
+[ "$CMD" = "MainLightSwitch:LittleLightToggle" ] && \
+  exec $0 IRsend '{"Protocol":"SYMPHONY","Bits":12,"Data":"0xD10","DataLSB":"0xB008","Repeat":0}';
+[ "$CMD" = "MainLightSwitch:Lighter" ] && \
+  exec $0 IRsend '{"Protocol":"SYMPHONY","Bits":12,"Data":"0xD08","DataLSB":"0xB010","Repeat":0}';
+[ "$CMD" = "MainLightSwitch:Darker" ] && \
+  exec $0 IRsend '{"Protocol":"SYMPHONY","Bits":12,"Data":"0xD20","DataLSB":"0xB004","Repeat":0}';
+
+[ -z "$PAYLOAD" ] && exec echo "$0 $CMD '<payload>'";
 
 PAYLOAD=$(echo $PAYLOAD | perl -MURI::Escape -ne 'print uri_escape($_)')
 RECEIVED=$(curl -s "$BASE_URL/cm?cmnd=$CMD%20$PAYLOAD");
