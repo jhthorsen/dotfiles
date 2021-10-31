@@ -1,6 +1,9 @@
 #!/bin/zsh
 [ "x$1" = "x-x" ] || DRY_RUN=1;
 
+# Check out:
+# - neoman
+
 function abort() {
   echo "# ERROR $*";
   exit 1;

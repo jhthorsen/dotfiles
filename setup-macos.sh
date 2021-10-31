@@ -1,6 +1,9 @@
 #!/bin/zsh
 [ "x$1" = "x-x" ] || DRY_RUN=1;
 
+# TODO
+# - https://github.com/aristocratos/btop
+
 function run() {
   echo "> $*";
   [ "x$DRY_RUN" = "x" ] && $*;
@@ -20,8 +23,8 @@ fi
 run arch -x86_64 $BREW_BIN install                         \
   ack             browserpass              cloc            \
   coreutils       cowsay                   cpanm           \
-  ctags           diff-so-fancy            docker          \
-  docker-compose  docker-machine           doctl           \
+  csvprintf       ctags                    diff-so-fancy   \
+  docker          docker-compose           doctl           \
   exiftool        fd                       ffmpeg          \
   figlet          fontconfig               freetype        \
   fzf             gh                       geoip           \
@@ -36,6 +39,7 @@ run arch -x86_64 $BREW_BIN install                         \
   postgresql      psgrep                   pstree          \
   python          redis                    rename          \
   ruby            rust                     sqlite          \
+  smartmontools                                            \
   ssh-copy-id     sshuttle                 telnet          \
   terraform       terraform-docs           tesseract       \
   tmux            tmuxinator-completion    tree            \
@@ -50,6 +54,8 @@ run cpanm -n
   Devel::Cover                                                    \
 
 run npm install -g pnpm;
+
+run pip install osxphotos;
 
 run rm /usr/local/bin/githook-perltidy;
 run ln -s "$(which githook-perltidy)" /usr/local/bin/githook-perltidy;
