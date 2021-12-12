@@ -1,7 +1,7 @@
 alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
 alias cpanm='cpanm -M https://cpan.metacpan.org'
 alias doctl='doctl --access-token=$DO_API_TOKEN'
-alias export-photos='osxphotos export ~/Pictures/exported --directory "{created.year}" --filename "{created.strftime,%Y-%m-%d-%H%M%S}_{uuid}" --exiftool  --jpeg-ext jpg --touch-file --update'
+alias export-photos='osxphotos export ~/Pictures/raw --directory "{created.year}" --filename "{created.strftime,%Y-%m-%d-%H%M%S}_{uuid}" --exiftool  --jpeg-ext jpg --touch-file --update'
 alias gensecret='echo "$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 32)"'
 alias gof='gopass show -c $(gopass list -f | fzf --no-mouse --preview "gopass show {} | tail -n +1")'
 alias grep='grep --color=auto --line-buffered'
