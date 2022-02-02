@@ -63,7 +63,7 @@ run ln -s "$(which githook-perltidy)" /usr/local/bin/githook-perltidy;
 run defaults write NSGlobalDomain InitialKeyRepeat -int 15
 run defaults write NSGlobalDomain KeyRepeat -int 2
 run defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool TRUE
-run defaults write com.apple.screencapture location /Users/jhthorsen/Downloads
+run defaults write com.apple.screencapture location $HOME/Downloads
 # run defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
 # sudo killall SystemUIServer
 # sudo killall -HUP mDNSResponder
