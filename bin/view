@@ -4,7 +4,7 @@ if [ -z "$1" ]; then
   echo "Usage:";
   echo "\$ view some/path.log";
   echo "\$ view Mojolicious::Controller";
-elif [ -e "$1" ]; then
+elif [ -e "$1" -o "x$1" = "x-" ]; then
   vim -R $1;
 else
   vim -R $(perldoc -l "$1");
