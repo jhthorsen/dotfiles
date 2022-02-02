@@ -1,0 +1,70 @@
+#!/usr/bin/env perl
+use Mojo::Base -strict;
+use POSIX qw(mktime);
+use Time::Piece;
+
+exit usage() if -t STDIN;
+
+my $tz_offset = shift @ARGV // $ENV{TZ_OFFSET} // 0;
+$tz_offset *= 3600 if $tz_offset <= 12;
+
+my $i = 0;
+my %mon_lookup = map { (lc($_) => $i++) } Time::Piece::mon_list;
+my $now = localtime;
+
+my $hms_re = qr/(?<hour>\d{2}):(?<min>\d{2}):(?<sec>\d{2})/;
+my $mon_re = join '|', keys %mon_lookup;
+my $tz_re = qr/\+(?<tz>\d{4})\b/;
+
+while (<STDIN>) {
+
+  # 2022-02-02T10:26:02
+  # 2022/01/28 01:06:32
+  s!(?<year>\d{4}) \W (?<mon>\d+)\w* \W (?<mday>\d+) (T|\s+) $hms_re!tztime()!eix;
+
+  # 02/Feb/2022:02:26:02 +0100
+  s!(?<mday>\d+) \W+ (?<mon>$mon_re)\w* \W+ (?<year>\d{4}) \W+ $hms_re \s+ $tz_re!tztime()!eix;
+
+  # Jan 27 11:44:04
+  s!(?<mon>$mon_re)\w* \s+ (?<mday>\d+) \s+ $hms_re!tztime()!eix;
+
+  local $| = 1;
+  print;
+}
+
+sub usage {
+  print <<'HERE';
+
+Usage:
+
+  # Convert from localtime in input stream to Tokyo ISO 8601 timestamp
+  cat /var/log/syslog | tzlog +9
+  cat /var/log/syslog | tzlog +32400
+
+  # Convert from localtime in input stream to New Year ISO 8601 timestamp
+  cat /var/log/syslog | tzlog -5
+  cat /var/log/syslog | tzlog -18000
+
+Supported timestamps
+
+  Jan 27 11:44:04
+  2022/01/28 01:06:32
+  02/Feb/2022:02:26:02 +0100
+
+HERE
+}
+
+sub tzoffset {
+  my $tz = shift;
+  my ($h, $m) = map { s!^0?!!r } $tz =~ m!(\d\d)(\d\d)!;
+  return $h * 3600 + $m * 60;
+}
+
+sub tztime {
+  my $year = $+{year} // $now->_year;
+  $year -= 1900 if $year > 1900;
+  my $mon = $mon_lookup{lc($+{mon})} // $+{mon} // $now->_mon;
+  my $time = mktime(@+{qw(sec min hour)}, $+{mday} || $now->mday, $mon, $year);
+  $time -= tzoffset($+{tz}) if defined $+{tz};
+  return localtime($time + $tz_offset)->datetime;
+}
