@@ -16,6 +16,17 @@ alias sort='LC_ALL=C sort'
 alias tmpdir='perl -le"use File::Spec;print File::Spec->tmpdir"'
 alias vi='vim'
 alias vij='sshj edit'
+alias wttr='curl https://wttr.in/'
+
+if [ "x$(uname)" = "xLinux" ]; then
+  alias apt='sudo -i apt';
+  alias btrfs='sudo -i btrfs';
+  alias docker='sudo -i docker';
+  alias nginx='sudo -i nginx';
+  alias systemctl='sudo -i systemctl';
+  alias wo='sudo -i wo';
+  alias wp='sudo -u www-data wp';
+fi
 
 command -v launchctl  >/dev/null && alias psql.start='launchctl load /usr/local/opt/postgresql/homebrew.mxcl.postgresql.plist'
 command -v tmux       >/dev/null && alias tma='tmux attach-session -t'
