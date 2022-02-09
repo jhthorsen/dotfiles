@@ -10,7 +10,7 @@ MISSING="";
 
 [ -z "$SSHJ_HOME"        ] && SSHJ_HOME="$HOME/.local/share/sshj";
 [ -d "$SSHJ_HOME/cache"  ] || mkdir -p "$SSHJ_HOME/cache";
-[ -z "$SSHJ_IGNORE_DIRS" ] && SSHJ_IGNORE_DIRS="inc:.git:.sass-cache:cache:cover_db:node_modules";
+[ -z "$SSHJ_IGNORE_DIRS" ] && SSHJ_IGNORE_DIRS="inc:.git:.sass-cache:cache:cover_db:node_modules:share/ddl";
 
 if [ -n "$MISSING" ]; then
   echo "Missing environment variables: $MISSING";
@@ -22,8 +22,8 @@ is_inside_sshfs="pwd | grep -q $SSHJ_MOUNT_POINT";
 is_mounted="mount | grep -q $SSHJ_MOUNT_POINT";
 
 populate_sshj_files() {
-  local IFS=":";
-  FIND_NOT="";
+  local FIND_NOT="";
+  local IFS=":"; # Split on ":" instead of " "
   for d in $SSHJ_IGNORE_DIRS; do
     FIND_NOT="$FIND_NOT -not -path '*/$d/*'";
   done
