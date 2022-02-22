@@ -5,6 +5,10 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+[ -z "$HOMEBREW_CELLAR" ] && export HOMEBREW_CELLAR="/opt/homebrew/Cellar";
+[ -z "$HOMEBREW_PREFIX" ] && export HOMEBREW_PREFIX="/opt/homebrew";
+[ -z "$HOMEBREW_REPOSITORY" ] && export HOMEBREW_REPOSITORY="/opt/homebrew";
+
 # Lines configured by zsh-newuser-install
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall

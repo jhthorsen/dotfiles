@@ -14,7 +14,7 @@ function lnk() {
   TO="$2";
   [ ! -e $1 ] && echo "# ERROR $1 cannot be found" && return 1;
   [ -L $TO -a ! -r $TO ] && run rm $TO; # Remove broken links
-  [ -e $TO ] && echo "# INFO $TO exists" || run ln -s $FROM $TO;
+  [ -e $TO ] && ls -l $TO || run ln -s $FROM $TO;
   [ "x$IMPORT" = "x1" -a ! -L $TO ] && run cp $TO $FROM;
 }
 
@@ -52,7 +52,7 @@ function setup_zsh() {
   lnk dotfiles/shell/bindkey.sh $XDG_CONFIG_DIR/zsh/10-bindkey.sh;
   lnk dotfiles/shell/history.sh $XDG_CONFIG_DIR/zsh/10-history.sh;
 
-  lnk /usr/local/etc/profile.d/z.sh $XDG_CONFIG_DIR/zsh/15-z.sh
+  lnk $HOMEBREW_PREFIX/etc/profile.d/z.sh $XDG_CONFIG_DIR/zsh/15-z.sh
   lnk dotfiles/shell/completion.sh $XDG_CONFIG_DIR/zsh/15-completion.sh;
 
   lnk dotfiles/shell/setkeylabel.sh $XDG_CONFIG_DIR/zsh/30-setkeylabel.sh;
@@ -72,7 +72,7 @@ function setup_zsh_scheme() {
     lnk dotfiles/prompt/p10k.zsh $XDG_CONFIG_DIR/zsh/21-p10k.zsh;
   fi
 
-  lnk /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh $XDG_CONFIG_DIR/zsh/25-zsh-syntax-highlighting.zsh
+  lnk $HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh $XDG_CONFIG_DIR/zsh/25-zsh-syntax-highlighting.zsh
   lnk dotfiles/shell/gruvbox.sh $XDG_CONFIG_DIR/zsh/25-gruvbox.sh;
 }
 

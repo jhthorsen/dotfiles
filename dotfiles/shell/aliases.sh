@@ -28,7 +28,7 @@ if [ "x$(uname)" = "xLinux" ]; then
   alias wp='sudo -u www-data wp';
 fi
 
-command -v launchctl  >/dev/null && alias psql.start='launchctl load /usr/local/opt/postgresql/homebrew.mxcl.postgresql.plist'
+command -v launchctl  >/dev/null && alias psql.start="launchctl load $HOMEBREW_PREFIX/opt/postgresql/homebrew.mxcl.postgresql.plist"
 command -v tmux       >/dev/null && alias tma='tmux attach-session -t'
 command -v ack-grep   >/dev/null && alias ack='ack-grep'
 command -v gopass     >/dev/null && alias gopass='LESS=rXx2 gopass'

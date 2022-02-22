@@ -3,23 +3,23 @@ function _add_path () {
 }
 
 for app in ansible git perl; do
-  if [ -d "/usr/local/Cellar/$app" ]; then
-    version=$(ls /usr/local/Cellar/$app | sort | tail -n1);
-    _add_path "/usr/local/Cellar/$app/$version/bin";
+  if [ -d "$HOMEBREW_CELLAR/$app" ]; then
+    version=$(ls $HOMEBREW_CELLAR/$app | sort | tail -n1);
+    _add_path "$HOMEBREW_CELLAR/$app/$version/bin";
   fi
 done
 
-_add_path "/usr/local/opt/gettext/bin";
-_add_path "/usr/local/opt/python/libexec/bin";
-_add_path "/usr/local/opt/coreutils/libexec/gnubin";
-_add_path "/usr/local/opt/icu4c/bin";
-_add_path "/usr/local/opt/icu4c/sbin";
-_add_path "/usr/local/opt/ruby/bin";
-_add_path "/usr/local/opt/sqlite/bin";
-_add_path "/usr/local/opt/openssl/bin";
-_add_path "/usr/local/opt/ncurses/bin";
-_add_path "/usr/local/opt/go/libexec/bin";
-_add_path "/usr/local/bin";
-_add_path "/usr/local/sbin";
+_add_path "$HOMEBREW_PREFIX/opt/gettext/bin";
+_add_path "$HOMEBREW_PREFIX/opt/python/libexec/bin";
+_add_path "$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin";
+_add_path "$HOMEBREW_PREFIX/opt/icu4c/bin";
+_add_path "$HOMEBREW_PREFIX/opt/icu4c/sbin";
+_add_path "$HOMEBREW_PREFIX/opt/ruby/bin";
+_add_path "$HOMEBREW_PREFIX/opt/sqlite/bin";
+_add_path "$HOMEBREW_PREFIX/opt/openssl/bin";
+_add_path "$HOMEBREW_PREFIX/opt/ncurses/bin";
+_add_path "$HOMEBREW_PREFIX/opt/go/libexec/bin";
+_add_path "$HOMEBREW_PREFIX/bin";
+_add_path "$HOMEBREW_PREFIX/sbin";
 _add_path "/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
 _add_path "$(readlink -f $(dirname $ZSH_SOURCE)/../../bin)";

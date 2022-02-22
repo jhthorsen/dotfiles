@@ -15,14 +15,13 @@ zstyle ':completion:*' special-dirs true
 
 # rm -f ~/.zcompdump; compinit
 
-FZF_HOME=${FZF_HOME:-/usr/local/opt/fzf}
+FZF_HOME=${FZF_HOME:-$HOMEBREW_PREFIX/opt/fzf};
 if [ -d $FZF_HOME ]; then
   if [[ ! "$PATH" == *$FZF_HOME/bin* ]]; then
     export PATH="${PATH:+${PATH}:}$FZF_HOME/bin"
   fi
 
   [[ $- == *i* ]] && source "$FZF_HOME/shell/completion.zsh" 2> /dev/null
-
   source "$FZF_HOME/shell/key-bindings.zsh"
 fi
 

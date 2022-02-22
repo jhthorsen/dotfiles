@@ -16,20 +16,20 @@ fi
 TARGET=$(basename $PWD);
 
 if echo $TARGET | grep -q "Crypt-OpenSSL-Bignum"; then
-  OPENSSL_INCLUDE="-I/usr/local/opt/openssl/include" \
-    OPENSSL_LIB="-L/usr/local/opt/openssl/lib" \
+  OPENSSL_INCLUDE="-I$HOMEBREW_PREFIX/opt/openssl/include" \
+    OPENSSL_LIB="-L$HOMEBREW_PREFIX/opt/openssl/lib" \
     perl Makefile.PL || exit $?
   make && make install;
 
 elif echo $TARGET | grep -q "DBD-MariaDB"; then
   perl Makefile.PL \
-    --libs="-L/usr/local/opt/openssl/lib -L/usr/local/opt/mysql-client/lib -lmysqlclient" \
+    --libs="-L$HOMEBREW_PREFIX/opt/openssl/lib -L$HOMEBREW_PREFIX/opt/mysql-client/lib -lmysqlclient" \
     --testuser=root || exit $?;
   make && make install
 
 elif echo $TARGET | grep -q "DBD-mysql"; then
   perl Makefile.PL \
-    --libs="-L/usr/local/opt/openssl/lib -L/usr/local/opt/mysql-client/lib -lmysqlclient" \
+    --libs="-L$HOMEBREW_PREFIX/opt/openssl/lib -L$HOMEBREW_PREFIX/opt/mysql-client/lib -lmysqlclient" \
     --testuser=root || exit $?;
   make && make install
 
