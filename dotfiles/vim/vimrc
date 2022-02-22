@@ -103,4 +103,5 @@ if has("nvim")
   lua require'setup-lsp-perl'
   lua require'setup-lsp'
   lua require'setup-cmp'
+  lua require'sync-file'
 endif

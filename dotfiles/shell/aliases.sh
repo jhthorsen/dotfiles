@@ -15,7 +15,6 @@ alias reload='jobs | grep -q "[a-z]" && echo "Cannot reload zsh when there are r
 alias sort='LC_ALL=C sort'
 alias tmpdir='perl -le"use File::Spec;print File::Spec->tmpdir"'
 alias vi='vim'
-alias vij='sshj edit'
 alias wttr='curl https://wttr.in/'
 
 if [ "x$(uname)" = "xLinux" ]; then

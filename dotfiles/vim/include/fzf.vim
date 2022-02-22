@@ -16,9 +16,4 @@ EOF
 
 nnoremap <Leader>b <cmd>lua require('fzf-lua').buffers()<CR>
 nnoremap <Leader>g <cmd>lua require('fzf-lua').grep()<CR>
-
-if $SSHJ_CACHE_FILE =~ '/'
-  nnoremap <c-P> <cmd>lua require('fzf-sshj').files()<CR>
-else
-  nnoremap <c-P> <cmd>lua require('fzf-lua').files()<CR>
-end
+nnoremap <c-P> <cmd>lua require('fzf-lua').files()<CR>

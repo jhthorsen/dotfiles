@@ -106,7 +106,7 @@ run cpanm -n
   App::errno              App::git::ship   App::githook_perltidy  \
   App::githook::perltidy  App::httpstatus  App::pause             \
   App::podify             App::prowess     App::tt                \
-  Devel::Cover            PLS                                     \
+  Devel::Cover            PLS                                     ;
 
 # run pip install osxphotos;
 
