@@ -4,7 +4,7 @@
   t = !git tag | sort -n
 
   ca = commit --amend -C HEAD
-  co = commit
+  co = !/bin/bash -c 'git checkout "$0" && [ -x ../co ] && ../co "$0"'
   cl = ship clean
   cp = !/bin/bash -c 'git show "$0":"$1" > "$1"'
   dc = diff --cached
