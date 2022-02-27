@@ -1,11 +1,13 @@
 function _add_path () {
-  [ -d "$1" ] && export PATH="$1:$PATH";
+  p="$1";
+  [ -L "$p" ] && p=$(readlink -f $p);
+  [ -d "$p" ] && export PATH="$p:$PATH";
 }
 
-for app in ansible git perl; do
-  if [ -d "$HOMEBREW_CELLAR/$app" ]; then
-    version=$(ls $HOMEBREW_CELLAR/$app | sort | tail -n1);
-    _add_path "$HOMEBREW_CELLAR/$app/$version/bin";
+for n in Cellar/ansible Cellar/git Cellar/perl lib/ruby/gems; do
+  if [ -d "$HOMEBREW_PREFIX/$n" ]; then
+    version=$(ls $HOMEBREW_PREFIX/$n | sort | tail -n1);
+    _add_path "$HOMEBREW_PREFIX/$n/$version/bin";
   fi
 done
 

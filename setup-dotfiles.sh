@@ -1,6 +1,4 @@
 #!/bin/zsh
-[ "x$1" = "x-x" ] || DRY_RUN=1;
-
 # Check out:
 # - neoman
 
@@ -13,9 +11,9 @@ function lnk() {
   FROM="$(readlink -f $1)";
   TO="$2";
   [ ! -e $1 ] && echo "# ERROR $1 cannot be found" && return 1;
-  [ -L $TO -a ! -r $TO ] && run rm $TO; # Remove broken links
-  [ -e $TO ] && ls -l $TO || run ln -s $FROM $TO;
   [ "x$IMPORT" = "x1" -a ! -L $TO ] && run cp $TO $FROM;
+  [ -L $TO -a ! -r $TO ] && run rm $TO; # Remove broken links
+  [ -L $TO ] || run ln -s $FROM $TO;
 }
 
 function run() {
@@ -46,12 +44,12 @@ function setup_tmux() {
   [ -d ~/.tmux/plugins/tpm ] || git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 }
 
-function setup_vim() {
+function setup_vi() {
   lnk dotfiles/vim $HOME/.vim;
   [ -e "$HOME/.vim/autoload/plug.vim" ] || run curl -sfLo "$HOME/.vim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   lnk dotfiles/nvim $XDG_CONFIG_DIR/nvim;
-  git clone --depth 1 https://github.com/wbthomason/packer.nvim \
-    $XDG_CONFIG_DIR/nvim $XDG_DATA_HOME/nvim/site/pack/packer/start/packer.nvim;
+  [ -d "$XDG_DATA_HOME/nvim/site/pack/packer/start" ] \
+    || git clone --depth 1 https://github.com/wbthomason/packer.nvim $XDG_DATA_HOME/nvim/site/pack/packer/start/packer.nvim;
 }
 
 function setup_zsh() {
@@ -94,4 +92,4 @@ setup_zsh;
 setup_zsh_theme;
 setup_perl;
 setup_tmux;
-setup_vim;
+setup_vi;
