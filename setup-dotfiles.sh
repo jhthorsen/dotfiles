@@ -23,18 +23,21 @@ function run() {
   [ "x$DRY_RUN" = "x" ] && $*;
 }
 
-function setup_alacritty() {
-  [ -d "$HOME/.config/alacritty" ] || run mkdir -p $HOME/.config/alacritty;
-  lnk $SOURCE/alacritty.yml $HOME/.config/alacritty/alacritty.yml;
-}
-
 function setup_misc() {
   lnk dotfiles/ackrc $HOME/.ackrc;
   lnk dotfiles/git/gitconfig $HOME/.gitconfig;
   lnk dotfiles/git/gitignore_global $HOME/.gitignore_global;
   lnk dotfiles/perltidyrc $HOME/.perltidyrc;
-  lnk dotfiles/tmux.conf $HOME/.tmux.conf;
   [ -f $HOME/.pause ] || run cp dotfiles/pause $HOME/.pause;
+  [ -d $XDG_CONFIG_DIR/zsh/completion ] || run mkdir -p $XDG_CONFIG_DIR/zsh/completion;
+  [ -e $XDG_CONFIG_DIR/zsh/completion/gopass.zsh ] \
+    || run curl https://raw.githubusercontent.com/gopasspw/gopass/master/zsh.completion > $XDG_CONFIG_DIR/zsh/completion/_gopass;
+}
+
+function setup_tmux() {
+  lnk dotfiles/tmux.conf $HOME/.tmux.conf;
+  [ -d ~/.tmux/plugins ] || mkdir -p ~/.tmux/plugins;
+  [ -d ~/.tmux/plugins/tpm ] || git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 }
 
 function setup_vim() {
@@ -60,17 +63,13 @@ function setup_zsh() {
   lnk dotfiles/shell/zshrc $HOME/.zshrc;
 }
 
-function setup_zsh_scheme() {
-  if ! autoload -Uz is-at-least || ! is-at-least 5.1; then
-    lnk dotfiles/prompt/prompt-bmin.sh $XDG_CONFIG_DIR/zsh/02-prompt-bmin.sh;
-  else
-    if [ ! -d "$XDG_CONFIG_DIR/zsh/powerlevel10k" ]; then
-      run git clone https://github.com/romkatv/powerlevel10k.git $XDG_CONFIG_DIR/zsh/powerlevel10k;
-    fi
-
-    lnk $XDG_CONFIG_DIR/zsh/powerlevel10k/powerlevel10k.zsh-theme $XDG_CONFIG_DIR/zsh/20-theme-powerlevel10k.sh;
-    lnk dotfiles/prompt/p10k.zsh $XDG_CONFIG_DIR/zsh/21-p10k.zsh;
+function setup_zsh_theme() {
+  if [ ! -d "$XDG_CONFIG_DIR/zsh/powerlevel10k" ]; then
+    run git clone https://github.com/romkatv/powerlevel10k.git $XDG_CONFIG_DIR/zsh/powerlevel10k;
   fi
+
+  lnk $XDG_CONFIG_DIR/zsh/powerlevel10k/powerlevel10k.zsh-theme $XDG_CONFIG_DIR/zsh/20-theme-powerlevel10k.sh;
+  lnk dotfiles/prompt/p10k.zsh $XDG_CONFIG_DIR/zsh/21-p10k.zsh;
 
   lnk $HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh $XDG_CONFIG_DIR/zsh/25-zsh-syntax-highlighting.zsh
   lnk dotfiles/shell/gruvbox.sh $XDG_CONFIG_DIR/zsh/25-gruvbox.sh;
@@ -82,8 +81,8 @@ SOURCE="$(readlink -f dotfiles)";
 [ -z $SOURCE -o ! -d $SOURCE ] && abort "Cannot find ./dotfiles ($SOURCE)";
 [ -d $XDG_CONFIG_DIR/zsh ] || mkdir -p $XDG_CONFIG_DIR/zsh;
 
-setup_alacritty;
 setup_misc;
 setup_zsh;
-setup_zsh_scheme;
+setup_zsh_theme;
+setup_tmux;
 setup_vim;
