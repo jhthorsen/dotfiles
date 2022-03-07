@@ -3,7 +3,7 @@ vim.o.updatetime = 250
 vim.cmd [[autocmd! CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focus=false})]]
 
 local lsp_installer = require('nvim-lsp-installer')
-local wantedServers = { 'bashls', 'cssls', 'html', 'jsonls', 'sqlls', 'svelte', 'tsserver', 'vuels', 'yamlls' }
+local wantedServers = { 'bashls', 'cssls', 'html', 'jsonls', 'svelte', 'tsserver', 'vuels', 'yamlls' }
 
 for _, serverName in ipairs(wantedServers) do
   local server_is_found, server = lsp_installer.get_server(serverName)

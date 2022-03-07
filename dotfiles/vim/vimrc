@@ -7,7 +7,6 @@ else
   Plug 'junegunn/fzf'
 endif
 
-Plug 'skywind3000/asyncrun.vim'
 Plug 'itchyny/lightline.vim'
 Plug 'gruvbox-community/gruvbox'
 Plug 'andis-sprinkis/lightline-gruvbox-dark.vim'
@@ -18,15 +17,7 @@ Plug 'terryma/vim-multiple-cursors'
 
 " syntax
 Plug 'ap/vim-css-color'
-Plug 'cakebaker/scss-syntax.vim'
-Plug 'evanleck/vim-svelte'
-Plug 'gabrielelana/vim-markdown'
-Plug 'hail2u/vim-css3-syntax'
 Plug 'mattn/emmet-vim'
-Plug 'othree/html5.vim'
-Plug 'pangloss/vim-javascript'
-Plug 'posva/vim-vue'
-Plug 'vim-perl/vim-perl'
 Plug 'yko/mojo.vim'
 
 if has("nvim")
