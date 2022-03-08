@@ -1,4 +1,6 @@
 -- vim.lsp.set_log_level('debug')
+vim.o.updatetime = 250
+vim.cmd [[autocmd! CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focus=false})]]
 
 local lsp_installer = require('nvim-lsp-installer')
 local wantedServers = { 'bashls', 'cssls', 'html', 'jsonls', 'sqlls', 'svelte', 'tsserver', 'vuels', 'yamlls' }
