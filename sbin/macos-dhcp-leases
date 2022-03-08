@@ -1,0 +1,3 @@
+#!/bin/sh
+set -x;
+sudo cat /private/var/db/dhcpd_leases;
