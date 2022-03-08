@@ -5,7 +5,7 @@
 # - neoman
 
 function abort() {
-  echo "# ERROR $*";
+  echo "# ERROR $*" >&2;
   exit 1;
 }
 
@@ -19,7 +19,7 @@ function lnk() {
 }
 
 function run() {
-  echo "> $*";
+  echo "> $*" >&2;
   [ "x$DRY_RUN" = "x" ] && $*;
 }
 
@@ -27,11 +27,17 @@ function setup_misc() {
   lnk dotfiles/ackrc $HOME/.ackrc;
   lnk dotfiles/git/gitconfig $HOME/.gitconfig;
   lnk dotfiles/git/gitignore_global $HOME/.gitignore_global;
-  lnk dotfiles/perltidyrc $HOME/.perltidyrc;
-  [ -f $HOME/.pause ] || run cp dotfiles/pause $HOME/.pause;
   [ -d $XDG_CONFIG_DIR/zsh/completion ] || run mkdir -p $XDG_CONFIG_DIR/zsh/completion;
   [ -e $XDG_CONFIG_DIR/zsh/completion/gopass.zsh ] \
     || run curl https://raw.githubusercontent.com/gopasspw/gopass/master/zsh.completion > $XDG_CONFIG_DIR/zsh/completion/_gopass;
+}
+
+function setup_perl() {
+  [ -f $HOME/.pause ] || run cp dotfiles/pause $HOME/.pause;
+  lnk dotfiles/perltidyrc $HOME/.perltidyrc;
+  local PERL_LL_ROOT="$HOME/.local/share/perl5";
+  which brew &>/dev/null || run cpanm --local-lib=$PERL_LL_ROOT -n local::lib;
+  [ -d $PERL_LL_ROOT ] && run perl -I$PERL_LL_ROOT/lib/perl5 -Mlocal::lib=$PERL_LL_ROOT/ > $XDG_CONFIG_DIR/zsh/02-env-perl.sh;
 }
 
 function setup_tmux() {
@@ -84,5 +90,6 @@ SOURCE="$(readlink -f dotfiles)";
 setup_misc;
 setup_zsh;
 setup_zsh_theme;
+setup_perl;
 setup_tmux;
 setup_vim;
