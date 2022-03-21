@@ -1,5 +1,6 @@
 [alias]
   b = branch
+  c = commit
   d = diff HEAD^
   t = !git tag | sort -n
 
