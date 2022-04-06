@@ -1,5 +1,3 @@
--- https://github.com/neovim/neovim/tree/master/runtime/lua/vim
--- https://www.lua.org/pil/contents.html
 local uv = vim.loop
 
 function syncFileToRemoteHost()

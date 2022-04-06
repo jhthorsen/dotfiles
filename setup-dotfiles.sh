@@ -35,7 +35,7 @@ function setup_misc() {
 function setup_perl() {
   [ -f $HOME/.pause ] || run cp dotfiles/pause $HOME/.pause;
   lnk dotfiles/perltidyrc $HOME/.perltidyrc;
-  local PERL_LL_ROOT="$HOME/.local/share/perl5";
+  local PERL_LL_ROOT="$XDG_DATA_HOME/perl5";
   which brew &>/dev/null || run cpanm --local-lib=$PERL_LL_ROOT -n local::lib;
   [ -d $PERL_LL_ROOT ] && run perl -I$PERL_LL_ROOT/lib/perl5 -Mlocal::lib=$PERL_LL_ROOT/ > $XDG_CONFIG_DIR/zsh/02-env-perl.sh;
 }
@@ -49,8 +49,9 @@ function setup_tmux() {
 function setup_vim() {
   lnk dotfiles/vim $HOME/.vim;
   [ -e "$HOME/.vim/autoload/plug.vim" ] || run curl -sfLo "$HOME/.vim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  [ -d "$XDG_CONFIG_DIR/nvim" ] || run mkdir $XDG_CONFIG_DIR/nvim;
-  lnk dotfiles/vim/nvim.vim $XDG_CONFIG_DIR/nvim/init.vim;
+  lnk dotfiles/nvim $XDG_CONFIG_DIR/nvim;
+  git clone --depth 1 https://github.com/wbthomason/packer.nvim \
+    $XDG_CONFIG_DIR/nvim $XDG_DATA_HOME/nvim/site/pack/packer/start/packer.nvim;
 }
 
 function setup_zsh() {
@@ -83,6 +84,7 @@ function setup_zsh_theme() {
 
 # NOTE XDG_CONFIG_DIR != XDG_CONFIG_DIRS
 XDG_CONFIG_DIR="$HOME/.config";
+XDG_DATA_HOME="$HOME/.local/share";
 SOURCE="$(readlink -f dotfiles)";
 [ -z $SOURCE -o ! -d $SOURCE ] && abort "Cannot find ./dotfiles ($SOURCE)";
 [ -d $XDG_CONFIG_DIR/zsh ] || mkdir -p $XDG_CONFIG_DIR/zsh;
