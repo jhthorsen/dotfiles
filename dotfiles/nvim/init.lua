@@ -53,10 +53,12 @@ return require('packer').startup(function()
   use {'nvim-treesitter/nvim-treesitter'}
   use {'yko/mojo.vim', ft = {'ep', 'epl'}}
 
-  require('lualine').setup()
-  require('config/theme')
-  require('config/lsp')
-  require('config/cmp')
-  require('config/telescope')
-  require('config/treesitter')
+  local ok, mod = pcall(require, 'lualine')
+  if ok then mod.setup() end
+
+  local ok, mod = pcall(require, 'config/theme')
+  local ok, mod = pcall(require, 'config/lsp')
+  local ok, mod = pcall(require, 'config/cmp')
+  local ok, mod = pcall(require, 'config/telescope')
+  local ok, mod = pcall(require, 'config/treesitter')
 end)
