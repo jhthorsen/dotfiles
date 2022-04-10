@@ -34,6 +34,7 @@ vim.g.netrw_winsize = 30
 
 -- grouped config and local extensions
 require('config/keymap')
+require('config/clipboard')
 require('extensions/sync-file')
 
 -- external extensions
