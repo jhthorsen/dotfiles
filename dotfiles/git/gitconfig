@@ -75,7 +75,7 @@
 [user]
   name = Jan Henning Thorsen
   email = jhthorsen@cpan.org
-  signingkey = 4B747C8EC747C46B
+  signingkey = 6C8D2162B06DF550
 
 [init]
   defaultBranch = main
