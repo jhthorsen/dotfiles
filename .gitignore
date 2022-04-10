@@ -3,4 +3,3 @@ local/
 dotfiles/shell/jhthorsen.sh
 dotfiles/vim/plugged
 dotfiles/vim/autoload/plug.vim
-dotfiles/shell/gopass-completion.zsh

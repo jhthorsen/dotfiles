@@ -3,7 +3,6 @@ alias cpanm='cpanm -M https://cpan.metacpan.org'
 alias doctl='doctl --access-token=$DO_API_TOKEN'
 alias export-photos='osxphotos export ~/Pictures/raw --directory "{created.year}" --filename "{created.strftime,%Y-%m-%d-%H%M%S}_{uuid}" --exiftool  --jpeg-ext jpg --touch-file --update'
 alias gensecret='echo "$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 32)"'
-alias gof='gopass show -c $(gopass list -f | fzf --no-mouse --preview "gopass show {} | tail -n +1")'
 alias grep='grep --color=auto --line-buffered'
 alias gti='git'
 alias hwinfo='dmidecode'
@@ -29,4 +28,3 @@ fi
 command -v launchctl  >/dev/null && alias psql.start="launchctl load $HOMEBREW_PREFIX/opt/postgresql/homebrew.mxcl.postgresql.plist"
 command -v tmux       >/dev/null && alias tma='tmux attach-session -t'
 command -v ack-grep   >/dev/null && alias ack='ack-grep'
-command -v gopass     >/dev/null && alias gopass='LESS=rXx2 gopass'

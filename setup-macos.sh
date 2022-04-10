@@ -54,7 +54,6 @@ run $BREW_BIN install glances
 run $BREW_BIN install gnupg
 run $BREW_BIN install gnutls
 run $BREW_BIN install go
-run $BREW_BIN install gopass
 run $BREW_BIN install gpg-suite
 run $BREW_BIN install imagemagick
 run $BREW_BIN install jpeg
@@ -70,6 +69,7 @@ run $BREW_BIN install nginx
 run $BREW_BIN install nmap
 run $BREW_BIN install node
 run $BREW_BIN install openssl
+run $BREW_BIN install pass
 run $BREW_BIN install perl
 run $BREW_BIN install pinentry
 run $BREW_BIN install pinentry-mac

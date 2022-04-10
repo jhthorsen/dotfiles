@@ -1,0 +1,15 @@
+#!/bin/sh
+[ -z "$PASSWORD_STORE_DIR" ] && PASSWORD_STORE_DIR="$HOME/.password-store";
+
+function find_password_entries() {
+  find -L "$PASSWORD_STORE_DIR" -not -name .git -a -name '*.gpg' 2>/dev/null \
+    | sed -e "s#${PASSWORD_STORE_DIR}/\{0,1\}##" -e 's#\.gpg##' -e 's#\\#\\\\#g' -e 's#:#\\:#g' \
+    | sort;
+}
+
+if [ "x$1" = "xls" ]; then
+  find_password_entries;
+else
+  found=$(find_password_entries | fzf --no-mouse --preview "pass show {} | perl -ne'print if $. > 1'");
+  [ -n "$found" ] && pass show -c "$found";
+fi

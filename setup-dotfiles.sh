@@ -26,8 +26,6 @@ function setup_misc() {
   lnk dotfiles/git/gitconfig $HOME/.gitconfig;
   lnk dotfiles/git/gitignore_global $HOME/.gitignore_global;
   [ -d $XDG_CONFIG_DIR/zsh/completion ] || run mkdir -p $XDG_CONFIG_DIR/zsh/completion;
-  [ -e $XDG_CONFIG_DIR/zsh/completion/gopass.zsh ] \
-    || run curl https://raw.githubusercontent.com/gopasspw/gopass/master/zsh.completion > $XDG_CONFIG_DIR/zsh/completion/_gopass;
 }
 
 function setup_perl() {
