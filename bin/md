@@ -1,0 +1,6 @@
+#!/bin/sh
+if [ -n "$1" -a -r "$1" ]; then
+  pandoc $1 | lynx -stdin;
+else
+  echo "Usage: markdown <file>" >&2;
+fi
