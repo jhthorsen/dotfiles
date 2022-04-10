@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-$ENV{EDITOR} //= 'vim';
+$ENV{EDITOR} //= 'vi';
 my $list = 0;
 @ARGV = grep { $list ||= $_ eq '-l'; $_ ne '-l' } @ARGV;
 

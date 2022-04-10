@@ -25,3 +25,5 @@ _add_path "$HOMEBREW_PREFIX/bin";
 _add_path "$HOMEBREW_PREFIX/sbin";
 _add_path "/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
 _add_path "$(readlink -f $(dirname $ZSH_SOURCE)/../../bin)";
+
+export PATH=$(echo $PATH | perl -MList::Util=uniq -pe'$_ = join ":", uniq split ":"');

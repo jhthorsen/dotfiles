@@ -14,7 +14,6 @@ alias pipesha10='shasum | cut -c1-10'
 alias reload='jobs | grep -q "[a-z]" && echo "Cannot reload zsh when there are running jobs." || exec zsh'
 alias sort='LC_ALL=C sort'
 alias tmpdir='perl -le"use File::Spec;print File::Spec->tmpdir"'
-alias vi='vim'
 alias wttr='curl https://wttr.in/'
 
 if [ "x$(uname)" = "xLinux" ]; then
