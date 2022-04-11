@@ -6,9 +6,10 @@
 vim.o.completeopt = 'menu,menuone,noselect'
 vim.o.errorbells = false
 vim.o.expandtab = true
+vim.o.foldenable = false
 vim.o.hlsearch = false
-vim.o.ignorecase = true
 vim.o.incsearch = true
+vim.o.lazyredraw = true
 vim.o.number = true
 vim.o.numberwidth = 4
 vim.o.relativenumber = true
@@ -23,17 +24,9 @@ vim.o.tabstop = 2
 vim.o.termguicolors = true
 vim.o.wrap = false
 
--- netrw
-vim.g.netrw_altv = 0
-vim.g.netrw_banner = 0
-vim.g.netrw_browse_split = 4
-vim.g.netrw_fastbrowse = 2
-vim.g.netrw_keepdir = 0
-vim.g.netrw_liststyle = 3
-vim.g.netrw_winsize = 30
-
--- grouped config and local extensions
 require('config/keymap')
+require('config/netrw')
+require('config/syntax')
 require('config/clipboard')
 require('extensions/sync-file')
 
@@ -45,12 +38,12 @@ return require('packer').startup(function()
   use {'hrsh7th/cmp-buffer'}
   use {'hrsh7th/cmp-nvim-lsp'}
   use {'hrsh7th/nvim-cmp'}
+  use {'lucas1/vim-perl', branch = 'dev'}
   use {'mattn/emmet-vim', ft = {'ep', 'epl', 'html', 'svelte'}}
   use {'mg979/vim-visual-multi'}
   use {'neovim/nvim-lspconfig'}
   use {'nvim-lualine/lualine.nvim', requires = {'kyazdani42/nvim-web-devicons', opt = true}}
   use {'nvim-telescope/telescope.nvim', requires = {'nvim-lua/plenary.nvim'}}
-  use {'nvim-treesitter/nvim-treesitter'}
   use {'yko/mojo.vim', ft = {'ep', 'epl'}}
 
   local ok, mod = pcall(require, 'lualine')
@@ -60,5 +53,4 @@ return require('packer').startup(function()
   local ok, mod = pcall(require, 'config/lsp')
   local ok, mod = pcall(require, 'config/cmp')
   local ok, mod = pcall(require, 'config/telescope')
-  local ok, mod = pcall(require, 'config/treesitter')
 end)

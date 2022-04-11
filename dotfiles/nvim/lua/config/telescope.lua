@@ -1,6 +1,9 @@
 local telescope = require('telescope')
 
 telescope.setup({
+  defaults = {
+    preview = false
+  },
   pickers = {
     buffers = {theme = 'ivy'},
     find_files = {theme = 'ivy'},
