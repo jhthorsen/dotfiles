@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 [ -t 1 ] || exec /usr/bin/man "$@";
 export LESS="X";
 export LESS_TERMCAP_md=$(tput bold; tput setaf 4)

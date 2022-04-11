@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 FILE="$1";
 IMGCAT="$HOME/.iterm2/imgcat";
 

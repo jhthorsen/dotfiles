@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 export N_WORDS="${1:-100}";
 
 make_lorem () {

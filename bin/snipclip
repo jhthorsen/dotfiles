@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 OP="$1"
 OP_ARG="$2"
 

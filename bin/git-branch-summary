@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 git branch -a \
   | perl -ple's!^\W+!!;s!\s+.*!!' \
   | while read b; do git show -s --format="%cs $b %ce %s" $b; done \

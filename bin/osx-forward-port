@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 SOURCE_PORT="$1";
 DEST_PORT="$2";
 DEST_IP="$3";

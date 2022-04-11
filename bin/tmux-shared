@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ACTION=${1:-start};
 
 [ -z "$TMUX_SHARED_SESSION_NAME" ]  && TMUX_SHARED_SESSION_NAME=${2-$USER};

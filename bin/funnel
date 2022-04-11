@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 OPTION="$1";
 
 if [ "x$OPTION" = "xforward" -o "x$OPTION" = "xcancel" ]; then

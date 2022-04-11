@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ROOT_DIR=$(pwd);
 
 for i in *; do
