@@ -32,8 +32,8 @@ function setup_perl() {
   [ -f $HOME/.pause ] || run cp dotfiles/pause $HOME/.pause;
   lnk dotfiles/perltidyrc $HOME/.perltidyrc;
   local PERL_LL_ROOT="$XDG_DATA_HOME/perl5";
-  which brew &>/dev/null || run cpanm --local-lib=$PERL_LL_ROOT -n local::lib;
-  [ -d $PERL_LL_ROOT ] && run perl -I$PERL_LL_ROOT/lib/perl5 -Mlocal::lib=$PERL_LL_ROOT/ > $XDG_CONFIG_DIR/zsh/02-env-perl.sh;
+  run cpanm --local-lib=$PERL_LL_ROOT -n local::lib;
+  [ -d $PERL_LL_ROOT ] && run perl -I$PERL_LL_ROOT/lib/perl5 -Mlocal::lib=$PERL_LL_ROOT/ | run tee $XDG_CONFIG_DIR/zsh/02-env-perl.sh;
 }
 
 function setup_tmux() {
