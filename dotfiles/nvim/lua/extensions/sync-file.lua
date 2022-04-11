@@ -1,11 +1,16 @@
 local uv = vim.loop
 
 function syncFileToRemoteHost()
+  local local_root = os.getenv('NVIM_REMOTE_LOCAL_ROOT')
   local remote_dir = os.getenv('NVIM_REMOTE_DIR')
   local remote_host = os.getenv('NVIM_REMOTE_HOST')
 
   if remote_dir ~= nil and remote_dir ~= nil then
     local file = vim.api.nvim_buf_get_name(0)
+
+    local idx = string.find(file, local_root)
+    if idx == nil then return end
+
     local projects_dir = file
     local project_name
     while #projects_dir > 1 do
