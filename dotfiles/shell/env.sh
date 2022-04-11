@@ -26,4 +26,4 @@ else
 fi
 
 # Fix ^M in some programs, such as gpg
-stty sane;
+[ "x$UNAME" = "xDarwin" ] && stty sane;
