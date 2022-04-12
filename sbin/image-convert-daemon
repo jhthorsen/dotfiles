@@ -19,6 +19,7 @@ documentation __FILE__;
 version '2.00';
 
 option string => convert_delay => 'Delay before processing the file',                          1;
+option string => nextcloud     => 'Point to the nextcloud "occ" script';
 option string => unlock_delay  => 'Delay before allowing the same file to be processed again', 3;
 option string => ext           => 'jpg,jpeg,pdf,png,...',                                      'jpg,jpeg,pdf,png';
 option string => log_level     => 'debug, info, warn, error',                                  'debug';
@@ -65,6 +66,12 @@ async sub process_file_p {
   $self->logf(debug => 'Processing %s (%0.2fkB) with rules %s', $file, $size0 / 1000, encode_json $rules);
   lc($file->extname) eq 'pdf' ? await $self->process_pdf_p($file, $rules) : await $self->process_image_p($file, $rules);
   $self->logf(info => 'Converted %s: %0.2fkB => %0.2fkB', $file, $size0 / 1000, $file->stat->size / 1000);
+
+  if ($self->nextcloud) {
+    my $nextcloud_dir = $self->{root} =~ s!.*?([^/]+)/files/!$1/files/!r;
+    $self->logf(debug => 'php %s files:scan --path=%s', $self->nextcloud, $nextcloud_dir);
+    system php => $self->nextcloud, 'files:scan' => "--path=$nextcloud_dir";
+  }
 
   # Unlock the file later
   await Mojo::Promise->timer($self->unlock_delay)->then(sub { delete $self->{file_lock}{$file} });
@@ -149,7 +156,7 @@ sub watch_directory {
 
   $self->inotify->watch(
     "$path",
-    IN_CLOSE_WRITE,
+    IN_CLOSE_WRITE | IN_MOVED_TO,
     sub {
       $self->process_file_p($rules, @_)->catch(sub {
         $self->logf(error => 'Unable to process image: %s', shift);
