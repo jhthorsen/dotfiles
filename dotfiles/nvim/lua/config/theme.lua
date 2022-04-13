@@ -10,3 +10,7 @@ vim.api.nvim_exec([[
   highlight Normal ctermbg=none guibg=none guifg=252
   highlight NonASCII ctermbg=red guibg=red
 ]], false)
+
+local feline = require('feline')
+feline.add_preset('custom', require('feline.presets.custom'))
+feline.setup({preset = 'custom'})

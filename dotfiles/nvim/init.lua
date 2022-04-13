@@ -34,15 +34,16 @@ require('extensions/sync-file')
 return require('packer').startup(function()
   use {'wbthomason/packer.nvim'}
   use {'ap/vim-css-color', ft = {'css', 'html', 'scss'}}
-  use {'gruvbox-community/gruvbox'}
+  use {'ellisonleao/gruvbox.nvim'}
+  use {'feline-nvim/feline.nvim'}
   use {'hrsh7th/cmp-buffer'}
   use {'hrsh7th/cmp-nvim-lsp'}
   use {'hrsh7th/nvim-cmp'}
+  use {'kyazdani42/nvim-web-devicons'}
   use {'lucas1/vim-perl', branch = 'dev'}
   use {'mattn/emmet-vim', ft = {'ep', 'epl', 'html', 'svelte'}}
   use {'mg979/vim-visual-multi'}
   use {'neovim/nvim-lspconfig'}
-  use {'nvim-lualine/lualine.nvim', requires = {'kyazdani42/nvim-web-devicons', opt = true}}
   use {'nvim-telescope/telescope.nvim', requires = {'nvim-lua/plenary.nvim'}}
   use {'yko/mojo.vim', ft = {'ep', 'epl'}}
 
