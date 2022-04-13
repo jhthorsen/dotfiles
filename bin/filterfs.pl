@@ -42,10 +42,10 @@ sub handle_getattr ($self, $rel) {
 
 sub handle_getdir ($self, $rel) {
   return -ENOENT unless my $abs = $self->resolve_file(getdir => $rel);
-  return -$!     unless opendir(my $DH, $abs);
+  return -$!     unless opendir(my $dh, $abs);
 
   $rel =~ s!/$!!;
-  my @names = grep { $self->resolve_file(readdir => "$rel/$_") } readdir $DH;
+  my @names = grep { $self->resolve_file(readdir => "$rel/$_") } readdir $dh;
   return @names, 0;
 }
 
@@ -65,6 +65,12 @@ sub handle_open ($self, $rel, $modes, $info_hash = {}) {
   return (0, $fh);
 }
 
+sub handle_opendir ($self, $rel) {
+  return -ENOENT unless my $abs = $self->resolve_file(open => $rel);
+  return -$! unless opendir my ($fh), $abs;
+  return (0, $fh);
+}
+
 sub handle_read ($self, $rel, $bufsize, $offset, $fh = undef) {
   return -ENOSYS unless $fh;
   return -$!     unless sysseek $fh, $offset, SEEK_SET;
@@ -78,6 +84,17 @@ sub handle_read_buf ($self, $rel, $size, $offset, $bufvec, $fh = undef) {
   my $rv = $bufvec->[0]{size} = sysread $fh, $bufvec->[0]{mem}, $size;
   return $rv;
 }
+
+sub handle_readdir ($self, $rel, $offset, $dh) {
+  return -ENOENT unless my $abs = $self->resolve_file(getdir => $rel);
+  return -ENOSYS unless $dh;
+  return -$! unless seekdir $dh, $offset;
+
+  $rel =~ s!/$!!;
+  my @names = grep { $self->resolve_file(readdir => "$rel/$_") } readdir $dh;
+  return @names, 0;
+}
+
 
 sub handle_readlink ($self, $rel) {
   return -ENOENT unless my $abs = $self->resolve_file(readlink => $rel);
@@ -196,28 +213,39 @@ sub start ($self, $mountpoint) {
     mountopts  => $self->mountopts,
     mountpoint => $mountpoint,
     threaded   => $has_threads,
-    (map { ($_ => $self->_make_handler($_)) } $self->supported_fuse_functions),
+    (map { $self->_make_handler($_) } $self->_fuse_functions),
   );
 }
 
-sub supported_fuse_functions ($self) {
-  return grep { $self->can("handle_$_") } qw(access bmap chmod chown create destroy fallocate),
-    qw(fgetattr flock flush fsync fsyncdir ftruncate getattr),
-    qw(getdir getxattr init ioctl link listxattr lock mkdir),
-    qw(mknod open opendir poll read read_buf readdir readlink),
-    qw(release releasedir removexattr rename rmdir setxattr),
-    qw(statfs symlink truncate unlink utime utimens write write_buf);
+sub _fuse_functions ($self) {
+  return qw(access bmap chmod chown create destroy fallocate),
+  qw(fgetattr flock flush fsync fsyncdir ftruncate getattr),
+  qw(getdir getxattr init ioctl link listxattr lock mkdir),
+  qw(mknod open opendir poll read read_buf readdir readlink),
+  qw(release releasedir removexattr rename rmdir setxattr),
+  qw(statfs symlink truncate unlink utime utimens write write_buf);
 }
 
 sub _make_handler ($self, $name) {
   my $handler = "handle_$name";
-  return sub {
-    my @ret = $self->$handler(@_);
-    warn sprintf "%s %s == %s\n", $name, join(', ', map { $_ // 'undef' } @_),
-      join(', ', map { $_ // 'undef' } @ret)
-      if $self->{debug} > 1;
-    return wantarray ? @ret : $ret[0];
-  };
+  if ($self->can($handler)) {
+    return $name => sub {
+      my @ret = $self->$handler(@_);
+      warn sprintf "%s %s == %s\n", $name, join(', ', map { $_ // 'undef' } @_),
+        join(', ', map { $_ // 'undef' } @ret)
+        if $self->{debug} > 1;
+      return wantarray ? @ret : $ret[0];
+    };
+  }
+  elsif ($self->{debug} > 1) {
+    return $name => sub {
+      warn sprintf "%s %s == Not implemented\n", $name, join(', ', map { $_ // 'undef' } @_) if $self->{debug} > 1;
+      return;
+    };
+  }
+  else {
+    return;
+  }
 }
 
 #==============================================================================
