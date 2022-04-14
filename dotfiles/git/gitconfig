@@ -74,7 +74,7 @@
 
 [user]
   name = Jan Henning Thorsen
-  email = jhthorsen@cpan.org
+  email = jan.henning@thorsen.pm
   signingkey = 6C8D2162B06DF550
 
 [init]
