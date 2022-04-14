@@ -22,6 +22,3 @@ if [ -z "$SSH_TTY" ]; then
 else
   export FZF_DEFAULT_OPTS='--height 10 --reverse'
 fi
-
-# Fix ^M in some programs, such as gpg
-[ "x$UNAME" = "xDarwin" ] && stty sane;
