@@ -45,6 +45,7 @@ return require('packer').startup(function()
   use {'mg979/vim-visual-multi'}
   use {'neovim/nvim-lspconfig'}
   use {'nvim-telescope/telescope.nvim', requires = {'nvim-lua/plenary.nvim'}}
+  use {'osamuaoki/vim-spell-under'}
   use {'yko/mojo.vim', ft = {'ep', 'epl'}}
 
   local ok, mod = pcall(require, 'lualine')

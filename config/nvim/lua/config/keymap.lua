@@ -26,6 +26,8 @@ vim.api.nvim_set_keymap('n', '<c-s>', ':%s!', {noremap = true})
 
 -- spelling
 vim.api.nvim_set_keymap('i', '<c-s>', '<cmd>lua require("telescope.builtin").spell_suggest()<CR>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<leader>se', ':syntax off<CR>:set spell<CR>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<leader>sd', ':syntax on<CR>:set spell<CR>', {noremap = true})
 
 -- tab
 vim.api.nvim_set_keymap('n', '<c-j>', ':tabprev<CR>', {noremap = true})

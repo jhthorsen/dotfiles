@@ -1,6 +1,7 @@
 *swp
 .pls_cache
 local/
+config/nvim/spell
 config/vim/autoload/plug.vim
 config/vim/plugged
 config/zsh/02-env-perl.sh
