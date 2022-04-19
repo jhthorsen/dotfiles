@@ -1,6 +1,4 @@
 #!/bin/zsh
-# TODO
-# - https://github.com/aristocratos/btop
 
 function abort() {
   echo "! $*" >&2;

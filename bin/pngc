@@ -1,2 +1,0 @@
-#!/bin/bash
-pngcrush -rem allb -brute -reduce $1 $1.new;

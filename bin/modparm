@@ -1,5 +1,4 @@
 #!/bin/bash
-
 module=$1;
 
 if [ -d "/sys/module/$module/parameters" ]; then

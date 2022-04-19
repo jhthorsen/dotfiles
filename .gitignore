@@ -1,5 +1,12 @@
 *swp
+.pls_cache
 local/
-dotfiles/shell/jhthorsen.sh
-dotfiles/vim/plugged
-dotfiles/vim/autoload/plug.vim
+config/vim/autoload/plug.vim
+config/vim/plugged
+config/zsh/02-env-perl.sh
+config/zsh/15-z.sh
+config/zsh/20-theme-powerlevel10k.sh
+config/zsh/25-zsh-syntax-highlighting.zsh
+config/zsh/jhthorsen.sh
+config/zsh/powerlevel10k/
+config/zsh/zsh_history

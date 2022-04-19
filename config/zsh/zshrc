@@ -1,13 +1,14 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
+[ -z "$XDG_CACHE_HOME" ] && export XDG_CACHE_HOME="$HOME/.cache";
+[ -z "$XDG_CONFIG_HOME" ] && export XDG_CONFIG_HOME="$HOME/.config";
 [ -z "$HOMEBREW_CELLAR" ] && export HOMEBREW_CELLAR="/opt/homebrew/Cellar";
 [ -z "$HOMEBREW_PREFIX" ] && export HOMEBREW_PREFIX="/opt/homebrew";
 [ -z "$HOMEBREW_REPOSITORY" ] && export HOMEBREW_REPOSITORY="/opt/homebrew";
+
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+[ -r "$XDG_CACHE_HOME/p10k-instant-prompt-${(%):-%n}.zsh" ] \
+  && source "$XDG_CACHE_HOME/p10k-instant-prompt-${(%):-%n}.zsh";
 
 # Lines configured by zsh-newuser-install
 # End of lines configured by zsh-newuser-install
@@ -19,7 +20,6 @@ compinit
 # End of lines added by compinstall
 
 umask 0002
-# setopt ignore_eof # disable ^D
 setopt notify
 unsetopt extendedglob # Allow "git show HEAD^"
 
@@ -28,7 +28,8 @@ function readlink_f() {
   [ "x$UNAME" = "xDarwin" ] && readlink $* || readlink -f $*;
 }
 
-for ZSH_SOURCE in $(find $HOME/.config/zsh -maxdepth 1 | grep '/zsh/[0-9]\+-' | sort); do
+ZSH_CONFIG_HOME="$(readlink_f $XDG_CONFIG_HOME/zsh)";
+for ZSH_SOURCE in $(find $ZSH_CONFIG_HOME -maxdepth 1 | grep 'zsh/[0-9]\+-' | sort); do
   export ZSH_SOURCE="$(readlink_f $ZSH_SOURCE)";
   source $ZSH_SOURCE;
   unset ZSH_SOURCE;
