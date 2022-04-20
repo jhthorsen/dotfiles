@@ -22,6 +22,7 @@ function install_misc() {
   lnk config/ackrc $HOME/.ackrc;
   lnk config/git/gitconfig $HOME/.gitconfig;
   lnk config/git/gitignore_global $HOME/.gitignore_global;
+  lnk config/kitty $XDG_CONFIG_DIR/kitty;
 }
 
 function install_perl() {
