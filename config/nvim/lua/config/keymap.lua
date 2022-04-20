@@ -5,6 +5,7 @@ vim.g.mapleader = ' '
 -- buffers and files
 vim.api.nvim_set_keymap('n', '<leader>b', '<cmd>lua require("telescope.builtin").buffers()<CR>', {noremap = true})
 vim.api.nvim_set_keymap('n', '<leader>g', '<cmd>lua require("telescope.builtin").live_grep()<CR>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<leader>eol', ':set binary noeol<CR>:w<CR>', {noremap = true})
 vim.api.nvim_set_keymap('n', '<c-p>', '<cmd>lua require("telescope.builtin").find_files()<CR>', {noremap = true})
 vim.api.nvim_set_keymap('n', ',e', ':tabedit <C-R>=expand("%:h")<CR>', {noremap = true})
 
