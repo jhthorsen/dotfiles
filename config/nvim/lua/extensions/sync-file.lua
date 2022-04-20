@@ -8,6 +8,10 @@ function syncFileToRemoteHost()
   if remote_dir ~= nil and remote_dir ~= nil then
     local file = vim.api.nvim_buf_get_name(0)
 
+    -- Ignore local and .git files
+    if string.find(file, '/.git') then return end
+    if string.find(file, '/local/') then return end
+
     local idx = string.find(file, local_root)
     if idx == nil then return end
 
