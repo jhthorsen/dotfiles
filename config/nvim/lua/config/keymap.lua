@@ -24,6 +24,10 @@ utils.autocmd('netrw', {
 vim.api.nvim_set_keymap('n', '\'', '/', {noremap = true})
 vim.api.nvim_set_keymap('n', '<c-s>', ':%s!', {noremap = true})
 
+-- signcolumn
+vim.api.nvim_set_keymap('n', '<leader>cd', ':setlocal norelativenumber nonumber signcolumn=no<CR>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<leader>ce', ':setlocal relativenumber number signcolumn=yes<CR>', {noremap = true})
+
 -- spelling
 vim.api.nvim_set_keymap('i', '<c-s>', '<cmd>lua require("telescope.builtin").spell_suggest()<CR>', {noremap = true})
 vim.api.nvim_set_keymap('n', '<leader>se', ':syntax off<CR>:set spell<CR>', {noremap = true})
