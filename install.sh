@@ -25,7 +25,6 @@ function install_misc() {
 }
 
 function install_perl() {
-  [ -f $HOME/.pause ] || run cp .pause $HOME/.pause;
   lnk config/perltidyrc $HOME/.perltidyrc;
   local PERL_LL_ROOT="$XDG_DATA_HOME/perl5";
   run cpanm --local-lib=$PERL_LL_ROOT -n local::lib;
@@ -49,16 +48,16 @@ function install_vi() {
 function install_zsh() {
   lnk config/zsh $XDG_CONFIG_DIR/zsh;
   lnk config/zsh/zshrc $HOME/.zshrc;
-  lnk $HOMEBREW_PREFIX/etc/profile.d/z.sh $XDG_CONFIG_DIR/zsh/15-z.sh;
 
-  [ -d "$XDG_CONFIG_DIR/gruvbox" ] \
-    || run git clone https://github.com/morhetz/gruvbox $XDG_CONFIG_DIR/gruvbox;
+  [ -d "$HOMEBREW_PREFIX" ] \
+    && lnk $HOMEBREW_PREFIX/etc/profile.d/z.sh $XDG_CONFIG_DIR/zsh/15-z.sh;
+
   [ -d "$XDG_CONFIG_DIR/zsh/powerlevel10k" ] \
     || run git clone https://github.com/romkatv/powerlevel10k.git $XDG_CONFIG_DIR/zsh/powerlevel10k;
-
-  lnk $XDG_CONFIG_DIR/gruvbox/gruvbox_256palette_osx.sh  $XDG_CONFIG_DIR/zsh/20-gruvbox.sh;
   lnk $XDG_CONFIG_DIR/zsh/powerlevel10k/powerlevel10k.zsh-theme $XDG_CONFIG_DIR/zsh/20-theme-powerlevel10k.sh;
-  lnk $HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh $XDG_CONFIG_DIR/zsh/25-zsh-syntax-highlighting.zsh
+
+  [ -d "$HOMEBREW_PREFIX" ] \
+    && lnk $HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh $XDG_CONFIG_DIR/zsh/25-zsh-syntax-highlighting.zsh
 }
 
 XDG_CONFIG_DIR="$HOME/.config";

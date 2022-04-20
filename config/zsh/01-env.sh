@@ -5,6 +5,7 @@ export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export LESS=XFR;
 export LS_COLORS=
+export POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
 export TT_HOURS_PER_MONTH=150
 
 [ -x "/usr/bin/nvim" ] && export VIM_BIN="/usr/bin/nvim"
