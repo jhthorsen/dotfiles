@@ -39,11 +39,11 @@
   diff = auto
   status = auto
 
-[commit]
-  gpgsign = true
-
 [core]
   excludesfile = ~/.gitignore_global
+
+[commit]
+  gpgsign = true
 
 [credential]
   helper = store
@@ -63,6 +63,9 @@
   required = true
   smudge = git-lfs smudge -- %f
 
+[init]
+  defaultBranch = main
+
 [merge]
   tool = meld
 
@@ -73,6 +76,3 @@
   name = Jan Henning Thorsen
   email = jan.henning@thorsen.pm
   signingkey = 6C8D2162B06DF550
-
-[init]
-  defaultBranch = main
