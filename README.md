@@ -37,3 +37,7 @@
 
     ./bin/fuse-filterfs          # Mount a directory with some invisible folders/files
     ./bin/fuse-unionfs           # Mount several directories as one
+
+## Resources
+
+* [Everything you need to know to configure neovim using lua](https://vonheikemen.github.io/devlog/tools/configuring-neovim-using-lua/)
