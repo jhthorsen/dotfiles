@@ -21,4 +21,4 @@ PATH="/Applications/Visual Studio Code.app/Contents/Resources/app/bin:$PATH"
 PATH="$(readlink -f $(dirname $ZSH_SOURCE)/../../bin):$PATH";
 
 # Clean up the $PATH
-PATH=$(echo $PATH | perl -MList::Util=uniq -pe'$_ = join ":", grep { length && -d } uniq split ":"');
+PATH=$(echo $PATH | perl -pe'$_ = join ":", grep { !$u{$_}++ && length && -d } split ":"');

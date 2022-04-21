@@ -21,9 +21,7 @@
   lgg = !git lg --graph
   lgh = log -n5 --pretty=format:'%Cred%h%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset %C(yellow)%d%Creset'
 
-  branch-summary = !git-branch-summary
   build = ship build
-  day-by-day = !git-day-by-day
   graph = !git-graph.pl
   hist = log --graph --all --color=always --decorate --pretty=format:'%Cred%h%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset %C(yellow)%d%Creset'
   ready = rebase -i @{u}
@@ -31,7 +29,6 @@
   snapshot = !/bin/bash -c 'git branch _/$(date +%Y%m%d-%H%M%S)'
   standup = log --pretty=format:'%Cred%h%Creset -%Creset %s %Cgreen(%cD) %C(bold blue)<%an>%Creset' --since yesterday --author Jan
   start = ship start
-  summary = !git-summary
   test-coverage = ship test-coverage
 
 [branch]
