@@ -12,7 +12,7 @@ exit 0 if config_up_to_date($config_template, $config_file);
 my $config = config_read(fh($config_template));
 
 my %has;
-$has{signingkey} = system("gpg --armor --export $config->{user}{signingkey} &>/dev/null") ? 0 : 1;
+$has{signingkey} = length(qx"gpg --armor --export $config->{user}{signingkey}");
 warn sprintf "# Has %s\n", join ', ', map {"$_=$has{$_}"} sort keys %has unless $ENV{QUIET};
 
 warn "# Writing $config_file\n" unless $ENV{QUIET};
