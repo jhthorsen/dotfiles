@@ -95,7 +95,6 @@ sub handle_readdir ($self, $rel, $offset, $dh) {
   return @names, 0;
 }
 
-
 sub handle_readlink ($self, $rel) {
   return -ENOENT unless my $abs = $self->resolve_file(readlink => $rel);
   return readlink($abs) // -$!;
@@ -320,8 +319,8 @@ __END__
 
   Usage:
 
-    $ filterfs.pl -h
-    $ filterfs.pl -e readdir=node_modules,.snapshots /source/path /dest/path
+    $ fuse-filterfs -h
+    $ fuse-filterfs -e readdir=node_modules,.snapshots /source/path /dest/path
 
   Options:
     -e, --exclude    Exclude a file/directorie
