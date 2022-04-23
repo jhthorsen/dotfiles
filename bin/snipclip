@@ -44,6 +44,13 @@ sync_from_remote_clipboard() {
   ssh $1 'cat $HOME/.snipclip' | stdin_to_clipboard;
 }
 
+sync_from_remote_clipboard_loop() {
+  export REMOTE_HOST="$1";
+  while ssh $REMOTE_HOST 'tail -n0 -F $HOME/.snipclip 2>&1 | head -n1'; do
+    ssh $REMOTE_HOST 'cat $HOME/.snipclip' | stdin_to_clipboard;
+  done
+}
+
 sync_to_remote_clipboard() {
   clipboard_to_stdout | ssh $1 'cat - > $HOME/.snipclip';
 }
@@ -52,6 +59,11 @@ if [ "x$OP" = "x-i" -o "x$OP" = "x-in" ]; then
   [ -z "$OP_ARG" ] && stdin_to_clipboard || sync_from_remote_clipboard $OP_ARG;
 elif [ "x$OP" = "x-o" -o "x$OP" = "x-out" ]; then
   [ -z "$OP_ARG" ] && clipboard_to_stdout || sync_to_remote_clipboard $OP_ARG;
+elif [ "x$OP" = "x--loop" ]; then
+  [ -z "$OP_ARG" ] && exit 1;
+  sync_from_remote_clipboard_loop $OP_ARG;
+elif [ ! -t 0 ]; then
+  stdin_to_clipboard;
 else
   NAME="$(basename $0)";
   cat - <<HERE;
@@ -66,10 +78,11 @@ It will use one of the following "backends" for copy/paste:
 
 Usage:
 
-  $NAME -i              # Read from STDIN and write to clipboard
-  $NAME -o              # Read from clipboard and write to STDOUT
-  $NAME -i example.com  # Read remote clipboard from example.com
-  $NAME -o example.com  # Write local clipboard to example.com
+  $NAME -i               # Read from STDIN and write to clipboard
+  $NAME -o               # Read from clipboard and write to STDOUT
+  $NAME -i hostname      # Read remote clipboard from hostname
+  $NAME -o hostname      # Write local clipboard to hostname
+  $NAME --loop hostname  # Read remote clipboard from hostname in a loop
 
 HERE
 fi
