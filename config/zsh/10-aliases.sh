@@ -21,7 +21,6 @@ if [ "x$(uname)" = "xLinux" ]; then
   alias btrfs='sudo -i btrfs';
   alias docker='sudo -i docker';
   alias nginx='sudo -i nginx';
-  alias systemctl='sudo -i systemctl';
   alias wo='sudo -i wo';
   alias wp='sudo -u www-data wp';
 fi
