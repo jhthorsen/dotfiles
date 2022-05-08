@@ -66,6 +66,7 @@ run $BREW_BIN install neovim
 run $BREW_BIN install nginx
 run $BREW_BIN install nmap
 run $BREW_BIN install node
+run $BREW_BIN install mosh
 run $BREW_BIN install openssl
 run $BREW_BIN install pass
 run $BREW_BIN install perl
