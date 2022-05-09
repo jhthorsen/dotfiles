@@ -1,0 +1,67 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use IO::Socket::IP;
+use POSIX qw(mkfifo);
+
+my $app = bless {host => shift @ARGV}, __PACKAGE__;
+die "Usage: mosh-tunnel <host>\n" unless $app->{host};
+$app->start_mosh_server;
+$app->start_tunnel;
+sleep 1;
+$app->start_mosh_client;
+$app->stop_tunnel;
+
+sub cmd {
+  my ($self, $cmd) = @_;
+  $self->{ncat}  ||= $ENV{NCAT_BIN}   || 'ncat';
+  $self->{ports} ||= $ENV{MOSH_PORTS} || '60000:61000';
+
+  $cmd =~ s!\%(\w+)!{$self->{$1}}!ge;
+  warn "\$ $cmd\n";
+  return $cmd;
+}
+
+sub start_mosh_client {
+  my ($self) = @_;
+  system $self->cmd('mosh-client 127.0.0.1 %port');
+}
+
+sub start_mosh_server {
+  my ($self) = @_;
+  my $cmd = $self->cmd("ssh %host mosh-server new -p %ports 127.0.0.1");
+  open my $MOSH_SERVER, '-|', $cmd or die "ERR! Can't start mosh-server: $!";
+  while (<$MOSH_SERVER>) {
+    ($self->{port} = $1, $ENV{MOSH_KEY} = $2) if /MOSH CONNECT (\d+) (\S+)/;
+  }
+
+  die "ERR! Couldn't get port and mosh key from mosh-server" unless $self->{port} and $ENV{MOSH_KEY};
+}
+
+sub start_tunnel {
+  my ($self) = @_;
+  my $ppid = $$;
+
+  # Make fifo for ncat
+  my $fifo = $self->{fifo} = "/tmp/mosh-tunnel-$<-$self->{host}-$self->{port}.sock";
+  unlink $fifo or die "ERR! Can't remove fifo $fifo: $!" if -e $fifo;
+  mkfifo $fifo, 0700 or die "ERR! Can't make fifo $fifo: $!";
+
+  # Parent
+  defined(my $pid = fork) or die "ERR! Can't fork: $!";
+  return $self->{tunnel_pid} = $pid if $pid;
+
+  # Child
+  while (1) {
+    local $SIG{HUP} = sub { my $g = getpgrp 0; warn "\$ kill -TERM $g\n"; kill -TERM => $g };
+    system $self->cmd('%ncat -l -u 127.0.0.1 %port < %fifo | ssh %host %ncat -u 127.0.0.1 %port > %fifo');
+    sleep 1;
+    exit 0 if getppid != $ppid;
+  }
+}
+
+sub stop_tunnel {
+  my ($self) = @_;
+  kill HUP => $self->{tunnel_pid};
+  unlink $self->{fifo} if -e $app->{fifo};
+}
