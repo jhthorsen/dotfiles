@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 package File;
 use Mojo::Base -base;
-use Crypt::xxHash ();
+use Mojo::Util qw(sha1_sum);
 use Number::Bytes::Human qw(format_bytes);
 use overload
   '""'     => sub { shift->file->to_string },
@@ -16,14 +16,14 @@ has checksum => sub {
   my $fh = $self->file->open;
   Carp::croak(qq{Can't read from file "$$self": $!})
     unless defined $fh->sysread(my $content, ($ENV{CHECKSUM_KB} * 1000), 0);
-  return Crypt::xxHash::xxhash64($content, $^T);
+  return sha1_sum($content, $^T);
 };
 
-has dir  => undef;
 has file => undef;
 has stat => sub { $_[0]->file->stat // die "stat $_[0]: $!" };
 
 sub basename { shift->file->basename }
+sub dirname { shift->file->dirname }
 sub hsize    { format_bytes(shift->size) }
 sub size     { shift->stat->size }
 
@@ -31,7 +31,7 @@ sub fix {
   my ($self, $other) = @_;
   my @other = @{$other->file};
   my $len   = @{$self->file};
-  my @dir   = @{$self->dir};
+  my @dir   = @{$self->dirname};
   my @to;
 
   while (1) {
@@ -39,7 +39,7 @@ sub fix {
     unshift @to, pop @other;
   }
 
-  return $self->new(dir => $self->dir, file => $self->file->new(@dir, @to));
+  return $self->new(dir => $self->dirname, file => $self->file->new(@dir, @to));
 }
 
 package main;
@@ -47,10 +47,13 @@ use Applify;
 use Mojo::File;
 use Mojo::IOLoop;
 use Term::ANSIColor qw(colored);
+use Time::Piece;
 
 option str  => exec       => 'Ex: --exec rm --exec mv', [], n_of => '@';
 option num  => concurrent => 'How many files to get checksum from at once', 5;
 option flag => color      => 'Output with color';
+option flag => dry_run    => 'Skip doing the operation';
+option flag => rename     => 'Normalize basename - No dup checks';
 option flag => progress   => 'Print progress';
 option flag => verbose    => 'Print verbose output';
 
@@ -107,13 +110,15 @@ sub group_by_size {
 
 sub exec_operations {
   my ($self, $by_checksum) = @_;
-  my $exec_mv = grep { $_ eq 'mv' } @{$self->exec};
-  my $exec_rm = grep { $_ eq 'rm' } @{$self->exec};
+  my $exec_mv = $self->dry_run ? 0 : grep { $_ eq 'mv' } @{$self->exec};
+  my $exec_rm = $self->dry_run ? 0 : grep { $_ eq 'rm' } @{$self->exec};
 
-  my ($rename_if, $mv, $keep, $rm) = ('??', 0, 0, 0);
+  my ($rename_if, $mv, $keep, $rm, @keep) = ('??', 0, 0, 0);
   for my $checksum (sort keys %$by_checksum) {
     my $dups = $by_checksum->{$checksum};
+    @$dups = sort @$dups;
     my $first = shift @$dups;
+    push @keep, $first;
     next unless @$dups;
 
     # See if we should rename a file
@@ -148,6 +153,27 @@ sub exec_operations {
   }
 
   $self->debug(exec => "keep=$keep mv=$mv rm=$rm") if $self->progress;
+  return 0;
+}
+
+sub exec_rename {
+  my $self = shift;
+
+  for my $dir (@_) {
+    for my $f ($dir->list_tree->sort->each) {
+      my $file = File->new(dir => $dir, file => $f);
+      my $renamed = $file->basename;
+      $renamed = sprintf '%s %s', localtime($file->stat->mtime)->ymd, $renamed =~ s!(\d\d\d\d)-?(\d\d)[ -]+!!r
+        unless $renamed =~ s!^(\d\d\d\d)-?(\d\d)-?(\d\d)( -)?!$1-$2-$3!;
+      next if $file->basename eq $renamed;
+      $renamed = $file->file->sibling($renamed);
+      next if -e $renamed;
+      say qq(mv "$file" "$renamed");
+      rename $file => $renamed unless $self->dry_run;
+    }
+  }
+
+  return 0;
 }
 
 sub info {
@@ -162,8 +188,8 @@ sub info {
 
 app {
   my $self = shift;
-  return 1 unless @_;
+  return $self->_script->print_help, 0 unless @_;
   $self->debug(start => "p=@_") if $self->progress;
-  $self->exec_operations($self->group_by_checksum($self->group_by_size(map { Mojo::File->new($_)->to_abs } @_)));
-  return 0;
+  return $self->exec_rename(map { Mojo::File->new($_)->to_abs } @_) if $self->rename;
+  return $self->exec_operations($self->group_by_checksum($self->group_by_size(map { Mojo::File->new($_)->to_abs } @_)));
 };
