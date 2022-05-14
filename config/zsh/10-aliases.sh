@@ -28,3 +28,7 @@ fi
 command -v launchctl  >/dev/null && alias psql.start="launchctl load $HOMEBREW_PREFIX/opt/postgresql/homebrew.mxcl.postgresql.plist"
 command -v tmux       >/dev/null && alias tma='tmux attach-session -t'
 command -v ack-grep   >/dev/null && alias ack='ack-grep'
+
+freestyle_libre_fix() {
+  perl -pi -e's!,(\d\d)-(\d\d)-(\d\d\d\d) (\d\d):(\d\d),!,$3-$2-$1 $4:$5:00,!' $*;
+}
