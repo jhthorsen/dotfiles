@@ -1,5 +1,5 @@
-vim.g.gruvbox_italic = 1
 vim.o.background = 'dark'
+vim.g.gruvbox_contrast_dark = 'hard'
 vim.o.spell = true
 vim.g.spell_under = 'gruvbox';
 
