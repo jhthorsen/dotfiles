@@ -20,6 +20,7 @@ function run() {
 
 function install_misc() {
   lnk config/ackrc $HOME/.ackrc;
+  lnk config/skhd $XDG_CONFIG_DIR/skhd;
   lnk config/git/gitignore_global $HOME/.gitignore_global;
   lnk config/kitty $XDG_CONFIG_DIR/kitty;
   run perl config/git/generate.pl;

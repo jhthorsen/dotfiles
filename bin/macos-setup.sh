@@ -24,6 +24,7 @@ fi
 
 #run arch -x86_64 $BREW_BIN install                         \
 run $BREW_BIN install ack
+run $BREW_BIN install alt-tab
 run $BREW_BIN install bat
 run $BREW_BIN install browserpass
 run $BREW_BIN install cloc
