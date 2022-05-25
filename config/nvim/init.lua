@@ -21,7 +21,6 @@ vim.o.splitbelow = true
 vim.o.splitright = true
 vim.o.swapfile = false
 vim.o.tabstop = 2
-vim.o.termguicolors = true
 vim.o.wrap = false
 
 vim.g.instant_username = 'jhthorsen'
@@ -36,8 +35,7 @@ require('extensions/sync-file')
 return require('packer').startup(function()
   use {'wbthomason/packer.nvim'}
   use {'ap/vim-css-color', ft = {'css', 'html', 'scss'}}
-  use {'ellisonleao/gruvbox.nvim'}
-  use {'feline-nvim/feline.nvim'}
+  use {'folke/tokyonight.nvim'}
   use {'hrsh7th/cmp-buffer'}
   use {'hrsh7th/cmp-nvim-lsp'}
   use {'hrsh7th/nvim-cmp'}
@@ -47,12 +45,10 @@ return require('packer').startup(function()
   use {'mattn/emmet-vim', ft = {'ep', 'epl', 'html', 'svelte'}}
   use {'mg979/vim-visual-multi'}
   use {'neovim/nvim-lspconfig'}
+  use {'nvim-lualine/lualine.nvim', requires = {'kyazdani42/nvim-web-devicons', opt = true}}
   use {'nvim-telescope/telescope.nvim', requires = {'nvim-lua/plenary.nvim'}}
   use {'osamuaoki/vim-spell-under'}
   use {'yko/mojo.vim', ft = {'ep', 'epl'}}
-
-  local ok, mod = pcall(require, 'lualine')
-  if ok then mod.setup() end
 
   local ok, mod = pcall(require, 'config/theme')
   local ok, mod = pcall(require, 'config/lsp')
