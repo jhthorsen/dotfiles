@@ -44,6 +44,7 @@ run $BREW_BIN install figlet
 run $BREW_BIN install fontconfig
 run $BREW_BIN install freetype
 run $BREW_BIN install fsevents-tools
+run $BREW_BIN install fx
 run $BREW_BIN install fzf
 run $BREW_BIN install geoip
 run $BREW_BIN install gh
