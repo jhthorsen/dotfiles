@@ -24,6 +24,8 @@ vim.o.tabstop = 2
 vim.o.termguicolors = true
 vim.o.wrap = false
 
+vim.g.instant_username = 'jhthorsen'
+
 require('config/keymap')
 require('config/netrw')
 require('config/syntax')
@@ -39,6 +41,7 @@ return require('packer').startup(function()
   use {'hrsh7th/cmp-buffer'}
   use {'hrsh7th/cmp-nvim-lsp'}
   use {'hrsh7th/nvim-cmp'}
+  use {'jbyuki/instant.nvim'}
   use {'kyazdani42/nvim-web-devicons'}
   use {'lucas1/vim-perl', branch = 'dev'}
   use {'mattn/emmet-vim', ft = {'ep', 'epl', 'html', 'svelte'}}
