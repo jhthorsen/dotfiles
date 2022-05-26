@@ -1,6 +1,12 @@
 require('nvim-treesitter.configs').setup({
-  ensure_installed = {'bash', 'html', 'javascript', 'json', 'lua', 'perl', 'scss', 'svelte', 'typescript', 'vue'},
+  ensure_installed = {'bash', 'html', 'javascript', 'json', 'lua', 'scss', 'svelte', 'typescript', 'vue'},
   context_commentstring = {enable = true},
-  highlight = {enable = true},
-  indent = {enable = true},
+  highlight = {
+    additional_vim_regex_highlighting = false,
+    disable = {'perl'},
+    enable = true,
+  },
+  indent = {
+    enable = false,
+  },
 })
