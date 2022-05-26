@@ -7,28 +7,28 @@ ACTION=${1:-start};
 TMUX_SHARED_SESSION_FILE="/tmp/$USER-$TMUX_SHARED_SESSION_NAME.tmux.sock";
 
 session_exists () {
-  tmux has-session -t $TMUX_SHARED_SESSION_NAME 2>/dev/null;
+  tmux has-session -t "$TMUX_SHARED_SESSION_NAME" 2>/dev/null;
   return $?;
 }
 
 # stop collab session
-if [ "x$ACTION" = "xstop" ]; then
+if [ "$ACTION" = "stop" ]; then
   session_exists && tmux -S $TMUX_SHARED_SESSION_FILE kill-session -t $TMUX_SHARED_SESSION_NAME 2>/dev/null;
 
 # show how to join
-elif [ "x$ACTION" = "xcmd" ]; then
+elif [ "$ACTION" = "cmd" ]; then
   echo "tmux -S $TMUX_SHARED_SESSION_FILE attach -t $TMUX_SHARED_SESSION_NAME";
 
 # start collab session
 else
-  session_exists || tmux -S $TMUX_SHARED_SESSION_FILE \
-    new -s $TMUX_SHARED_SESSION_NAME \; \
+  session_exists || tmux -S "$TMUX_SHARED_SESSION_FILE" \
+    new -s "$TMUX_SHARED_SESSION_NAME" \; \
     new-window "chgrp $TMUX_SHARED_SESSION_GROUP $TMUX_SHARED_SESSION_FILE" \; \
     detach;
-  tmux -S $TMUX_SHARED_SESSION_FILE attach -t $TMUX_SHARED_SESSION_NAME;
+  tmux -S "$TMUX_SHARED_SESSION_FILE" attach -t "$TMUX_SHARED_SESSION_NAME";
 fi
 
 # clean up socket file
-session_exists || [ ! -e "$TMUX_SHARED_SESSION_FILE" ] || rm $TMUX_SHARED_SESSION_FILE;
+session_exists || [ ! -e "$TMUX_SHARED_SESSION_FILE" ] || rm "$TMUX_SHARED_SESSION_FILE";
 
 exit $?;

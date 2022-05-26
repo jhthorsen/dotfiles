@@ -3,7 +3,7 @@ SOURCE_PORT="$1";
 DEST_PORT="$2";
 DEST_IP="$3";
 
-if [ "x$2" = "x" ]; then
+if [ "$2" = "" ]; then
   echo "Usage: forward_port <source-port> <dest-port> [dest-ip]";
   exit;
 fi

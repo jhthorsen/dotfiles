@@ -5,22 +5,22 @@ OP_ARG="$2"
 CLIPBOARD_FILE="$HOME/.snipclip";
 
 has_command() {
-  command -v $1 >/dev/null || return 1;
-  echo $1 | grep -q "^x" && [ -z "$DISPLAY" ] && return 1;
+  command -v "$1" >/dev/null || return 1;
+  echo "$1" | grep -q "^x" && [ -z "$DISPLAY" ] && return 1;
   return 0;
 }
 
 clipboard_to_stdout() {
   if [ -n "$SSH_TTY" ]; then
-    cat $CLIPBOARD_FILE;
+    cat "$CLIPBOARD_FILE";
   elif has_command pbpaste; then
     pbpaste;
   elif has_command xclip; then
     xclip -selection clipboard -o;
   elif has_command xsel; then
     xsel -o -b;
-  elif [ -e $CLIPBOARD_FILE ]; then
-    cat $CLIPBOARD_FILE;
+  elif [ -e "$CLIPBOARD_FILE" ]; then
+    cat "$CLIPBOARD_FILE";
   fi
 }
 
@@ -32,40 +32,40 @@ stdin_to_clipboard() {
   if [ -n "$SSH_TTY" ]; then
     :; # noop
   elif has_command pbcopy; then
-    cat $CLIPBOARD_FILE | pbcopy;
+    pbcopy < "$CLIPBOARD_FILE";
   elif has_command xclip; then
-    cat $CLIPBOARD_FILE | xclip -selection clipboard;
+    xclip -selection clipboard < "$CLIPBOARD_FILE";
   elif has_command xsel; then
-    cat $CLIPBOARD_FILE | xsel -i -b;
+    xsel -i -b < "$CLIPBOARD_FILE";
   fi
 }
 
 sync_from_remote_clipboard() {
-  ssh $1 'cat $HOME/.snipclip' | stdin_to_clipboard;
+  ssh "$1" 'cat $HOME/.snipclip' | stdin_to_clipboard;
 }
 
 sync_from_remote_clipboard_loop() {
   export REMOTE_HOST="$1";
-  while ssh $REMOTE_HOST 'tail -n0 -F $HOME/.snipclip 2>&1 | head -n1'; do
-    ssh $REMOTE_HOST 'cat $HOME/.snipclip' | stdin_to_clipboard;
+  while ssh "$REMOTE_HOST" 'tail -n0 -F $HOME/.snipclip 2>&1 | head -n1'; do
+    ssh "$REMOTE_HOST" 'cat $HOME/.snipclip' | stdin_to_clipboard;
   done
 }
 
 sync_to_remote_clipboard() {
-  clipboard_to_stdout | ssh $1 'cat - > $HOME/.snipclip';
+  clipboard_to_stdout | ssh "$1" 'cat - > $HOME/.snipclip';
 }
 
-if [ "x$OP" = "x-i" -o "x$OP" = "x-in" ]; then
-  [ -z "$OP_ARG" ] && stdin_to_clipboard || sync_from_remote_clipboard $OP_ARG;
-elif [ "x$OP" = "x-o" -o "x$OP" = "x-out" ]; then
-  [ -z "$OP_ARG" ] && clipboard_to_stdout || sync_to_remote_clipboard $OP_ARG;
-elif [ "x$OP" = "x--loop" ]; then
+if [ "$OP" = "-i" ] || [ "$OP" = "-in" ]; then
+  if [ -z "$OP_ARG" ]; then stdin_to_clipboard; else sync_from_remote_clipboard "$OP_ARG"; fi
+elif [ "$OP" = "-o" ] || [ "$OP" = "-out" ]; then
+  if [ -z "$OP_ARG" ]; then clipboard_to_stdout; else sync_to_remote_clipboard "$OP_ARG"; fi
+elif [ "$OP" = "--loop" ]; then
   [ -z "$OP_ARG" ] && exit 1;
-  sync_from_remote_clipboard_loop $OP_ARG;
+  sync_from_remote_clipboard_loop "$OP_ARG";
 elif [ ! -t 0 ]; then
   stdin_to_clipboard;
 else
-  NAME="$(basename $0)";
+  NAME="$(basename "$0")";
   cat - <<HERE;
 
 $NAME is a clipboard manager that works across operating systems.

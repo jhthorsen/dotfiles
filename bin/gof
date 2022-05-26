@@ -7,7 +7,7 @@ function find_password_entries() {
     | sort;
 }
 
-if [ "x$1" = "xls" ]; then
+if [ "$1" = "ls" ]; then
   find_password_entries;
 else
   found=$(find_password_entries | fzf --no-mouse --preview "pass show {} | perl -ne'print if $. > 1'");

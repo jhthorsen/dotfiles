@@ -1,11 +1,11 @@
 #!/bin/bash
 
-if [ "x$1" = "app-id" ]; then
+if [ "$1" = "app-id" ]; then
   osascript -e 'id of app "Finder"'
-elif [ "x$1" = "dns-flush" ]; then
+elif [ "$1" = "dns-flush" ]; then
   sudo dscacheutil -flushcache;
   sudo killall -HUP mDNSResponder;
-elif [ "x$1" = "leases" ]; then
+elif [ "$1" = "leases" ]; then
   set -x;
   sudo cat /private/var/db/dhcpd_leases;
 else

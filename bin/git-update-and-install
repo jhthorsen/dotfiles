@@ -6,11 +6,11 @@ for i in *; do
     echo "";
     echo "--- $i";
 
-    cd $i;
+    cd "$i" || exit;
     git remote update;
     git pull;
-    [ -e "cpanfile" -o -e "Makefile.PL" ] && cpanm -n --installdeps .
+    [ -e "cpanfile" ] || [ -e "Makefile.PL" ] && cpanm -n --installdeps .
   fi
 
-  cd $ROOT_DIR;
+  cd "$ROOT_DIR" || exit;
 done

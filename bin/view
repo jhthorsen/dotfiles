@@ -4,8 +4,8 @@ if [ -z "$1" ]; then
   echo "Usage:";
   echo "\$ view some/path.log";
   echo "\$ view Mojolicious::Controller";
-elif [ -e "$1" -o "x$1" = "x-" ]; then
-  vi -R $1;
+elif [ -e "$1" ] || [ "$1" = "-" ]; then
+  vi -R "$1";
 else
-  vi -R $(perldoc -l "$1");
+  vi -R "$(perldoc -l "$1")";
 fi

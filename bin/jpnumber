@@ -1,2 +1,5 @@
-#!/bin/bash
-perl -le'$n=$ARGV[0]||0;print pack "U",hex "0xff1$n"' $1 2>/dev/null
+#!/usr/bin/env perl
+use strict;
+use feature qw(say);
+open STDERR, '>', '/dev/null';
+say join '', map { pack "U", hex "0xff1$_" } split //, $ARGV[0] || 0;
