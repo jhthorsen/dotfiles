@@ -17,13 +17,6 @@ end
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
 local lspconfig = require('lspconfig')
 
--- sudo cpanm PLS::Server
--- sudo npm install -g bash-language-server
--- sudo npm install -g svelte-language-server
--- sudo npm install -g typescript typescript-language-server
--- sudo npm install -g vls
--- sudo npm install -g vscode-langservers-extracted # css, html
--- sudo npm install -g yaml-language-server
 lspconfig.bashls.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.cssls.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.html.setup({capabilities = capabilities, on_attach = on_attach})

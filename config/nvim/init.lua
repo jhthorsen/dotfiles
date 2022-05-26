@@ -47,6 +47,7 @@ return require('packer').startup(function()
   use {'neovim/nvim-lspconfig'}
   use {'nvim-lualine/lualine.nvim', requires = {'kyazdani42/nvim-web-devicons', opt = true}}
   use {'nvim-telescope/telescope.nvim', requires = {'nvim-lua/plenary.nvim'}}
+  use {'nvim-treesitter/nvim-treesitter'}
   use {'osamuaoki/vim-spell-under'}
   use {'yko/mojo.vim', ft = {'ep', 'epl'}}
 
@@ -54,4 +55,5 @@ return require('packer').startup(function()
   local ok, mod = pcall(require, 'config/lsp')
   local ok, mod = pcall(require, 'config/cmp')
   local ok, mod = pcall(require, 'config/telescope')
+  local ok, mod = pcall(require, 'config/treesitter')
 end)

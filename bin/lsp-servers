@@ -1,0 +1,13 @@
+#!/bin/bash
+
+run() {
+  if [ "$(uname)" = "Darwin" ]; then "$@"; else sudo "$@"; fi
+}
+
+run cpanm PLS::Server
+run npm install -g bash-language-server
+run npm install -g svelte-language-server
+run npm install -g typescript typescript-language-server
+run npm install -g vls
+run npm install -g vscode-langservers-extracted # css, html
+run npm install -g yaml-language-server
