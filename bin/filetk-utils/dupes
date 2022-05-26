@@ -1,0 +1,130 @@
+#!/usr/bin/env perl
+package App::filetk::dupes;
+use Getopt::App -signatures;
+use Digest::SHA qw(sha1_hex);
+use File::Spec::Functions qw(catfile);
+use IO::Handle;
+
+sub dry_run    ($self) { $self->{d} ? 0 : 1 }
+sub chunk_size ($self) { $self->{s} || 1024 }
+sub n_workers  ($self) { $self->{w} || 4 }
+sub recurse    ($self) { $self->{r} || 0 }
+
+sub by_size_to_by_checksum ($self, $by_size) {
+  my ($i, $waiting, $by_checksum) = (0, 0, {});
+
+  my $read_file_info_from_worker = sub {
+    die "Read from workers: $!" unless defined(my $line = readline $self->{workers_fh});
+    $waiting--;
+    chomp $line;
+    my ($pid, $size, $checksum, $path) = split ':', $line, 4;
+    return warn "Can't read $path: $checksum\n" if $size < 0;    # $checksum can also be an error message
+    $by_checksum->{"$size:$checksum"} ? say "[$pid] [x] $checksum $size $path" : say "[$pid] [u] $checksum $size $path" if $ENV{VERBOSE};
+    push @{$by_checksum->{"$size:$checksum"}}, $path;
+  };
+
+  for my $size (keys %$by_size) {
+    next if @{$by_size->{$size}} <= 1;    # Do not scan unique items
+
+    for my $path (@{$by_size->{$size}}) {
+      my $n = $i++ % $self->n_workers;    # Round robin usage of the workers
+      $waiting++;
+      print {$self->{worker_fh}{$n}} "$size:$path\n" or die $!;
+      $read_file_info_from_worker->() while $waiting >= $self->n_workers;
+    }
+  }
+
+  $read_file_info_from_worker->() while $waiting;
+  return $by_checksum;
+}
+
+sub find_dupes_by_size ($self, $dir, $by_size = {}) {
+  opendir my ($DH), $dir or die "Can't open $dir: $!";
+  while (my $basename = readdir $DH) {
+    next if $basename =~ m!^\.!;
+    my $path = catfile $dir, $basename;
+    if (-d $path) {
+      $self->find_dupes_by_size($path, $by_size) if $self->recurse;
+    }
+    elsif (!-l $path) {
+      my $size = -s $path;
+      push @{$by_size->{$size}}, $path;
+    }
+  }
+
+  return $by_size;
+}
+
+sub handle_dupes ($self, $dupes) {
+  my $cmd = $self->dry_run ? '-' : 'rm';
+  my $res = 0;
+  for my $id (sort keys %$dupes) {
+    my $n = @{$dupes->{$id}};
+    next if $n <= 1;
+    @{$dupes->{$id}} = sort @{$dupes->{$id}};
+    printf "# %s [%s]\n", shift @{$dupes->{$id}}, $n;
+    printf "%s %s\n", $cmd, $_ for @{$dupes->{$id}};
+    print "\n";
+    unlink @{$dupes->{$id}} unless $self->dry_run;
+    $res ||= 24;
+  }
+
+  return $res;
+}
+
+sub start_workers ($self) {
+  my $ppid = $$;
+  pipe $self->{workers_fh}, my $write_fh or die "pipe: $!";
+  $write_fh->autoflush;
+
+  for my $n (0 .. ($self->n_workers - 1)) {
+    pipe my $read_fh, $self->{worker_fh}{$n} or die "pipe: $!";
+    $self->{worker_fh}{$n}->autoflush;
+
+    # Parent
+    die "Can't fork: $!" unless defined(my $pid = fork);
+    push(@{$self->{worker_pids}}, $pid) && next if $pid;
+
+    # Child
+    while (my $line = readline $read_fh) {
+      exit unless getppid == $ppid;
+      chomp $line;
+      my ($size, $path) = split ':', $line;
+      print  {$write_fh} "$$:$n:-1:$!:$path\n" && next unless open my $FH, '<', $path;
+      print  {$write_fh} "$$:$n:-1:$!:$path\n" && next unless defined sysread $FH, my $head, $self->chunk_size * 1024, 0;
+      printf {$write_fh} "$$:%s:%s:%s\n", $size, sha1_hex($head), $path;
+    }
+
+    exit;
+  }
+
+  close $write_fh;
+}
+
+sub stop_workers ($self) {
+  kill 9 => $_ for @{$self->{worker_pids}};
+}
+
+run(
+  'd|delete    # Delete duplicates',
+  'r|recurse   # Recurse directories',
+  's|size=i    # Size of chunk (kB) to use for comparison (1024)',
+  'w|workers=i # Number of processes to calculate dupes (4)',
+  sub ($self, $dir = undef, @) {
+    return print extract_usage unless $dir;
+    my $by_size = $self->find_dupes_by_size($dir);
+    $self->start_workers;
+    my $by_checksum = $self->by_size_to_by_checksum($by_size);
+    $self->stop_workers;
+    return $self->handle_dupes($by_checksum);
+  },
+);
+
+__END__
+
+=head1 SYNOPSIS
+
+  filetk dupes <directory>
+  filetk dupes -d -r <directory>
+
+=cut

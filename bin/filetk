@@ -1,0 +1,31 @@
+#!/usr/bin/env perl
+package Getopt::App;use feature qw(:5.16);use strict;use warnings;use utf8;use Carp qw(croak);use Getopt::Long ();use List::Util qw(first);our ($OPT_COMMENT_RE, $OPTIONS, $SUBCOMMANDS, %APPS) = (qr{\s+\#\s+});
+sub capture {my ($app, $argv) = @_;my ($exit_value, $stderr, $stdout) = (-1, '', '');local *STDERR;local *STDOUT;open STDERR, '>', \$stderr;open STDOUT, '>', \$stdout;($!, $@) = (0, '');eval {$exit_value = $app->($argv || [@ARGV]);1;} or do {print STDERR $@;$exit_value = int $!;};return [$stdout, $stderr, $exit_value];}
+sub extract_usage {my %pod2usage;$pod2usage{'-sections'} = shift;$pod2usage{'-input'}    = shift || (caller)[1];$pod2usage{'-verbose'}  = 99 if $pod2usage{'-sections'};require Pod::Usage;open my $USAGE, '>', \my $usage;Pod::Usage::pod2usage(-exitval => 'noexit', -output => $USAGE, %pod2usage);close $USAGE;$usage //= '';$usage =~ s!^(.*?)\n!!s if $pod2usage{'-sections'};$usage =~ s!^Usage:\n\s+([A-Z])!$1!s;    $usage =~ s!^    !!gm;return join '', $usage, _usage_for_subcommands($SUBCOMMANDS || []),_usage_for_options($OPTIONS || []);}
+sub import {my ($class, @flags) = @_;my $caller = caller;$_->import for qw(strict warnings utf8);feature->import(':5.16');my $skip_default;no strict qw(refs);while (my $flag = shift @flags) {if ($flag eq '-capture') {*{"$caller\::capture"} = \&capture;$skip_default = 1;}elsif ($flag eq '-signatures') {require experimental;experimental->import(qw(signatures));}elsif ($flag !~ /^-/) {croak "package definition required - cannot extend main with $flag!" if $caller eq 'main';croak "require $flag FAIL $@" unless eval "require $flag;1";push @{"${caller}::ISA"}, $flag;}}unless ($skip_default) {*{"$caller\::extract_usage"} = \&extract_usage unless $caller->can('extract_usage');*{"$caller\::new"}           = \&new           unless $caller->can('new');*{"$caller\::run"}           = \&run;}}
+sub new {my $class = shift;bless @_ ? @_ > 1 ? {@_} : {%{$_[0]}} : {}, ref $class || $class;}
+sub run {my @rules = @_;my $class = $Getopt::App::APP_CLASS || caller;return sub { local $Getopt::App::APP_CLASS = $class; run(@_, @rules) }if !$Getopt::App::APP_CLASS and defined wantarray;my $cb   = pop @rules;my $argv = ref $rules[0] eq 'ARRAY' ? shift @rules : [@ARGV];local $OPTIONS = [@rules];@rules = map {s!$OPT_COMMENT_RE.*$!!r} @rules;my $app = $class->new;_call($app, getopt_pre_process_argv => $argv);local $SUBCOMMANDS = _call($app, 'getopt_subcommands');my $exit_value = $SUBCOMMANDS ? _subcommand($app, $SUBCOMMANDS, $argv) : undef;return $exit_value if defined $exit_value;my @configure = _call($app, 'getopt_configure');my $prev      = Getopt::Long::Configure(@configure);my $valid     = Getopt::Long::GetOptionsFromArray($argv, $app, @rules) ? 1 : 0;Getopt::Long::Configure($prev);_call($app, getopt_post_process_argv => $argv, {valid => $valid});$exit_value = $valid ? $app->$cb(@$argv) : 1;$exit_value = _call($app, getopt_post_process_exit_value => $exit_value) // $exit_value;$exit_value = 0   unless $exit_value and $exit_value =~ m!^\d{1,3}$!;$exit_value = 255 unless $exit_value < 255;exit(int $exit_value) unless $Getopt::App::APP_CLASS;return $exit_value;}
+sub _call {my ($app, $method) = (shift, shift);my $cb = $app->can($method) || __PACKAGE__->can("_$method");return $cb ? $app->$cb(@_) : undef;}
+sub _getopt_configure {qw(bundling no_auto_abbrev no_ignore_case pass_through require_order)}
+sub _getopt_load_subcommand {my ($self, $subcommand, $argv) = @_;($@, $!) = ('', 0);my $code = do $subcommand->[1];croak "Unable to load subcommand $subcommand->[0]: $@ ($!)" if $@ or $!;return $code;}
+sub _getopt_post_process_argv {my ($app, $argv, $state) = @_;return unless $state->{valid};return unless $argv->[0] and $argv->[0] =~ m!^-!;$! = 1;die "Invalid argument or argument order: @$argv\n";}
+sub _getopt_unknown_subcommand {my ($self, $argv) = @_;die "Unknown subcommand: $argv->[0]\n";}
+sub _subcommand {my ($app, $subcommands, $argv) = @_;return undef unless $argv->[0] and $argv->[0] =~ m!^\w!;return _call($app, getopt_unknown_subcommand => $argv)unless my $subcommand = first { $_->[0] eq $argv->[0] } @$subcommands;local $Getopt::App::APP_CLASS;local $0 = $subcommand->[1];unless ($APPS{$subcommand->[1]}) {$APPS{$subcommand->[1]} = _call($app, getopt_load_subcommand => $subcommand, $argv);croak "Can't load code ref from $subcommand->[0]" unless ref $APPS{$subcommand->[1]} eq 'CODE';}return $APPS{$subcommand->[1]}->([@$argv[1 .. $#$argv]]);}
+sub _usage_for_options {my ($rules) = @_;return '' unless @$rules;my ($len, @options) = (0);for (@$rules) {my @o = split $OPT_COMMENT_RE, $_, 2;$o[0] =~ s/(=[si][@%]?|\!|\+)$//;$o[0] = join ', ',map { length($_) == 1 ? "-$_" : "--$_" } sort { length($b) <=> length($a) } split /\|/, $o[0];$o[1] //= '';my $l = length $o[0];$len = $l if $l > $len;push @options, \@o;}return "Options:\n" . join('', map { sprintf "  %-${len}s  %s\n", @$_ } @options) . "\n";}
+sub _usage_for_subcommands {my ($subcommands) = @_;return '' unless @$subcommands;my ($len, @cmds) = (0);for my $s (@$subcommands) {my $l = length $s->[0];$len = $l if $l > $len;push @cmds, [$s->[0], $s->[2] // ''];}return "Subcommands:\n" . join('', map { sprintf "  %-${len}s  %s\n", @$_ } @cmds) . "\n";}
+BEGIN{$INC{'Getopt/App.pm'}='BUNDLED'}
+
+package App::filetk;
+use Getopt::App -signatures;
+use File::Basename qw(dirname);
+use File::Spec::Functions qw(catdir rel2abs);
+
+sub getopt_subcommands ($self) {
+  my $dir = rel2abs(catdir dirname(__FILE__), 'filetk-utils');
+  return [
+    ['dupes', "$dir/dupes", "Find duplicate files"],
+    ['exifrename', "$dir/exifrename", "Renamed picture files based on EXIF timestamp"],
+  ];
+}
+
+run sub { print extract_usage };

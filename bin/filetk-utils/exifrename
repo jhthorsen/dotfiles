@@ -1,0 +1,72 @@
+#!/usr/bin/env perl
+package App::filetk::exifrename;
+use Getopt::App -signatures;
+use File::Spec::Functions qw(catfile);
+use Image::ExifTool;
+use Time::Piece;
+
+sub ts_from_exif ($self, $file) {
+  my $exif   = Image::ExifTool->new;
+  my $info   = $exif->ExtractInfo($file) or return undef;
+  my $fmt    = '%04s-%02s-%02s-%02s%02s%02s';
+  my $num_re = '(\d+)\D*';
+
+  for my $k (qw(CreateDate DateTimeOriginal ModifyDate GPSDateTime)) {
+    my $date = $exif->GetValue($k)                                     or next;
+    $date =~ m!(\d{4}) [:-]+ $num_re $num_re $num_re $num_re $num_re!x or next;
+    return $2 > 12 ? sprintf $fmt, $1, $3, $2, $4, $5, $6 : sprintf $fmt, $1, $2, $3, $4, $5, $6;
+  }
+
+  return undef;
+}
+
+sub ts_from_mtime ($self, $file) {
+  my $tp = Time::Piece->new(+(stat $file)[9]);
+  return join '', $tp->ymd('-'), $tp->hour, $tp->minute, $tp->second;
+}
+
+sub w { warn "! $_[0]\n"; 1 }    # Force true return value
+
+run(
+  'm|mtime # Fallback to file modify timestamp if exif fails',
+  'n|nono  # Only print actions, without actually renaming',
+  sub ($self, $dir = undef) {
+    return print extract_usage unless $dir;
+
+    my $comment = $self->{n} ? '# ' : '';
+    my $ts_re   = qr/^\d{4}-\d{2}-\d{2}/;
+
+    opendir my ($DH), $dir or die "Can't open $dir: $!";
+    while (my $basename = readdir $DH) {
+      my $orig = catfile $dir, $basename;
+      next if $basename =~ m!^\.! or -d $orig;
+      next if $basename =~ $ts_re;
+      next unless my $ext = $basename =~ m!\.(jpe?g|png|raf|raw)$!i && lc $1;
+
+      my $date = $self->ts_from_exif($orig);
+      unless ($date) {
+        w("Could not get date from $orig") && next unless $self->{m};
+        w("Could not get date from $orig - fallback to mtime");
+        $date = $self->ts_from_mtime($orig);
+      }
+
+      my $renamed = catfile $dir, "$date.$ext";
+      my $n       = 0;
+      ++$n && ($renamed = catfile $dir, "${date}_${n}.$ext") while -e $renamed;
+
+      say qq(${comment}mv "$orig" "$renamed");
+      rename $orig, $renamed unless $self->{n};
+    }
+
+    return 0;
+  },
+);
+
+__END__
+
+=head1 SYNOPSIS
+
+  filetk exifrename <directory>
+  filetk exifrename -n <directory>
+
+=cut
