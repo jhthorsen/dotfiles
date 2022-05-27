@@ -7,7 +7,7 @@ sub new {my $class = shift;bless @_ ? @_ > 1 ? {@_} : {%{$_[0]}} : {}, ref $clas
 sub run {my @rules = @_;my $class = $Getopt::App::APP_CLASS || caller;return sub { local $Getopt::App::APP_CLASS = $class; run(@_, @rules) }if !$Getopt::App::APP_CLASS and defined wantarray;my $cb   = pop @rules;my $argv = ref $rules[0] eq 'ARRAY' ? shift @rules : [@ARGV];local $OPTIONS = [@rules];@rules = map {s!$OPT_COMMENT_RE.*$!!r} @rules;my $app = $class->new;_call($app, getopt_pre_process_argv => $argv);local $SUBCOMMANDS = _call($app, 'getopt_subcommands');my $exit_value = $SUBCOMMANDS ? _subcommand($app, $SUBCOMMANDS, $argv) : undef;return $exit_value if defined $exit_value;my @configure = _call($app, 'getopt_configure');my $prev      = Getopt::Long::Configure(@configure);my $valid     = Getopt::Long::GetOptionsFromArray($argv, $app, @rules) ? 1 : 0;Getopt::Long::Configure($prev);_call($app, getopt_post_process_argv => $argv, {valid => $valid});$exit_value = $valid ? $app->$cb(@$argv) : 1;$exit_value = _call($app, getopt_post_process_exit_value => $exit_value) // $exit_value;$exit_value = 0   unless $exit_value and $exit_value =~ m!^\d{1,3}$!;$exit_value = 255 unless $exit_value < 255;exit(int $exit_value) unless $Getopt::App::APP_CLASS;return $exit_value;}
 sub _call {my ($app, $method) = (shift, shift);my $cb = $app->can($method) || __PACKAGE__->can("_$method");return $cb ? $app->$cb(@_) : undef;}
 sub _getopt_configure {qw(bundling no_auto_abbrev no_ignore_case pass_through require_order)}
-sub _getopt_load_subcommand {my ($self, $subcommand, $argv) = @_;($@, $!) = ('', 0);my $code = do $subcommand->[1];croak "Unable to load subcommand $subcommand->[0]: $@ ($!)" if $@ or $!;return $code;}
+sub _getopt_load_subcommand {my ($self, $subcommand, $argv) = @_;($@, $!) = ('', 0);my $code = do $subcommand->[1];return $code if $code;croak "Unable to load subcommand $subcommand->[0]: $@ ($!)"}
 sub _getopt_post_process_argv {my ($app, $argv, $state) = @_;return unless $state->{valid};return unless $argv->[0] and $argv->[0] =~ m!^-!;$! = 1;die "Invalid argument or argument order: @$argv\n";}
 sub _getopt_unknown_subcommand {my ($self, $argv) = @_;die "Unknown subcommand: $argv->[0]\n";}
 sub _subcommand {my ($app, $subcommands, $argv) = @_;return undef unless $argv->[0] and $argv->[0] =~ m!^\w!;return _call($app, getopt_unknown_subcommand => $argv)unless my $subcommand = first { $_->[0] eq $argv->[0] } @$subcommands;local $Getopt::App::APP_CLASS;local $0 = $subcommand->[1];unless ($APPS{$subcommand->[1]}) {$APPS{$subcommand->[1]} = _call($app, getopt_load_subcommand => $subcommand, $argv);croak "Can't load code ref from $subcommand->[0]" unless ref $APPS{$subcommand->[1]} eq 'CODE';}return $APPS{$subcommand->[1]}->([@$argv[1 .. $#$argv]]);}
@@ -18,13 +18,13 @@ BEGIN{$INC{'Getopt/App.pm'}='BUNDLED'}
 package App::filetk;
 use Getopt::App -signatures;
 use File::Basename qw(dirname);
-use File::Spec::Functions qw(catdir rel2abs);
+use File::Spec::Functions qw(catdir catfile rel2abs);
 
 sub getopt_subcommands ($self) {
   my $dir = rel2abs(catdir dirname(__FILE__), 'filetk-utils');
   return [
-    ['dupes', "$dir/dupes", "Find duplicate files"],
-    ['exifrename', "$dir/exifrename", "Renamed picture files based on EXIF timestamp"],
+    ['dupes', catfile($dir, 'dupes'), "Find duplicate files"],
+    ['exifrename', catfile($dir, 'exifrename'), "Renamed picture files based on EXIF timestamp"],
   ];
 }
 
