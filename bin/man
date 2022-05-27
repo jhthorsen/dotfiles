@@ -8,8 +8,6 @@ echo "$1" | grep -q "^-" && exec /usr/bin/man "$@";
 SECTION="1 2 3 4 5 6 7 8";
 echo "$1" | grep -q '^[1-8]$' && SECTION="$1" && shift;
 PAGE="$1"; shift;
-SEARCH="$1"; shift;
-[ "x$SEARCH" != "x" ] && SEARCH="--pattern=$SEARCH";
 
 LESS="X"; export LESS;
 LESS_TERMCAP_mb=$(tput blink); export LESS_TERMCAP_mb;
@@ -21,12 +19,12 @@ LESS_TERMCAP_ue=$(tput sgr0); export LESS_TERMCAP_ue;
 LESS_TERMCAP_us=$(tput setaf 2); export LESS_TERMCAP_us;
 PAGER="${PAGER:-less}"; export PAGER;
 
-for d in ${MANPATH/:/ /}; do
+for d in ${MANPATH//:/ }; do
   for s in $SECTION; do
     p="$d/man$s/$PAGE.$s";
     [ -r "$p" ] || continue;
-    [ -n "$DEBUG" ] && echo echo "groff -mman -Tutf8 $p | $PAGER $SEARCH" >&2;
-    groff -mman -Tascii "$p" 2>/dev/null | $PAGER "$SEARCH" && exit 0;
+    [ -n "$DEBUG" ] && echo echo "groff -mman -Tutf8 $p | $PAGER" >&2;
+    groff -mman -Tascii "$p" 2>/dev/null | $PAGER && exit 0;
   done
 done
 
