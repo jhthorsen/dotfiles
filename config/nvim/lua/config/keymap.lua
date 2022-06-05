@@ -5,7 +5,6 @@ vim.g.mapleader = ' '
 -- buffers and files
 vim.api.nvim_set_keymap('n', '<leader>b', '<cmd>lua require("telescope.builtin").buffers()<CR>', {noremap = true})
 vim.api.nvim_set_keymap('n', '<leader>g', '<cmd>lua require("telescope.builtin").live_grep()<CR>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<leader>eol', ':set binary noeol<CR>:w<CR>', {noremap = true})
 vim.api.nvim_set_keymap('n', '<c-p>', '<cmd>lua require("telescope.builtin").find_files()<CR>', {noremap = true})
 vim.api.nvim_set_keymap('n', ',e', ':tabedit <C-R>=expand("%:h")<CR>', {noremap = true})
 
@@ -31,8 +30,7 @@ vim.api.nvim_set_keymap('n', '<leader>ce', ':setlocal relativenumber number sign
 
 -- spelling
 vim.api.nvim_set_keymap('i', '<c-s>', '<cmd>lua require("telescope.builtin").spell_suggest()<CR>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<leader>se', ':syntax off<CR>:set spell<CR>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<leader>sd', ':syntax on<CR>:set spell<CR>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<leader>st', ':set spell!<CR>', {noremap = true})
 
 -- tab
 vim.api.nvim_set_keymap('n', '<c-j>', ':tabprev<CR>', {noremap = true})

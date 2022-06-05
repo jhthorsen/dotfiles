@@ -1,5 +1,4 @@
 vim.o.background = 'dark'
-vim.o.spell = true
 vim.o.termguicolors = true
 vim.g.spell_under = 'tokyonight';
 vim.g.tokyonight_sidebars = {'qf', 'vista_kind', 'terminal', 'packer'}
