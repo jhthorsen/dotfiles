@@ -83,6 +83,7 @@ run $BREW_BIN install qrencode
 run $BREW_BIN install redis
 run $BREW_BIN install rename
 run $BREW_BIN install rg
+run $BREW_BIN install rmlint
 run $BREW_BIN install rsync
 run $BREW_BIN install ruby
 run $BREW_BIN install rust
