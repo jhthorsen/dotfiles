@@ -1,8 +1,10 @@
 #!/bin/bash
 OP="$1"
-OP_ARG="$2"
 
-CLIPBOARD_FILE="$HOME/.snipclip";
+ensure_hostname_and_port() {
+  [ -z "$SNIPCLIP_HOSTNAME" ] && SNIPCLIP_HOSTNAME="127.0.0.1";
+  [ -z "$SNIPCLIP_PORT" ] && SNIPCLIP_PORT="38888";
+}
 
 has_command() {
   command -v "$1" >/dev/null || return 1;
@@ -11,78 +13,62 @@ has_command() {
 }
 
 clipboard_to_stdout() {
-  if [ -n "$SSH_TTY" ]; then
-    cat "$CLIPBOARD_FILE";
-  elif has_command pbpaste; then
-    pbpaste;
-  elif has_command xclip; then
-    xclip -selection clipboard -o;
-  elif has_command xsel; then
-    xsel -o -b;
-  elif [ -e "$CLIPBOARD_FILE" ]; then
-    cat "$CLIPBOARD_FILE";
+  if [ -n "$SSH_TTY" ];         then cat "$SNIPCLIP_FILE";
+  elif has_command pbpaste;     then pbpaste;
+  elif has_command xclip;       then xclip -selection clipboard -o;
+  elif has_command xsel;        then xsel -o -b;
+  elif [ -e "$SNIPCLIP_FILE" ]; then cat "$SNIPCLIP_FILE";
   fi
 }
 
 stdin_to_clipboard() {
-  [ -n "$CLIPBOARD_FILE" ] && touch "$CLIPBOARD_FILE" && chmod 600 "$CLIPBOARD_FILE";
-  cat - > "$CLIPBOARD_FILE.tmp";
-  mv "$CLIPBOARD_FILE.tmp" "$CLIPBOARD_FILE";
+  [ -n "$SNIPCLIP_FILE" ] && touch "$SNIPCLIP_FILE" && chmod 600 "$SNIPCLIP_FILE";
+  cat - > "$SNIPCLIP_FILE.tmp";
+  mv "$SNIPCLIP_FILE.tmp" "$SNIPCLIP_FILE";
 
-  if [ -n "$SSH_TTY" ]; then
-    :; # noop
-  elif has_command pbcopy; then
-    pbcopy < "$CLIPBOARD_FILE";
-  elif has_command xclip; then
-    xclip -selection clipboard < "$CLIPBOARD_FILE";
-  elif has_command xsel; then
-    xsel -i -b < "$CLIPBOARD_FILE";
+  if [ -n "$SNIPCLIP_HOSTNAME" ]; then nc -N "$SNIPCLIP_HOSTNAME" $SNIPCLIP_PORT < "$SNIPCLIP_FILE";
+  elif has_command pbcopy;        then pbcopy < "$SNIPCLIP_FILE";
+  elif has_command xclip;         then xclip -selection clipboard < "$SNIPCLIP_FILE";
+  elif has_command xsel;          then xsel -i -b < "$SNIPCLIP_FILE";
   fi
 }
 
-sync_from_remote_clipboard() {
-  ssh "$1" 'cat $HOME/.snipclip' | stdin_to_clipboard;
-}
-
-sync_from_remote_clipboard_loop() {
-  export REMOTE_HOST="$1";
-  while ssh "$REMOTE_HOST" 'tail -n0 -F $HOME/.snipclip 2>&1 | head -n1'; do
-    ssh "$REMOTE_HOST" 'cat $HOME/.snipclip' | stdin_to_clipboard;
-  done
-}
-
-sync_to_remote_clipboard() {
-  clipboard_to_stdout | ssh "$1" 'cat - > $HOME/.snipclip';
-}
-
-if [ "$OP" = "-i" ] || [ "$OP" = "-in" ]; then
-  if [ -z "$OP_ARG" ]; then stdin_to_clipboard; else sync_from_remote_clipboard "$OP_ARG"; fi
-elif [ "$OP" = "-o" ] || [ "$OP" = "-out" ]; then
-  if [ -z "$OP_ARG" ]; then clipboard_to_stdout; else sync_to_remote_clipboard "$OP_ARG"; fi
-elif [ "$OP" = "--loop" ]; then
-  [ -z "$OP_ARG" ] && exit 1;
-  sync_from_remote_clipboard_loop "$OP_ARG";
-elif [ ! -t 0 ]; then
-  stdin_to_clipboard;
-else
-  NAME="$(basename "$0")";
+usage() {
+  ensure_hostname_and_port;
   cat - <<HERE;
 
-$NAME is a clipboard manager that works across operating systems.
-It will use one of the following "backends" for copy/paste:
-
-  * pbcopy and pbpaste
-  * xclip
-  * xsel
-  * $CLIPBOARD_FILE
+Snipclip is a clipboard manager that works across operating systems.
+It will use pbcopy, pbpaste, xclip, xsel or $SNIPCLIP_FILE
+as backend for copy/paste.
 
 Usage:
 
-  $NAME -i               # Read from STDIN and write to clipboard
-  $NAME -o               # Read from clipboard and write to STDOUT
-  $NAME -i hostname      # Read remote clipboard from hostname
-  $NAME -o hostname      # Write local clipboard to hostname
-  $NAME --loop hostname  # Read remote clipboard from hostname in a loop
+  # Same computer
+  cat | snipclip [-i] # Read from STDIN and write to clipboard
+  snipclip [-o]       # Read from clipboard and write to STDOUT
+
+  # Listen to clipboard on SNIPCLIP_HOSTNAME:SNIPCLIP_PORT
+  snipclip -l         
+
+  # Send clipboard to SNIPCLIP_HOSTNAME:SNIPCLIP_PORT
+  cat - | SSH_TTY=1 snipclip -i
+  cat - | SNIPCLIP_HOSTNAME=$SNIPCLIP_HOSTNAME SNIPCLIP_PORT=$SNIPCLIP_PORT snipclip -i
 
 HERE
+}
+
+[ -z "$SNIPCLIP_FILE" ] && SNIPCLIP_FILE="$HOME/.snipclip";
+[ -n "$SSH_TTY" ] && ensure_hostname_and_port;
+
+if [ "$OP" = "-i" ] || [ ! -t 0 ]; then
+  stdin_to_clipboard;
+elif [ "$OP" = "--server" ] || [ "$OP" = "-l" ]; then
+  ensure_hostname_and_port;
+  while echo "Waiting for clipboard data on $SNIPCLIP_HOSTNAME:$SNIPCLIP_PORT"; do
+    nc -l "$SNIPCLIP_HOSTNAME" "$SNIPCLIP_PORT" | SNIPCLIP_HOSTNAME="" stdin_to_clipboard;
+  done
+elif [ "$OP" = "--help" ] || [ "$OP" = "-h" ]; then
+  usage;
+else
+  clipboard_to_stdout;
 fi
