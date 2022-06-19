@@ -49,6 +49,7 @@ run $BREW_BIN install fzf
 run $BREW_BIN install geoip
 run $BREW_BIN install gh
 run $BREW_BIN install git
+run $BREW_BIN install git-delta
 run $BREW_BIN install git-secret
 run $BREW_BIN install glances
 run $BREW_BIN install gnupg

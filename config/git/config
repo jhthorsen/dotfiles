@@ -1,3 +1,4 @@
+# Generated from /Users/jhthorsen/git/dotfiles/config/git/config
 [alias]
   b = branch
   c = commit
@@ -41,12 +42,23 @@
 
 [core]
   excludesfile = ~/.gitignore_global
+  pager = delta
 
 [commit]
   gpgsign = true
 
+[interactive]
+  diffFilter = delta --color-only
+
 [credential]
   helper = store
+
+[delta]
+  dark = true
+  line-numbers = true
+  # side-by-side = true
+  syntax-theme = Dracula
+  zero-style = dim syntax
 
 [diff]
   tool = vimdiff
