@@ -36,9 +36,11 @@ return require('packer').startup(function()
   use {'wbthomason/packer.nvim'}
   use {'ap/vim-css-color', ft = {'css', 'html', 'scss'}}
   use {'folke/tokyonight.nvim'}
-  use {'hrsh7th/cmp-buffer'}
-  use {'hrsh7th/cmp-nvim-lsp'}
-  use {'hrsh7th/nvim-cmp'}
+  use {'hrsh7th/nvim-cmp', requires = {
+    'hrsh7th/cmp-buffer',
+    'hrsh7th/cmp-nvim-lsp',
+    'hrsh7th/cmp-path',
+  }}
   use {'jbyuki/instant.nvim'}
   use {'kyazdani42/nvim-web-devicons'}
   use {'lucas1/vim-perl', branch = 'dev'}

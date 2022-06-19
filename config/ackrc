@@ -3,6 +3,7 @@
 --ignore-dir=.nuxt
 --ignore-dir=coverage
 --ignore-dir=assets/offline
+--ignore-dir=node_modules
 --ignore-dir=static/docs
 --ignore-dir=.jekyll-cache/
 

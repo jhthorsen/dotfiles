@@ -1,10 +1,11 @@
 #!/bin/bash
 
 run() {
+  echo "# $*";
   if [ "$(uname)" = "Darwin" ]; then "$@"; else sudo "$@"; fi
 }
 
-run cpanm PLS::Server
+run cpanm -n PLS::Server
 run npm install -g bash-language-server
 run npm install -g svelte-language-server
 run npm install -g typescript typescript-language-server
