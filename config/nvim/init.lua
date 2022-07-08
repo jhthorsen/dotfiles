@@ -40,6 +40,7 @@ return require('packer').startup(function()
     'hrsh7th/cmp-buffer',
     'hrsh7th/cmp-nvim-lsp',
     'hrsh7th/cmp-path',
+    'L3MON4D3/LuaSnip',
   }}
   use {'jbyuki/instant.nvim'}
   use {'kyazdani42/nvim-web-devicons'}
