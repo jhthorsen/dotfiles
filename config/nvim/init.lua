@@ -45,7 +45,7 @@ return require('packer').startup(function()
   use {'jbyuki/instant.nvim'}
   use {'kyazdani42/nvim-web-devicons'}
   use {'lucas1/vim-perl', branch = 'dev'}
-  use {'mattn/emmet-vim', ft = {'ep', 'epl', 'html', 'svelte'}}
+  use {'mattn/emmet-vim'}
   use {'mg979/vim-visual-multi'}
   use {'neovim/nvim-lspconfig'}
   use {'nvim-lualine/lualine.nvim', requires = {'kyazdani42/nvim-web-devicons', opt = true}}
