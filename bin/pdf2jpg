@@ -1,0 +1,10 @@
+#!/bin/bash
+PDF_FILE="$1";
+JPEG_FILE="${PDF_FILE%.pdf}.jpg";
+
+if [ -z "$PDF_FILE" ] || [ "$PDF_FILE" = "$JPEG_FILE" ]; then
+  echo "Usage: pdf2jpg file.pdf";
+  exit 1;
+fi
+
+convert -density 300 "$PDF_FILE" -quality 95 "$JPEG_FILE";
