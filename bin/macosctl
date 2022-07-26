@@ -1,7 +1,7 @@
 #!/bin/bash
 
 runx() {
-  "$*";
+  "$@";
   exit $?;
 }
 
@@ -23,5 +23,6 @@ run_dns_flush () {
 [ "$1" = "fwd" ] && runx run_pfctl "$2" "$3" "$4";
 [ "$1" = "dns-flush" ] && runx run_dns_flush;
 [ "$1" = "leases" ] && runx sudo cat /private/var/db/dhcpd_leases;
+[ "$1" = "ssh-add" ] && runx ssh-add --apple-use-keychain "$2";
 
-echo "$0 [app-id|fwd|dns-flush|leases-add]";
+echo "$0 [app-id|fwd|dns-flush|leases|ssh-add]";
