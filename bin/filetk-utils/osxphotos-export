@@ -1,0 +1,35 @@
+#!/usr/bin/env perl
+package App::filetk::osxphotos_export;
+use Getopt::App -signatures;
+use File::Spec::Functions qw(catfile);
+use Image::ExifTool;
+use Time::Piece;
+
+sub getopt_post_process_argv { }
+
+run(
+  'dry-run   # Dry run',
+  'v|verbose # Verbose output',
+  'year # Export to $year/... directory',
+  sub ($self, @options) {
+    my $dir = pop @options;
+    return print extract_usage unless $dir and -d $dir;
+
+    my @cmd = qw(osxphotos export --download-missing --exiftool --jpeg-ext jpg --touch-file --update);
+    push @cmd, '--filename' => '{created.strftime,%Y-%m-%d-%H%M%S}_{uuid}';
+    push @cmd, '--directory' => '{created.year}' if $self->{year};
+    push @cmd, @options, $dir;
+
+    printf "\# %s\n", join ' ', @cmd;
+    system @cmd unless $self->{'dry-run'};
+    return $?;
+  },
+);
+
+__END__
+
+=head1 SYNOPSIS
+
+  filetk osxphotos-export <directory>
+
+=cut

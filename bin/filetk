@@ -23,8 +23,9 @@ use File::Spec::Functions qw(catdir catfile rel2abs);
 sub getopt_subcommands ($self) {
   my $dir = rel2abs(catdir dirname(__FILE__), 'filetk-utils');
   return [
-    ['dupes', catfile($dir, 'dupes'), "Find duplicate files"],
-    ['exifrename', catfile($dir, 'exifrename'), "Renamed picture files based on EXIF timestamp"],
+    ['dupes', catfile($dir, 'dupes'), 'Find duplicate files'],
+    ['exifrename', catfile($dir, 'exifrename'), 'Renamed picture files based on EXIF timestamp'],
+    ['osxphotos-export', catfile($dir, 'osxphotos-export'), 'Export photos with osxphotos'],
   ];
 }
 
