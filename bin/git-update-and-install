@@ -1,16 +1,16 @@
 #!/bin/bash
-ROOT_DIR=$(pwd);
+ROOT_DIR="$(pwd)";
 
-for i in *; do
-  if [ -d "$i/.git" ]; then
-    echo "";
-    echo "--- $i";
+run() {
+  echo "$p> $*";
+  "$@";
+}
 
-    cd "$i" || exit;
-    git remote update;
-    git pull;
-    [ -e "cpanfile" ] || [ -e "Makefile.PL" ] && cpanm -n --installdeps .
-  fi
-
+for p in *; do
+  [ -d "$p/.git" ] || continue;
+  cd "$p" >/dev/null || continue;
+  run git fetch --all --quiet;
+  run git pull --quiet --ff-only;
+  [ -e "cpanfile" ] || [ -e "Makefile.PL" ] && [ -n "$CPANM" ] && run $CPANM -n --installdeps .;
   cd "$ROOT_DIR" || exit;
 done

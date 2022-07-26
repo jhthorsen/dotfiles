@@ -1,25 +1,27 @@
 #!/bin/bash
 
-if [ "$1" = "app-id" ]; then
-  osascript -e 'id of app "Finder"'
+runx() {
+  "$*";
+  exit $?;
+}
 
-elif [ "$1" = "fwd" ]; then
+run_pfctl() {
   if [ "$4" = "" ]; then
     echo "Usage: macosctl fwd <source-port> <dest-port> [dest-ip]";
     exit;
   fi
 
-echo "rdr pass inet proto tcp from any to any port $2 -> $4 port $3" | sudo pfctl -
+  echo "rdr pass inet proto tcp from any to any port $2 -> $4 port $3" | sudo pfctl -;
+}
 
-elif [ "$1" = "dns-flush" ]; then
+run_dns_flush () {
   sudo dscacheutil -flushcache;
   sudo killall -HUP mDNSResponder;
+}
 
-elif [ "$1" = "leases" ]; then
-  set -x;
-  sudo cat /private/var/db/dhcpd_leases;
+[ "$1" = "app-id" ] && runx osascript -e 'id of app "Finder"';
+[ "$1" = "fwd" ] && runx run_pfctl "$2" "$3" "$4";
+[ "$1" = "dns-flush" ] && runx run_dns_flush;
+[ "$1" = "leases" ] && runx sudo cat /private/var/db/dhcpd_leases;
 
-else
-  echo "$0 [app-id|fwd|dns-flush|leases]";
-
-fi
+echo "$0 [app-id|fwd|dns-flush|leases-add]";
