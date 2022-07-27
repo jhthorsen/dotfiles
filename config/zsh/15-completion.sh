@@ -13,8 +13,6 @@ zstyle ':completion:*' special-dirs true
 # zstyle ':completion:*' use-cache on
 # zstyle ':completion:*' cache-path ~/.zsh/cache
 
-# rm -f ~/.zcompdump; compinit
-
 FZF_HOME=${FZF_HOME:-$HOMEBREW_PREFIX/opt/fzf};
 if [ -d $FZF_HOME ]; then
   if [[ ! "$PATH" == *$FZF_HOME/bin* ]]; then
@@ -22,7 +20,7 @@ if [ -d $FZF_HOME ]; then
   fi
 
   [[ $- == *i* ]] && source "$FZF_HOME/shell/completion.zsh" 2> /dev/null
-  source "$FZF_HOME/shell/key-bindings.zsh"
+  source "$FZF_HOME/shell/key-bindings.zsh";
 fi
 
 # ubuntu
@@ -31,4 +29,6 @@ fi
 
 which rg &>/dev/null && export FZF_DEFAULT_COMMAND='rg --files';
 
-fpath=($HOME/.config/zsh/completion $fpath);
+[ -f "$HOME/.config/zsh/completion" ] && FPATH="$HOME/.config/zsh/completion:$FPATH";
+[ -f "$HOMEBREW_PREFIX/share/zsh/site-functions" ] && FPATH="$HOMEBREW_PREFIX/share/zsh/site-functions:$FPATH";
+[ -f "$HOMEBREW_PREFIX/share/zsh-completions" ] && FPATH="$HOMEBREW_PREFIX/share/zsh-completions:$FPATH";
