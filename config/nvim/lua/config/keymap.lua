@@ -1,4 +1,4 @@
-local utils = require('../utils')
+local cmd = vim.cmd
 
 vim.g.mapleader = ' '
 
@@ -11,14 +11,12 @@ vim.api.nvim_set_keymap('n', ',e', ':tabedit <C-R>=expand("%:h")<CR>', {noremap 
 -- netrw
 vim.api.nvim_set_keymap('n', '<leader>e', ':Lexplore<CR>', {noremap = true})
 vim.api.nvim_set_keymap('n', '<leader>f', ':silent Lexplore %:p:h<CR>', {noremap = true})
-utils.autocmd('netrw', {
-  {'filetype', 'netrw', 'nmap <buffer> e <CR>:Lexplore<CR>'},
-  {'filetype', 'netrw', 'nmap <buffer> q :Lexplore<CR>'},
-  {'filetype', 'netrw', 'nmap <buffer> . gh<CR>'},
-  {'filetype', 'netrw', 'nmap <buffer> <leader><tab> mu'},
-  {'filetype', 'netrw', 'nmap <buffer> <s-tab> mF'},
-  {'filetype', 'netrw', 'nmap <buffer> <tab> mf'},
-})
+cmd('autocmd filetype netrw nmap <buffer> e <CR>:Lexplore<CR>')
+cmd('autocmd filetype netrw nmap <buffer> q :Lexplore<CR>')
+cmd('autocmd filetype netrw nmap <buffer> . gh<CR>')
+cmd('autocmd filetype netrw nmap <buffer> <leader><tab> mu')
+cmd('autocmd filetype netrw nmap <buffer> <s-tab> mF')
+cmd('autocmd filetype netrw nmap <buffer> <tab> mf')
 
 -- search
 vim.api.nvim_set_keymap('n', '\'', '/', {noremap = true})
