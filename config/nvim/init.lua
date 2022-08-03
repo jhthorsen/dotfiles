@@ -34,7 +34,7 @@ require('extensions/sync-file')
 -- external extensions
 return require('packer').startup(function()
   use {'wbthomason/packer.nvim'}
-  use {'ap/vim-css-color', ft = {'css', 'html', 'scss'}}
+  use {'ap/vim-css-color'}
   use {'folke/tokyonight.nvim'}
   use {'hrsh7th/nvim-cmp', requires = {
     'hrsh7th/cmp-buffer',
