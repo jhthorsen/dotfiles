@@ -2,6 +2,10 @@ local cmd = vim.cmd
 
 vim.g.mapleader = ' '
 
+--- NTBBloodbath/color-converter.nvim
+vim.api.nvim_set_keymap('n', '<leader>hsl', '<cmd>lua require("color-converter").to_hsl()<CR>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<leader>rgb', '<cmd>lua require("color-converter").to_rgb()<CR>', {noremap = true})
+
 -- buffers and files
 vim.api.nvim_set_keymap('n', '<leader>b', '<cmd>lua require("telescope.builtin").buffers()<CR>', {noremap = true})
 vim.api.nvim_set_keymap('n', '<leader>g', '<cmd>lua require("telescope.builtin").live_grep()<CR>', {noremap = true})

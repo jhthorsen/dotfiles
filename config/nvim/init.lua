@@ -48,6 +48,7 @@ return require('packer').startup(function()
   use {'mattn/emmet-vim'}
   use {'mg979/vim-visual-multi'}
   use {'neovim/nvim-lspconfig'}
+  use {'NTBBloodbath/color-converter.nvim'}
   use {'nvim-lualine/lualine.nvim', requires = {'kyazdani42/nvim-web-devicons', opt = true}}
   use {'nvim-telescope/telescope.nvim', requires = {'nvim-lua/plenary.nvim'}}
   use {'nvim-treesitter/nvim-treesitter'}
