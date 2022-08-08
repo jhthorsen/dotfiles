@@ -64,7 +64,7 @@ if [ "$OP" = "-i" ] || [ ! -t 0 ]; then
   stdin_to_clipboard;
 elif [ "$OP" = "--server" ] || [ "$OP" = "-l" ]; then
   ensure_hostname_and_port;
-  while echo "Waiting for clipboard data on $SNIPCLIP_HOSTNAME:$SNIPCLIP_PORT"; do
+  while echo "[$(date +'%H:%M:%S')] Waiting for clipboard data on $SNIPCLIP_HOSTNAME:$SNIPCLIP_PORT"; do
     nc -l "$SNIPCLIP_HOSTNAME" "$SNIPCLIP_PORT" | SNIPCLIP_HOSTNAME="" stdin_to_clipboard;
   done
 elif [ "$OP" = "--help" ] || [ "$OP" = "-h" ]; then
