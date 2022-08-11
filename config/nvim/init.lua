@@ -35,7 +35,6 @@ require('extensions/sync-file')
 return require('packer').startup(function()
   use {'wbthomason/packer.nvim'}
   use {'ap/vim-css-color'}
-  use {'folke/tokyonight.nvim'}
   use {'hrsh7th/nvim-cmp', requires = {
     'hrsh7th/cmp-buffer',
     'hrsh7th/cmp-nvim-lsp',
@@ -45,6 +44,7 @@ return require('packer').startup(function()
   use {'jbyuki/instant.nvim'}
   use {'kyazdani42/nvim-web-devicons'}
   use {'lucas1/vim-perl', branch = 'dev'}
+  use {'luisiacc/gruvbox-baby'}
   use {'mattn/emmet-vim'}
   use {'mg979/vim-visual-multi'}
   use {'neovim/nvim-lspconfig'}

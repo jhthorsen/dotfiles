@@ -1,11 +1,11 @@
 vim.o.background = 'dark'
 vim.o.termguicolors = true
-vim.g.spell_under = 'tokyonight';
-vim.g.tokyonight_sidebars = {'qf', 'vista_kind', 'terminal', 'packer'}
-vim.g.tokyonight_style = 'night'
-vim.g.tokyonight_transparent = true
+vim.g.spell_under = 'gruvbox-baby'
 
-vim.g.tokyonight_colors = {fg_gutter = '#707cb2', comment = '#707cb2'}
+vim.g.gruvbox_baby_background_color = 'dark'
+vim.g.gruvbox_baby_transparent_mode = false
+vim.g.gruvbox_baby_telescope_theme = true
+vim.g.gruvbox_baby_use_original_palette = true
 
 vim.api.nvim_exec([[
   syntax match NonASCII "[^\x00-\x7F]"
@@ -16,14 +16,6 @@ vim.api.nvim_exec([[
 
 local ok, mod = pcall(require, 'lualine')
 if ok then
-  local tokyonight = require('lualine/themes/tokyonight')
-  local bg = '#23283b'
-  tokyonight.command.b.bg = bg
-  tokyonight.insert.b.bg = bg
-  tokyonight.normal.b.bg = bg
-  tokyonight.replace.b.bg = bg
-  tokyonight.visual.b.bg = bg
-
   mod.setup({
     sections = {
       lualine_a = {'branch'},
@@ -42,7 +34,7 @@ if ok then
       lualine_z = {'location'},
     },
     options = {
-      theme = tokyonight,
+      theme = 'gruvbox-baby',
     }
   })
 end
