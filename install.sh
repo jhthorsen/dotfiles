@@ -20,9 +20,7 @@ function run() {
 
 function install_misc() {
   lnk config/ackrc $HOME/.ackrc;
-  lnk config/skhd $XDG_CONFIG_DIR/skhd;
   lnk config/git/gitignore_global $HOME/.gitignore_global;
-  lnk config/kitty $XDG_CONFIG_DIR/kitty;
   run perl config/git/generate.pl;
 }
 
@@ -47,6 +45,14 @@ function install_vi() {
     || git clone --depth 1 https://github.com/wbthomason/packer.nvim $XDG_DATA_HOME/nvim/site/pack/packer/start/packer.nvim;
 }
 
+function install_wezterm() {
+  lnk config/wezterm $HOME/.config/wezterm;
+  [ -e "$HOME/.config/wezterm/private_launch_menu.lua" ] || echo 'return {}' > "$HOME/.config/wezterm/private_launch_menu.lua";
+  [ -e "$HOME/.config/wezterm/private_ssh_domains.lua" ] || echo 'return {}' > "$HOME/.config/wezterm/private_ssh_domains.lua";
+  wezterm shell-completion --shell zsh > ~/.config/zsh/completion/wezterm.zsh-completion;
+  wget -qO $XDG_CONFIG_DIR/zsh/30-wezterm.sh https://raw.githubusercontent.com/wez/wezterm/main/assets/shell-integration/wezterm.sh;
+}
+
 function install_zsh() {
   lnk config/zsh $XDG_CONFIG_DIR/zsh;
   lnk config/zsh/zshrc $HOME/.zshrc;
@@ -68,6 +74,7 @@ XDG_CONFIG_DIR="$HOME/.config";
 XDG_DATA_HOME="$HOME/.local/share";
 
 install_zsh;
+install_wezterm;
 install_misc;
 install_perl;
 install_tmux;

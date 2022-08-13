@@ -3,7 +3,7 @@ vim.o.termguicolors = true
 vim.g.spell_under = 'gruvbox-baby'
 
 vim.g.gruvbox_baby_background_color = 'dark'
-vim.g.gruvbox_baby_transparent_mode = false
+vim.g.gruvbox_baby_transparent_mode = true
 vim.g.gruvbox_baby_telescope_theme = true
 vim.g.gruvbox_baby_use_original_palette = true
 

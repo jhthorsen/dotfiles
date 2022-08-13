@@ -22,8 +22,10 @@ fi
   #run arch -x86_64 $BREW_BIN update;
 #fi
 
+run $BREW_BIN tap wez/wezterm
+run $BREW_BIN install --cask wez/wezterm/wezterm
+
 #run arch -x86_64 $BREW_BIN install                         \
-run $BREW_BIN install ack
 run $BREW_BIN install alt-tab
 run $BREW_BIN install bat
 run $BREW_BIN install browserpass
@@ -33,9 +35,6 @@ run $BREW_BIN install cowsay
 run $BREW_BIN install cpanm
 run $BREW_BIN install csvprintf
 run $BREW_BIN install ctags
-run $BREW_BIN install diff-so-fancy
-run $BREW_BIN install docker
-run $BREW_BIN install docker-compose
 run $BREW_BIN install doctl
 run $BREW_BIN install exiftool
 run $BREW_BIN install fd
@@ -49,8 +48,6 @@ run $BREW_BIN install fzf
 run $BREW_BIN install geoip
 run $BREW_BIN install gh
 run $BREW_BIN install git
-run $BREW_BIN install git-delta
-run $BREW_BIN install git-secret
 run $BREW_BIN install glances
 run $BREW_BIN install gnupg
 run $BREW_BIN install gnutls
@@ -59,7 +56,6 @@ run $BREW_BIN install gpg-suite
 run $BREW_BIN install imagemagick
 run $BREW_BIN install jpeg
 run $BREW_BIN install jpegoptim
-run $BREW_BIN install kubernetes-cli
 run $BREW_BIN install less
 run $BREW_BIN install lynx
 run $BREW_BIN install mkcert
@@ -69,7 +65,6 @@ run $BREW_BIN install neovim
 run $BREW_BIN install nginx
 run $BREW_BIN install nmap
 run $BREW_BIN install node
-run $BREW_BIN install mosh
 run $BREW_BIN install openssl
 run $BREW_BIN install pass
 run $BREW_BIN install perl
@@ -78,7 +73,6 @@ run $BREW_BIN install pinentry-mac
 run $BREW_BIN install pngcrush
 run $BREW_BIN install postgresql
 run $BREW_BIN install psgrep
-run $BREW_BIN install pstree
 run $BREW_BIN install python
 run $BREW_BIN install qrencode
 run $BREW_BIN install redis
@@ -93,11 +87,7 @@ run $BREW_BIN install sqlite
 run $BREW_BIN install ssh-copy-id
 run $BREW_BIN install sshuttle
 run $BREW_BIN install telnet
-run $BREW_BIN install terraform
-run $BREW_BIN install terraform-docs
 run $BREW_BIN install tesseract
-run $BREW_BIN install tmux
-run $BREW_BIN install tmuxinator-completion
 run $BREW_BIN install tree
 run $BREW_BIN install vim
 run $BREW_BIN install wget
