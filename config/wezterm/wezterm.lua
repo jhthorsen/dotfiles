@@ -1,5 +1,7 @@
 local wezterm = require 'wezterm'
 local keymap = require 'keymap'
+local key_table_copy_mode = require 'key_table_copy_mode'
+local key_table_search_mode = require 'key_table_search_mode'
 local launch_menu = require 'private_launch_menu'
 local ssh_domains = require 'ssh_domains'
 local mouse_bindings = require 'mouse_bindings'
@@ -30,6 +32,7 @@ return {
   disable_default_key_bindings = true,
   exit_behavior = 'Close',
   keys = keymap,
+  key_tables = {copy_mode = key_table_copy_mode, search_mode = key_table_search_mode},
   mouse_bindings = mouse_bindings,
   scroll_to_bottom_on_input = true,
   scrollback_lines = 10000,

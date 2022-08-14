@@ -6,6 +6,16 @@ local clearScrollbackAndSendClearKey = act.Multiple {
   act.SendKey {key = 'L', mods = 'CTRL'},
 }
 
+local function searchCaseInSensitive (window, pane)
+  local selection = window:get_selection_text_for_pane(pane)
+  window:perform_action(act.Search({CaseInSensitiveString = selection}), pane)
+end
+
+local function searchRegex (window, pane)
+  local selection = window:get_selection_text_for_pane(pane)
+  window:perform_action(act.Search({Regex = selection}), pane)
+end
+
 local keymap = {
   {key = '[',     mods = 'SUPER',       action = 'ActivateCopyMode'},
   {key = 'Enter', mods = 'SUPER',       action = 'QuickSelect'},
@@ -16,7 +26,8 @@ local keymap = {
   {key = 'm',     mods = 'SUPER',       action = 'ShowLauncher'},
   {key = 'Enter', mods = 'ALT',         action = 'ToggleFullScreen'},
   {key = 'z',     mods = 'SUPER|SHIFT', action = 'TogglePaneZoomState'},
-  {key = '/',     mods = 'SUPER',       action = act.Search 'CurrentSelectionOrEmptyString'},
+  {key = 'f',     mods = 'SUPER',       action = wezterm.action_callback(searchCaseInSensitive)},
+  {key = 'F',     mods = 'SUPER|SHIFT', action = wezterm.action_callback(searchRegex)},
   {key = 'c',     mods = 'SUPER',       action = act.CopyTo 'Clipboard'},
   {key = 'v',     mods = 'SUPER',       action = act.PasteFrom 'Clipboard'},
   {key = 'L',     mods = 'CTRL|SHIFT',  action = clearScrollbackAndSendClearKey},
