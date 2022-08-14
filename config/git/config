@@ -1,7 +1,5 @@
 # Generated from /Users/jhthorsen/git/dotfiles/config/git/config
 [alias]
-  b = branch
-  c = commit
   d = diff HEAD^
   t = !git tag | sort -n
 
@@ -10,8 +8,6 @@
   cl = ship clean
   cp = !/bin/bash -c 'git show "$0":"$1" > "$1"'
   dc = diff --cached
-  dd = !/bin/bash -c 'git diff --color -C $(echo $0 | grep -q "/bin/" && echo "HEAD^" || echo "$0") -w | diff-so-fancy --color | less -RX -x2 -F'
-  df = !git diff HEAD^ | diff-so-fancy | less -XFR
   ds = diff --shortstat --numstat HEAD^
   gl = log --graph --pretty='format:%C(yellow)%h%Cred%d%Creset %s %C(white) %C(cyan)%an%Creset, %C(green)%ar%Creset'
   lg = log --pretty='format:%Cblue%h%Creset %s (%Cgreen%ar%Creset)'
@@ -26,7 +22,6 @@
   graph = !git-graph.pl
   hist = log --graph --all --color=always --decorate --pretty=format:'%Cred%h%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset %C(yellow)%d%Creset'
   ready = rebase -i @{u}
-  rm-untracked = !"git status|grep '^\t'| awk '{print $1}'|xargs rm -r"
   snapshot = !/bin/bash -c 'git branch _/$(date +%Y%m%d-%H%M%S)'
   standup = log --pretty=format:'%Cred%h%Creset -%Creset %s %Cgreen(%cD) %C(bold blue)<%an>%Creset' --since yesterday --author Jan
   start = ship start
@@ -42,29 +37,15 @@
 
 [core]
   excludesfile = ~/.gitignore_global
-  pager = delta
 
 [commit]
   gpgsign = true
 
-[interactive]
-  diffFilter = delta --color-only
-
 [credential]
   helper = store
 
-[delta]
-  dark = true
-  line-numbers = true
-  # side-by-side = true
-  syntax-theme = Dracula
-  zero-style = dim syntax
-
 [diff]
   tool = vimdiff
-
-[diff-so-fancy]
-  markEmptyLines = false
 
 [gpg]
   program = gpg
