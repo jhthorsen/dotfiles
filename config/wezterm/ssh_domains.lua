@@ -5,7 +5,7 @@ for host, config in pairs(wezterm.enumerate_ssh_hosts()) do
   table.insert(ssh_domains, {
     name = host,
     remote_address = host,
-    local_echo_threshold_ms = 10,
+    -- local_echo_threshold_ms = 100,
   });
 end
 

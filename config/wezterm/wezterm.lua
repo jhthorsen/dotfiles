@@ -19,9 +19,13 @@ return {
   -- send_composed_key_when_right_alt_is_pressed = true,
 
   color_scheme = 'Gruvbox Dark',
-  font = wezterm.font('MesloLGS NF'),
+  font = wezterm.font_with_fallback {
+    {family = 'Hack'},
+    {family = 'JetBrains Mono'},
+  },
+  harfbuzz_features = {'calt=0', 'clig=1', 'liga=1'},
   font_size = 12,
-  line_height = 1.1,
+  line_height = 1.2,
   window_background_opacity = 0.95,
 
   adjust_window_size_when_changing_font_size = false,
