@@ -10,6 +10,7 @@ vim.o.foldenable = false
 vim.o.hlsearch = false
 vim.o.incsearch = true
 vim.o.lazyredraw = true
+vim.o.mouse = ''
 vim.o.number = true
 vim.o.numberwidth = 4
 vim.o.relativenumber = true
