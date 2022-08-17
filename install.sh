@@ -24,13 +24,6 @@ function install_misc() {
   run perl config/git/generate.pl;
 }
 
-function install_perl() {
-  lnk config/perltidyrc $HOME/.perltidyrc;
-  local PERL_LL_ROOT="$XDG_DATA_HOME/perl5";
-  run cpanm --local-lib=$PERL_LL_ROOT -n local::lib;
-  [ -d $PERL_LL_ROOT ] && run perl -I$PERL_LL_ROOT/lib/perl5 -Mlocal::lib=$PERL_LL_ROOT/ | run tee $XDG_CONFIG_DIR/zsh/02-env-perl.sh;
-}
-
 function install_tmux() {
   lnk config/tmux/tmux.conf $HOME/.tmux.conf;
   [ -d ~/.tmux/plugins ] || mkdir -p ~/.tmux/plugins;
@@ -76,6 +69,5 @@ XDG_DATA_HOME="$HOME/.local/share";
 install_zsh;
 install_wezterm;
 install_misc;
-install_perl;
 install_tmux;
 install_vi;
