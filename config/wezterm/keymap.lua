@@ -52,6 +52,15 @@ local keymap = {
   {key = '2', mods = 'SUPER',       action = act.ActivateTab(1)},
   {key = '3', mods = 'SUPER',       action = act.ActivateTab(2)},
   {key = '4', mods = 'SUPER',       action = act.ActivateTab(3)},
+  {key = '5', mods = 'SUPER',       action = act.ActivateTab(4)},
+  {key = '6', mods = 'SUPER',       action = act.ActivateTab(5)},
+
+  {key = '1', mods = 'SUPER|CTRL', action = act.MoveTab(0)},
+  {key = '2', mods = 'SUPER|CTRL', action = act.MoveTab(1)},
+  {key = '3', mods = 'SUPER|CTRL', action = act.MoveTab(2)},
+  {key = '4', mods = 'SUPER|CTRL', action = act.MoveTab(3)},
+  {key = '5', mods = 'SUPER|CTRL', action = act.MoveTab(4)},
+  {key = '6', mods = 'SUPER|CTRL', action = act.MoveTab(5)},
 };
 
 return keymap;
