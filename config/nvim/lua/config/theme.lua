@@ -2,10 +2,11 @@ vim.o.background = 'dark'
 vim.o.termguicolors = true
 vim.g.spell_under = 'gruvbox-baby'
 
+local colors = require('gruvbox-baby.colors').config()
+
 vim.g.gruvbox_baby_background_color = 'dark'
-vim.g.gruvbox_baby_transparent_mode = false
-vim.g.gruvbox_baby_telescope_theme = true
-vim.g.gruvbox_baby_use_original_palette = true
+vim.g.gruvbox_baby_transparent_mode = true
+vim.g.gruvbox_baby_highlights = {Visual = {bg = colors.medium_gray}}
 
 vim.api.nvim_exec([[
   syntax match NonASCII "[^\x00-\x7F]"
