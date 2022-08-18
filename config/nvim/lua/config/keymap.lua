@@ -1,51 +1,41 @@
-local cmd = vim.cmd
+local bindkey = vim.keymap.set
 
 vim.g.mapleader = ' '
 
 --- NTBBloodbath/color-converter.nvim
-vim.api.nvim_set_keymap('n', '<leader>hsl', '<cmd>lua require("color-converter").to_hsl()<CR>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<leader>rgb', '<cmd>lua require("color-converter").to_rgb()<CR>', {noremap = true})
+bindkey('n', '<leader>hsl', function() require('color-converter').to_hsl() end)
+bindkey('n', '<leader>rgb', function() require('color-converter').to_rgb() end)
 
 -- buffers and files
-vim.api.nvim_set_keymap('n', '<leader>b', '<cmd>lua require("telescope.builtin").buffers()<CR>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<leader>g', '<cmd>lua require("telescope.builtin").live_grep()<CR>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<c-p>', '<cmd>lua require("telescope.builtin").find_files()<CR>', {noremap = true})
-vim.api.nvim_set_keymap('n', ',e', ':tabedit <C-R>=expand("%:h")<CR>', {noremap = true})
-
--- netrw
-vim.api.nvim_set_keymap('n', '<leader>e', ':Lexplore<CR>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<leader>f', ':silent Lexplore %:p:h<CR>', {noremap = true})
-cmd('autocmd filetype netrw nmap <buffer> e <CR>:Lexplore<CR>')
-cmd('autocmd filetype netrw nmap <buffer> q :Lexplore<CR>')
-cmd('autocmd filetype netrw nmap <buffer> . gh<CR>')
-cmd('autocmd filetype netrw nmap <buffer> <leader><tab> mu')
-cmd('autocmd filetype netrw nmap <buffer> <s-tab> mF')
-cmd('autocmd filetype netrw nmap <buffer> <tab> mf')
+bindkey('n', '<leader>b', function() require('telescope.builtin').buffers() end)
+bindkey('n', '<leader>g', function() require('telescope.builtin').live_grep() end)
+bindkey('n', '<c-p>', function() require('telescope.builtin').find_files() end)
+bindkey('n', ',e', ':tabedit <C-R>=expand("%:h")<CR>')
 
 -- search
-vim.api.nvim_set_keymap('n', '\'', '/', {noremap = true})
-vim.api.nvim_set_keymap('n', '<c-s>', ':%s!', {noremap = true})
+bindkey('n', '\'', '/')
+bindkey('n', '<c-s>', ':%s!')
 
 -- signcolumn
-vim.api.nvim_set_keymap('n', '<leader>cd', ':setlocal norelativenumber nonumber signcolumn=no<CR>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<leader>ce', ':setlocal relativenumber number signcolumn=yes<CR>', {noremap = true})
+bindkey('n', '<leader>cd', ':setlocal norelativenumber nonumber signcolumn=no<CR>')
+bindkey('n', '<leader>ce', ':setlocal relativenumber number signcolumn=yes<CR>')
 
 -- spelling
-vim.api.nvim_set_keymap('i', '<c-s>', '<cmd>lua require("telescope.builtin").spell_suggest()<CR>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<leader>st', ':set spell!<CR>', {noremap = true})
+bindkey('i', '<c-s>', function() require('telescope.builtin').spell_suggest() end)
+bindkey('n', '<leader>st', ':set spell!<CR>')
 
 -- tab
-vim.api.nvim_set_keymap('n', '<c-j>', ':tabprev<CR>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<c-k>', ':tabnext<CR>', {noremap = true})
+bindkey('n', '<c-j>', ':tabprev<CR>')
+bindkey('n', '<c-k>', ':tabnext<CR>')
 
 -- visual-multi
-vim.api.nvim_set_keymap('n', '<c-d>', '<c-n>', {noremap = false})
-vim.api.nvim_set_keymap('v', '<c-d>', '<c-n>', {noremap = false})
+bindkey('n', '<c-d>', '<c-n>', {remap = true})
+bindkey('v', '<c-d>', '<c-n>', {remap = true})
 
 -- window
-vim.api.nvim_set_keymap('n', '<leader>h', '<c-w><c-h>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<leader>j', '<c-w><c-j>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<leader>k', '<c-w><c-k>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<leader>l', '<c-w><c-l>', {noremap = true})
-vim.api.nvim_set_keymap('n', 'sp', ':sp<CR>', {noremap = true})
-vim.api.nvim_set_keymap('n', 'vs', ':vs<CR>', {noremap = true})
+bindkey('n', '<leader>h', '<c-w><c-h>')
+bindkey('n', '<leader>j', '<c-w><c-j>')
+bindkey('n', '<leader>k', '<c-w><c-k>')
+bindkey('n', '<leader>l', '<c-w><c-l>')
+bindkey('n', 'sp', ':sp<CR>')
+bindkey('n', 'vs', ':vs<CR>')

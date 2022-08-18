@@ -24,8 +24,6 @@ vim.o.swapfile = false
 vim.o.tabstop = 2
 vim.o.wrap = false
 
-vim.g.instant_username = 'jhthorsen'
-
 require('config/keymap')
 require('config/netrw')
 require('config/syntax')
@@ -42,13 +40,13 @@ return require('packer').startup(function()
     'hrsh7th/cmp-path',
     'L3MON4D3/LuaSnip',
   }}
-  use {'jbyuki/instant.nvim'}
   use {'kyazdani42/nvim-web-devicons'}
   use {'lucas1/vim-perl', branch = 'dev'}
   use {'luisiacc/gruvbox-baby'}
   use {'mattn/emmet-vim'}
   use {'mg979/vim-visual-multi'}
   use {'neovim/nvim-lspconfig'}
+  use {'numToStr/Comment.nvim', config = function() require('Comment').setup() end} -- gcc, gci{, gbat
   use {'NTBBloodbath/color-converter.nvim'}
   use {'nvim-lualine/lualine.nvim', requires = {'kyazdani42/nvim-web-devicons', opt = true}}
   use {'nvim-telescope/telescope.nvim', requires = {'nvim-lua/plenary.nvim'}}
