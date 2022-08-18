@@ -26,7 +26,7 @@ return {
   harfbuzz_features = {'calt=0', 'clig=1', 'liga=1'},
   font_size = 12,
   line_height = 1.2,
-  window_background_opacity = 0.95,
+  window_background_opacity = 0.98,
 
   adjust_window_size_when_changing_font_size = false,
   audible_bell = 'Disabled',

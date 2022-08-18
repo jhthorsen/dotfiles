@@ -6,7 +6,6 @@ local colors = require('gruvbox-baby.colors').config()
 
 vim.g.gruvbox_baby_background_color = 'dark'
 vim.g.gruvbox_baby_transparent_mode = true
-vim.g.gruvbox_baby_highlights = {Visual = {bg = colors.medium_gray}}
 
 vim.api.nvim_exec([[
   syntax match NonASCII "[^\x00-\x7F]"
