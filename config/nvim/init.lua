@@ -16,7 +16,6 @@ vim.o.numberwidth = 4
 vim.o.relativenumber = true
 vim.o.scrolloff = 6
 vim.o.shiftwidth = 2
-vim.o.showtabline = 2
 vim.o.signcolumn = 'yes'
 vim.o.splitbelow = true
 vim.o.splitright = true

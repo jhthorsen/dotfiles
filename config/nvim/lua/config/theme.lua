@@ -18,23 +18,17 @@ local ok, mod = pcall(require, 'lualine')
 if ok then
   mod.setup({
     sections = {
-      lualine_a = {'branch'},
-      lualine_b = {'diff', 'diagnostics'},
-      lualine_c = {{'filename', path = 1}},
-      lualine_x = {'encoding'},
+      lualine_a = {'buffers'},
+      lualine_b = {},
+      lualine_c = {},
+      lualine_x = {'diff', 'diagnostics'},
       lualine_y = {'filetype'},
       lualine_z = {'progress', 'location'},
     },
-    inactive_sections = {
-      lualine_a = {},
-      lualine_b = {{'filename', path = 1}},
-      lualine_c = {},
-      lualine_x = {},
-      lualine_y = {},
-      lualine_z = {'location'},
-    },
     options = {
+      globalstatus = true,
+      icons_enabled = false,
       theme = 'gruvbox-baby',
-    }
+    },
   })
 end

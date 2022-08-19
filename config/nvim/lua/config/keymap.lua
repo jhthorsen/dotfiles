@@ -7,10 +7,13 @@ bindkey('n', '<leader>hsl', function() require('color-converter').to_hsl() end)
 bindkey('n', '<leader>rgb', function() require('color-converter').to_rgb() end)
 
 -- buffers and files
-bindkey('n', '<leader>b', function() require('telescope.builtin').buffers() end)
 bindkey('n', '<leader>g', function() require('telescope.builtin').live_grep() end)
+bindkey('n', '<leader>b', function() require('telescope.builtin').buffers() end)
 bindkey('n', '<c-p>', function() require('telescope.builtin').find_files() end)
-bindkey('n', ',e', ':tabedit <C-R>=expand("%:h")<CR>')
+bindkey('n', '<c-j>', ':bprevious<CR>')
+bindkey('n', '<c-k>', ':bnext<CR>')
+bindkey('n', '<c-t>', ':enew<CR>')
+bindkey('n', ',e', ':e <C-R>=expand("%:h")<CR>')
 
 -- search
 bindkey('n', '\'', '/')
@@ -23,10 +26,6 @@ bindkey('n', '<leader>ce', ':setlocal relativenumber number signcolumn=yes<CR>')
 -- spelling
 bindkey('i', '<c-s>', function() require('telescope.builtin').spell_suggest() end)
 bindkey('n', '<leader>st', ':set spell!<CR>')
-
--- tab
-bindkey('n', '<c-j>', ':tabprev<CR>')
-bindkey('n', '<c-k>', ':tabnext<CR>')
 
 -- visual-multi
 bindkey('n', '<c-d>', '<c-n>', {remap = true})
