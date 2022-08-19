@@ -30,9 +30,7 @@ function install_tmux() {
   [ -d ~/.tmux/plugins/tpm ] || git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 }
 
-function install_vi() {
-  lnk config/vim $XDG_CONFIG_DIR/vim;
-  [ -e "$XDG_CONFIG_DIR/vim/autoload/plug.vim" ] || run curl -sfLo "$XDG_CONFIG_DIR/vim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+function install_nvim() {
   lnk config/nvim $XDG_CONFIG_DIR/nvim;
   [ -d "$XDG_DATA_HOME/nvim/site/pack/packer/start" ] \
     || git clone --depth 1 https://github.com/wbthomason/packer.nvim $XDG_DATA_HOME/nvim/site/pack/packer/start/packer.nvim;
@@ -70,4 +68,4 @@ install_zsh;
 install_wezterm;
 install_misc;
 install_tmux;
-install_vi;
+install_nvim;
