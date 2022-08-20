@@ -75,6 +75,7 @@ run $BREW_BIN install postgresql
 run $BREW_BIN install psgrep
 run $BREW_BIN install python
 run $BREW_BIN install qrencode
+run $BREW_BIN install ranger
 run $BREW_BIN install redis
 run $BREW_BIN install rename
 run $BREW_BIN install rg
@@ -88,6 +89,7 @@ run $BREW_BIN install ssh-copy-id
 run $BREW_BIN install sshuttle
 run $BREW_BIN install telnet
 run $BREW_BIN install tesseract
+run $BREW_BIN install trash-cli
 run $BREW_BIN install tree
 run $BREW_BIN install vim
 run $BREW_BIN install wget
