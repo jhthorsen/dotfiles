@@ -2,6 +2,7 @@
 .pls_cache
 local/
 config/nvim/spell
+config/nvim/plugin/
 config/vim/autoload/plug.vim
 config/vim/plugged
 config/zsh/02-env-perl.sh

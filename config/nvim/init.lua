@@ -40,6 +40,7 @@ return require('packer').startup(function()
     'L3MON4D3/LuaSnip',
   }}
   use {'kyazdani42/nvim-web-devicons'}
+  use {'kylechui/nvim-surround', config = function() require('nvim-surround').setup() end}
   use {'lucas1/vim-perl', branch = 'dev'}
   use {'luisiacc/gruvbox-baby'}
   use {'mattn/emmet-vim'}
