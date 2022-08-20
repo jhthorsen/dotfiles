@@ -29,4 +29,4 @@ for d in ${MANPATH//:/ }; do
 done
 
 # Fallback in case no man page could be found
-/usr/bin/man "$@";
+/usr/bin/man "$PAGE" "$@";
