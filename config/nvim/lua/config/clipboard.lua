@@ -1,4 +1,4 @@
-local bindkey = vim.keymap.set
+local bindkey = require('../utils').bindkey
 local cmd = vim.cmd
 
 vim.o.clipboard = 'unnamed'

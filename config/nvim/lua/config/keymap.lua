@@ -1,5 +1,6 @@
-local bindkey = vim.keymap.set
+local bindkey = require('../utils').bindkey
 
+vim.o.timeoutlen = 300
 vim.g.mapleader = ' '
 
 --- NTBBloodbath/color-converter.nvim
@@ -10,21 +11,30 @@ bindkey('n', '<leader>rgb', function() require('color-converter').to_rgb() end)
 bindkey('n', '<leader>g', function() require('telescope.builtin').live_grep() end)
 bindkey('n', '<leader>b', function() require('telescope.builtin').buffers() end)
 bindkey('n', '<c-p>', function() require('telescope.builtin').find_files() end)
-bindkey('n', '<c-j>', ':bprevious<CR>')
-bindkey('n', '<c-k>', ':bnext<CR>')
+bindkey('n', '<c-h>', ':bprevious<CR>')
+bindkey('n', '<c-l>', ':bnext<CR>')
 bindkey('n', '<c-t>', ':enew<CR>')
-bindkey('n', ',e', ':e <C-R>=expand("%:h")<CR>')
+bindkey('n', ',e', ':e <C-R>=expand("%:h")<CR>', {silent = false})
+
+-- movement
+bindkey('n', 'G', 'Gzz')
+bindkey('n', '<c-j>', '<c-d>zz')
+bindkey('n', '<c-k>', '<c-u>zz')
 
 -- search
-bindkey('n', '\'', '/')
-bindkey('n', '<c-s>', ':%s!')
+bindkey('n', '<c-f>', '/', {silent = false}) -- option+7 is mapped by BetterTouchTool instead
+bindkey('n', '<c-s>', ':%s!!', {silent = false})
 
 -- signcolumn
-bindkey('n', '<leader>cd', ':setlocal norelativenumber nonumber signcolumn=no<CR>')
-bindkey('n', '<leader>ce', ':setlocal relativenumber number signcolumn=yes<CR>')
+bindkey('n', '<leader>c', function()
+  local show = vim.wo.signcolumn == 'no'
+  vim.wo.signcolumn = show and 'yes' or 'no'
+  vim.wo.number = show
+  vim.wo.relativenumber = show
+end)
 
 -- spelling
-bindkey('i', '<c-s>', function() require('telescope.builtin').spell_suggest() end)
+bindkey('i', '<leader>ss', function() require('telescope.builtin').spell_suggest() end)
 bindkey('n', '<leader>st', ':set spell!<CR>')
 
 -- visual-multi

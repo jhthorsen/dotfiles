@@ -16,11 +16,13 @@ vim.o.numberwidth = 4
 vim.o.relativenumber = true
 vim.o.scrolloff = 6
 vim.o.shiftwidth = 2
+vim.o.showmode = false
 vim.o.signcolumn = 'yes'
 vim.o.splitbelow = true
 vim.o.splitright = true
 vim.o.swapfile = false
 vim.o.tabstop = 2
+vim.o.virtualedit = 'block'
 vim.o.wrap = false
 
 require('config/keymap')

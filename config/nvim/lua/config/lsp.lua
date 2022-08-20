@@ -1,4 +1,5 @@
--- vim.lsp.set_log_level('debug')
+local bindkey = require('../utils').bindkey
+
 local cmd = vim.cmd
 cmd('autocmd BufRead,BufNewFile *.css set filetype=scss')
 cmd('autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focus=false})')
@@ -9,14 +10,14 @@ local function on_attach(client, bufnr)
   vim.o.updatetime = 300
   vim.o.omnifunc = 'v:lua.vim.lsp.omnifunc'
 
-  local opts = {buffer = bufnr, noremap = true, silent = true}
-  vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
-  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
-  vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
-  vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
-  vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
-  vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
-  vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, opts)
+  local opts = {buffer = bufnr}
+  bindkey('n', 'gD', vim.lsp.buf.declaration, opts)
+  bindkey('n', 'gd', vim.lsp.buf.definition, opts)
+  bindkey('n', 'gi', vim.lsp.buf.implementation, opts)
+  bindkey('n', 'gr', vim.lsp.buf.references, opts)
+  bindkey('n', 'K', vim.lsp.buf.hover, opts)
+  bindkey('n', '<leader>rn', vim.lsp.buf.rename, opts)
+  bindkey('n', '<leader>q', vim.diagnostic.setloclist, opts)
 end
 
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
