@@ -22,8 +22,8 @@ bindkey('n', '<c-j>', '<c-d>zz')
 bindkey('n', '<c-k>', '<c-u>zz')
 
 -- search
-bindkey('n', '<c-f>', '/', {silent = false}) -- option+7 is mapped by BetterTouchTool instead
-bindkey('n', '<c-s>', ':%s!!', {silent = false})
+bindkey('n', '<a-7>', '/', {silent = false})  -- option+7 is mapped to "/" in BTT
+bindkey('n', '\\', ':%s!!', {silent = false}) -- option+shift+7 is mapped to "\" in BTT
 
 -- signcolumn
 bindkey('n', '<leader>c', function()

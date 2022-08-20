@@ -1,0 +1,11 @@
+#!/usr/bin/env perl
+use strict;
+use Term::ReadKey;
+use Mojo::Util qw(term_escape);
+
+END { ReadMode 0 }
+ReadMode 4;
+
+while (defined (my $key = ReadKey(3))) {
+  printf "%04x | %s\n", ord $key, term_escape($key);
+}
