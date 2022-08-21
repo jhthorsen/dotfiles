@@ -1,0 +1,25 @@
+set colors
+set drawbox
+set icons
+set ifs "\n"
+set info time
+set previewer ~/.config/lf/previewer
+set ratios 1:5:4
+set scrolloff 5
+set shellopts '-eu'
+
+map <backspace2> push h
+map <delete> $trash-put
+map <enter> push l
+map O $mimeopen --ask $f
+map X !$f
+map o &mimeopen $f
+map x $$f
+
+cmd open ${{
+  test -L $f && f=$(readlink -f $f)
+  case $(file --mime-type $f -b) in
+    text/*) $EDITOR $fx;;
+    *) for f in $fx; do setsid $OPENER $f > /dev/null 2> /dev/null & done;;
+  esac
+}}

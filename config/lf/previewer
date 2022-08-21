@@ -1,0 +1,23 @@
+#!/bin/zsh
+
+FILE="$1";
+WIDTH="${2:-$COLUMNS}";
+HEIGHT="$3";
+HORIZONTAL_POS="$4";
+VERTICAL_POS="$5";
+
+preview_image() {
+  chafa --format symbols --size "${WIDTH}x${HEIGHT}" "$1";
+}
+
+case "$(echo "$FILE" | tr '[:upper:]' '[:lower:]')" in
+  *.7z) 7z l "$FILE";;
+  *.rar) unrar l "$FILE";;
+  *.tar*) tar tf "$FILE";;
+  *.zip) unzip -l "$FILE";;
+  *.jpeg) preview_image "$FILE";;
+  *.jpg) preview_image "$FILE";;
+  *.pdf) convert -density 50 "$FILE" -quality 10 jpg:- | preview_image "-";;
+  *.png) preview_image "$FILE";;
+  *) bat --color always --decorations never --paging never -r "1:$HEIGHT" --terminal-width "$WIDTH" "$FILE";;
+esac

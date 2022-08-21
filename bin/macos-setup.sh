@@ -57,6 +57,7 @@ run $BREW_BIN install imagemagick
 run $BREW_BIN install jpeg
 run $BREW_BIN install jpegoptim
 run $BREW_BIN install less
+run $BREW_BIN install lf
 run $BREW_BIN install lynx
 run $BREW_BIN install mkcert
 run $BREW_BIN install mysql
@@ -75,7 +76,6 @@ run $BREW_BIN install postgresql
 run $BREW_BIN install psgrep
 run $BREW_BIN install python
 run $BREW_BIN install qrencode
-run $BREW_BIN install ranger
 run $BREW_BIN install redis
 run $BREW_BIN install rename
 run $BREW_BIN install rg
