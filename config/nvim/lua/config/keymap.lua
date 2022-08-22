@@ -18,8 +18,8 @@ bindkey('n', ',e', ':e <C-R>=expand("%:h")<CR>', {silent = false})
 
 -- movement
 bindkey('n', 'G', 'Gzz')
-bindkey('n', '<c-j>', '<c-d>zz')
-bindkey('n', '<c-k>', '<c-u>zz')
+bindkey('n', '<c-j>', '10j')
+bindkey('n', '<c-k>', '10k')
 
 -- search
 bindkey('n', '<a-7>', '/', {silent = false})  -- option+7 is mapped to "/" in BTT
