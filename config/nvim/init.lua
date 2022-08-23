@@ -2,7 +2,6 @@
 -- https://icyphox.sh/blog/nvim-lua/
 -- https://www.lua.org/pil/contents.html
 
--- basics
 vim.o.completeopt = 'menu,menuone,noselect'
 vim.o.errorbells = false
 vim.o.expandtab = true
@@ -11,13 +10,8 @@ vim.o.hlsearch = false
 vim.o.incsearch = true
 vim.o.lazyredraw = true
 vim.o.mouse = ''
-vim.o.number = true
-vim.o.numberwidth = 4
-vim.o.relativenumber = true
 vim.o.scrolloff = 12
 vim.o.shiftwidth = 2
-vim.o.showmode = false
-vim.o.signcolumn = 'yes'
 vim.o.splitbelow = true
 vim.o.splitright = true
 vim.o.swapfile = false
@@ -34,6 +28,7 @@ require('extensions/sync-file')
 -- external extensions
 return require('packer').startup(function()
   use {'wbthomason/packer.nvim'}
+  use {'akinsho/bufferline.nvim', requires = 'kyazdani42/nvim-web-devicons'}
   use {'ap/vim-css-color'}
   use {'hrsh7th/nvim-cmp', requires = {
     'hrsh7th/cmp-buffer',
@@ -41,7 +36,6 @@ return require('packer').startup(function()
     'hrsh7th/cmp-path',
     'L3MON4D3/LuaSnip',
   }}
-  use {'kyazdani42/nvim-web-devicons'}
   use {'kylechui/nvim-surround', config = function() require('nvim-surround').setup() end}
   use {'lucas1/vim-perl', branch = 'dev'}
   use {'luisiacc/gruvbox-baby'}
@@ -50,7 +44,6 @@ return require('packer').startup(function()
   use {'neovim/nvim-lspconfig'}
   use {'numToStr/Comment.nvim', config = function() require('Comment').setup() end} -- gcc, gci{, gbat
   use {'NTBBloodbath/color-converter.nvim'}
-  use {'nvim-lualine/lualine.nvim', requires = {'kyazdani42/nvim-web-devicons', opt = true}}
   use {'nvim-telescope/telescope.nvim', requires = {'nvim-lua/plenary.nvim'}}
   use {'nvim-treesitter/nvim-treesitter'}
   use {'osamuaoki/vim-spell-under'}
