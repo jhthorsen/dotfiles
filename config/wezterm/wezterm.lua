@@ -10,7 +10,10 @@ return {
   launch_menu = launch_menu,
   ssh_domains = ssh_domains,
   unix_domains = {
-    {name = 'unix'},
+    {
+      name = 'unix',
+      local_echo_threshold_ms = 1000,
+    },
   },
 
   -- debug_key_events = true,
