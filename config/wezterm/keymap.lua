@@ -3,7 +3,9 @@ local act = wezterm.action
 
 local clearScrollbackAndSendClearKey = act.Multiple {
   act.ClearScrollback 'ScrollbackAndViewport',
-  act.SendKey {key = 'L', mods = 'CTRL'},
+  act.SendString '\x03',
+  act.SendString 'clear',
+  act.SendString '\x0d',
 }
 
 local function searchCaseInSensitive (window, pane)
@@ -30,7 +32,7 @@ local keymap = {
   {key = 'F',     mods = 'SUPER|SHIFT', action = wezterm.action_callback(searchRegex)},
   {key = 'c',     mods = 'SUPER',       action = act.CopyTo 'Clipboard'},
   {key = 'v',     mods = 'SUPER',       action = act.PasteFrom 'Clipboard'},
-  {key = 'L',     mods = 'CTRL|SHIFT',  action = clearScrollbackAndSendClearKey},
+  {key = 'l',     mods = 'CTRL|SHIFT',  action = clearScrollbackAndSendClearKey},
   {key = 'u',     mods = 'CTRL|SUPER',  action = act.AttachDomain('unix')},
 
   {key = 't', mods = 'SUPER',       action = act.SpawnTab 'CurrentPaneDomain'},
