@@ -2,14 +2,14 @@
 ROOT_DIR="$(pwd)";
 
 run() {
-  echo "$p> $*";
-  "$@";
+  echo "$(tput setaf 2)$p> $*$(tput sgr0)";
+  "$@" || echo "$(tput setaf 1)$p> $* FAIL $?$(tput sgr0)";
 }
 
 for p in *; do
   [ -d "$p/.git" ] || continue;
   cd "$p" >/dev/null || continue;
-  run git fetch --all --quiet;
+  run git fetch --all;
   run git pull --quiet --ff-only;
   [ -e "cpanfile" ] || [ -e "Makefile.PL" ] && [ -n "$CPANM" ] && run $CPANM -n --installdeps .;
   cd "$ROOT_DIR" || exit;
