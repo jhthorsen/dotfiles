@@ -10,6 +10,7 @@ bindkey('n', '<leader>rgb', function() require('color-converter').to_rgb() end)
 -- buffers and files
 bindkey('n', '<leader>g', function() require('telescope.builtin').live_grep() end)
 bindkey('n', '<leader>b', function() require('telescope.builtin').buffers() end)
+bindkey('n', '<leader>n', ':echo expand("%")<CR>')
 bindkey('n', '<c-p>', function() require('telescope.builtin').find_files() end)
 bindkey('n', '<c-h>', ':BufferLineCyclePrev<CR>')
 bindkey('n', '<c-l>', ':BufferLineCycleNext<CR>')
