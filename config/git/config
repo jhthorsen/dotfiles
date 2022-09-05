@@ -5,7 +5,6 @@
 
   ca = commit --amend -C HEAD
   co = !/bin/bash -c 'git checkout "$0" && [ -x ../co ] && ../co "$0"'
-  cl = ship clean
   cp = !/bin/bash -c 'git show "$0":"$1" > "$1"'
   dc = diff --cached
   ds = diff --shortstat --numstat HEAD^
@@ -18,14 +17,14 @@
   lgg = !git lg --graph
   lgh = log -n5 --pretty=format:'%Cred%h%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset %C(yellow)%d%Creset'
 
-  build = ship build
+  authors = git-authors
   graph = !git-graph.pl
   hist = log --graph --all --color=always --decorate --pretty=format:'%Cred%h%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset %C(yellow)%d%Creset'
   ready = rebase -i @{u}
+  ship = git-ship
   snapshot = !/bin/bash -c 'git branch _/$(date +%Y%m%d-%H%M%S)'
   standup = log --pretty=format:'%Cred%h%Creset -%Creset %s %Cgreen(%cD) %C(bold blue)<%an>%Creset' --since yesterday --author Jan
-  start = ship start
-  test-coverage = ship test-coverage
+  start = git-start
 
 [branch]
   autosetuprebase = always

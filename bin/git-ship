@@ -1,0 +1,50 @@
+#!/bin/bash
+set -e; # Exit on command error
+DOTFILES_ROOT="$(dirname "$(dirname "$0")")";
+AF="6";
+PS5="> ";
+
+getopt() {
+  while [ -n "$*" ]; do case "$1" in
+    --dry-run) shift; AF="7"; PS5="# " ;;
+    --no-test) shift; RUN_TESTS="no" ;;
+    -t|--template) shift; TEMPLATE="$1"; shift ;;
+    *) shift ;;
+  esac done
+}
+
+git_commit_maybe() {
+  git status --porcelain | grep -q "." || return 0;
+  run git commit -m "$1";
+}
+
+main() {
+  git status --porcelain | grep "." && usage 1 "Cannot release from unclean repository. (git clean -fd)";
+  source "$TEMPLATE_DIR/git-ship.sh";
+  prepare_project;
+  build_project;
+  [ "$RUN_TESTS" = "no" ] || test_project;
+  ship_project;
+}
+
+run() {
+  echo "$(tput setaf "$AF")$PS5$*$(tput sgr0)" >&2;
+  [ "$PS5" = "# " ] || "$@";
+}
+
+setup() {
+  [ -z "$TEMPLATE" ] && usage 0;
+  TEMPLATE_DIR="$DOTFILES_ROOT/templates/$TEMPLATE";
+  [ -d "$TEMPLATE_DIR" ] || usage 20 "Not a directory: $TEMPLATE_DIR";
+  [ -x "$TEMPLATE_DIR/git-ship.sh" ] || usage 2 "No such executable: $TEMPLATE_DIR/git-ship.sh";
+  [ -z "$RELEASE_DATE" ] && RELEASE_DATE="$(date +"%Y-%m-%dT%H:%M:%S")";
+}
+
+usage() {
+  [ -z "$2" ] \
+    && echo "Usage: git ship [--dry-run] [--no-test] --template perl" \
+    || echo "$(tput setaf 1)$2$(tput sgr0)";
+  exit "$1";
+}
+
+getopt "$@" && setup && main;

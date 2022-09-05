@@ -1,0 +1,4 @@
+#!/bin/bash
+REFNAME="$1";
+[ -z "$REFNAME" ] && REFNAME="$(git for-each-ref --format '%(refname)' --sort=-creatordate refs/tags | head -n1)";
+git log --format="%an <%ae>" "$REFNAME..HEAD" | sort | uniq;
