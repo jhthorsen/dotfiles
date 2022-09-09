@@ -9,9 +9,11 @@
 \B\.DS_Store
 \B\._
 \B\.git\b
+\B\.gitattributes\b
 \B\.github\b
 \B\.gitignore\b
 \B\.pls_cache\b
+\B\.vstags\b
 \bMANIFEST\.bak
 \bMakeMaker-\d
 \bMakefile$

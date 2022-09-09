@@ -1,3 +1,6 @@
+use 5.016;
+use strict;
+use warnings;
 use utf8;
 use ExtUtils::MakeMaker;
 
@@ -14,11 +17,15 @@ my %WriteMakefileArgs = (
   PREREQ_PM     => {'Mojolicious' => '9.00'},
   META_MERGE    => {
     'dynamic_config' => 0,
-    'meta-spec'      => {version => 2},
+    'meta-spec'      => {version   => 2},
+    'no_index'       => {directory => [qw(examples t)]},
+    'prereqs'        => {runtime   => {requires => {perl => '5.016'}}},
     'resources'      => {
       bugtracker => {web => "$GITHUB_URL/issues"},
       homepage   => $GITHUB_URL,
+      license    => ['http://www.opensource.org/licenses/artistic-license-2.0'],
       repository => {type => 'git', url => "$GITHUB_URL.git", web => $GITHUB_URL},
+      x_IRC      => {url  => 'irc://irc.libera.chat/#convos', web => 'https://web.libera.chat/#convos'},
     },
     'x_contributors' => [],
   },

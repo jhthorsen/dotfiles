@@ -7,6 +7,7 @@ PS5="> ";
 getopt() {
   while [ -n "$*" ]; do case "$1" in
     -t|--template) shift; TEMPLATE="$1"; shift ;;
+    --diff) shift; DIFF_EXISTING="$1"; shift ;;
     --dry-run) shift; AF="7"; PS5="# " ;;
     *) [ -z "$PROJECT_NAME" ] && PROJECT_NAME="$1"; shift ;;
   esac done
@@ -22,11 +23,22 @@ main() {
   [ -d ".git" ] || run git init --initial-branch="main" "$PROJECT_NAME_LC";
   [ -d "../$PROJECT_NAME_LC" ] || run cd "$PROJECT_NAME_LC";
   [ -f ".gitignore" ] || run touch .gitignore;
-  run rsync -a --copy-unsafe-links --out-format='%i %n%L' --ignore-existing --exclude="git-*.sh" "$TEMPLATE_DIR/" "./";
-  git_commit_maybe "Add template files from github.com/jhthorsen/dotfiles.git/templates/$TEMPLATE";
+  rsync_a  --ignore-existing --exclude="git-*.sh" "$TEMPLATE_DIR/" "./";
+  git_commit_maybe "Add template files from github.com/jhthorsen/dotfiles/tree/main/templates/$TEMPLATE";
   [ -x "$TEMPLATE_DIR/git-start.sh" ] && source "$TEMPLATE_DIR/git-start.sh";
   start_project;
-  git_commit_maybe "Ran github.com/jhthorsen/dotfiles.git/templates/$TEMPLATE/git-start.sh";
+  git_commit_maybe "Ran github.com/jhthorsen/dotfiles/tree/main/templates/$TEMPLATE/git-start.sh";
+}
+
+rsync_a() {
+  local source_dir="${*: -2:1}";
+  set +e;
+  run rsync -a --copy-unsafe-links --info=name2,skip1 "$@" | sort | while read -r l; do
+    n="$(echo "$l" | cut -d' ' -f1)";
+    [ -d "$n" ] || echo "$l";
+    [ -n "$DIFF_EXISTING" ] && echo "$l" | grep -q " exists" && diff -u "$n" "$source_dir$n" | diff-so-fancy | head -n"$DIFF_EXISTING";
+  done
+  set -e;
 }
 
 run() {
@@ -51,7 +63,7 @@ start_project() {
 
 usage() {
   [ -z "$2" ] \
-    && echo "Usage: git start [--dry-run] --template perl My-Project" \
+    && echo "Usage: git start [--diff 40] [--dry-run] --template perl My-Project" \
     || echo "$(tput setaf 1)$2$(tput sgr0)";
   exit "$1";
 }
