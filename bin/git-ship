@@ -19,12 +19,17 @@ git_commit_maybe() {
 }
 
 main() {
-  git status --porcelain | grep "." && usage 1 "Cannot release from unclean repository. (git clean -fd)";
   source "$TEMPLATE_DIR/git-ship.sh";
-  prepare_project;
-  build_project;
-  [ "$RUN_TESTS" = "no" ] || test_project;
-  ship_project;
+
+  if project_is_ready; then
+    ship_project;
+  else
+    git status --porcelain | grep "." && usage 1 "Cannot release from unclean repository. (git clean -fd)";
+    prepare_project;
+    build_project;
+    [ "$RUN_TESTS" = "no" ] || test_project;
+    echo -ne "\n$(tput setaf 2)# Project is ready. Run 'git ship' again to push it upstream.$(tput sgr0)\n\n";
+  fi
 }
 
 run() {
