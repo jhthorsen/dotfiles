@@ -25,7 +25,7 @@ my %WriteMakefileArgs = (
       homepage   => $GITHUB_URL,
       license    => ['http://www.opensource.org/licenses/artistic-license-2.0'],
       repository => {type => 'git', url => "$GITHUB_URL.git", web => $GITHUB_URL},
-      x_IRC      => {url  => 'irc://irc.libera.chat/#convos', web => 'https://web.libera.chat/#convos'},
+      x_IRC => {url => 'irc://irc.libera.chat/#convos', web => 'https://web.libera.chat/#convos'},
     },
     'x_contributors' => [],
   },

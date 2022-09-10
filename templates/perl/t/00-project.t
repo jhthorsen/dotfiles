@@ -1,29 +1,31 @@
 use Test2::V0;
 use File::Find;
 
-if (($ENV{HARNESS_PERL_SWITCHES} || '') =~ /Devel::Cover/) {
-  skip_all('HARNESS_PERL_SWITCHES =~ /Devel::Cover/');
-}
-if (!eval 'use Test::Pod; 1') {
-  *Test::Pod::pod_file_ok = sub {
-    skip "pod_file_ok(@_) (Test::Pod is required)", 1;
-  };
-}
-if (!eval 'use Test::Pod::Coverage; 1') {
-  *Test::Pod::Coverage::pod_coverage_ok = sub {
-    skip "pod_coverage_ok(@_) (Test::Pod::Coverage is required)", 1;
-  };
-}
-if (!eval 'use Test::CPAN::Changes; 1') {
-  *Test::CPAN::Changes::changes_file_ok = sub {
-    skip "changes_ok(@_) (Test::CPAN::Changes is required)", 4;
+skip_all 'HARNESS_PERL_SWITCHES =~ /Devel::Cover/'
+  if +($ENV{HARNESS_PERL_SWITCHES} || '') =~ /Devel::Cover/;
+
+for (qw(
+  Test::CPAN::Changes::changes_file_ok+VERSION!4
+  Test::Pod::Coverage::pod_coverage_ok+VERSION!1
+  Test::Pod::pod_file_ok+VERSION!1
+  Test::Spelling::pod_file_spelling_ok+has_working_spellchecker!1
+))
+{
+  my ($fqn, $module, $sub, $check, $skip_n) = /^((.*)::(\w+))\+(\w+)!(\d+)$/;
+  next if eval "use $module;$module->$check";
+  no strict qw(refs);
+  *$fqn = sub {
+  SKIP: { skip "$sub(@_) ($module is required)", $skip_n }
   };
 }
 
 my @files;
-find({wanted => sub { /\.pm$/ and push @files, $File::Find::name }, no_chdir => 1}, -e 'blib' ? 'blib' : 'lib');
+find({wanted => sub { /\.pm$/ and push @files, $File::Find::name }, no_chdir => 1},
+  -e 'blib' ? 'blib' : 'lib');
+plan tests => @files * 4 + 4;
 
-plan tests => @files * 3 + 4;
+Test::Spelling::add_stopwords(<DATA>)
+  if Test::Spelling->can('has_working_spellchecker') && Test::Spelling->has_working_spellchecker;
 
 for my $file (@files) {
   my $module = $file;
@@ -32,7 +34,12 @@ for my $file (@files) {
   $module =~ s,/,::,g;
   ok eval "use $module; 1", "use $module" or diag $@;
   Test::Pod::pod_file_ok($file);
-  Test::Pod::Coverage::pod_coverage_ok($module, {also_private => [qr/^[A-Z_]+$/],});
+  Test::Pod::Coverage::pod_coverage_ok($module, {also_private => [qr/^[A-Z_]+$/]});
+  Test::Spelling::pod_file_spelling_ok($file);
 }
 
 Test::CPAN::Changes::changes_file_ok();
+
+__DATA__
+Henning
+Thorsen
