@@ -38,6 +38,7 @@ run() {
 }
 
 setup() {
+  [ -z "$TEMPLATE" ] && [ -e "Makefile.PL" ] && TEMPLATE="perl";
   [ -z "$TEMPLATE" ] && usage 0;
   TEMPLATE_DIR="$DOTFILES_ROOT/templates/$TEMPLATE";
   [ -d "$TEMPLATE_DIR" ] || usage 20 "Not a directory: $TEMPLATE_DIR";

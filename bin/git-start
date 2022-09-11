@@ -36,6 +36,7 @@ run() {
 
 setup() {
   [ -z "$PROJECT_NAME" ] && usage 0;
+  [ -z "$TEMPLATE" ] && [ -e "Makefile.PL" ] && TEMPLATE="perl";
   [ -z "$TEMPLATE" ] && usage 0;
   echo "$PROJECT_NAME" | grep -qi '^[a-z]' || usage 1 "Not a valid project name: $PROJECT_NAME";
   PROJECT_NAME_LC="$(echo "$PROJECT_NAME" | tr "[:upper:]" "[:lower:]")";
