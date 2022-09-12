@@ -12,6 +12,7 @@ find_bin() {
 
 if [ -e 'pnpm-lock.yaml' ] && [ -z "$NPM" ]; then
   REAL_BIN="$(find_bin pnpm)";
+  export NPM="1";
   [ -n "$REAL_BIN" ] && exec $REAL_BIN "$@";
 else
   REAL_BIN="$(find_bin npm)";
