@@ -1,11 +1,8 @@
-require('nightfox').setup({
-  options = {
-    transparent = true,
-    dim_inactive = true,
-  },
-});
+vim.g.spell_under = 'codedark'
+vim.g.codedark_conservative = 0
+vim.g.codedark_transparent = 1
+vim.g.codedark_italics = 1
 
-vim.g.spell_under = 'nightfox'
 vim.o.background = 'dark'
 vim.o.laststatus = 1
 vim.o.number = true

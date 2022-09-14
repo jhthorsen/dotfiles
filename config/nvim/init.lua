@@ -30,7 +30,6 @@ return require('packer').startup(function()
   use {'wbthomason/packer.nvim'}
   use {'akinsho/bufferline.nvim', requires = 'kyazdani42/nvim-web-devicons'}
   use {'ap/vim-css-color'}
-  use {'edeneast/nightfox.nvim'}
   use {'hrsh7th/nvim-cmp', requires = {
     'hrsh7th/cmp-buffer',
     'hrsh7th/cmp-nvim-lsp',
@@ -47,6 +46,7 @@ return require('packer').startup(function()
   use {'nvim-telescope/telescope.nvim', requires = {'nvim-lua/plenary.nvim'}}
   use {'nvim-treesitter/nvim-treesitter'}
   use {'osamuaoki/vim-spell-under'}
+  use {'tomasiser/vim-code-dark'}
   use {'yko/mojo.vim', ft = {'ep', 'epl'}}
 
   local ok, mod = pcall(require, 'config/theme')
