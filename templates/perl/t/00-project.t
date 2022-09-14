@@ -14,6 +14,7 @@ for (qw(
   my ($fqn, $module, $sub, $check, $skip_n) = /^((.*)::(\w+))\+(\w+)!(\d+)$/;
   next if eval "use $module;$module->$check";
   no strict qw(refs);
+  no warnings qw(redefine);
   *$fqn = sub {
   SKIP: { skip "$sub(@_) ($module is required)", $skip_n }
   };
