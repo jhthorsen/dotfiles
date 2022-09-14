@@ -1,4 +1,11 @@
-vim.g.spell_under = 'gruvbox-baby'
+require('nightfox').setup({
+  options = {
+    transparent = true,
+    dim_inactive = true,
+  },
+});
+
+vim.g.spell_under = 'nightfox'
 vim.o.background = 'dark'
 vim.o.laststatus = 1
 vim.o.number = true
@@ -9,11 +16,6 @@ vim.o.showmode = false
 vim.o.showcmd = true
 vim.o.signcolumn = 'yes'
 vim.o.termguicolors = true
-
-local colors = require('gruvbox-baby.colors').config()
-
-vim.g.gruvbox_baby_background_color = 'dark'
-vim.g.gruvbox_baby_transparent_mode = true
 
 vim.api.nvim_exec([[
   syntax match NonASCII "[^\x00-\x7F]"

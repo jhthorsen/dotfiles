@@ -30,6 +30,7 @@ return require('packer').startup(function()
   use {'wbthomason/packer.nvim'}
   use {'akinsho/bufferline.nvim', requires = 'kyazdani42/nvim-web-devicons'}
   use {'ap/vim-css-color'}
+  use {'edeneast/nightfox.nvim'}
   use {'hrsh7th/nvim-cmp', requires = {
     'hrsh7th/cmp-buffer',
     'hrsh7th/cmp-nvim-lsp',
@@ -38,7 +39,6 @@ return require('packer').startup(function()
   }}
   use {'kylechui/nvim-surround', config = function() require('nvim-surround').setup() end}
   use {'lucas1/vim-perl', branch = 'dev'}
-  use {'luisiacc/gruvbox-baby'}
   use {'mattn/emmet-vim'}
   use {'mg979/vim-visual-multi'}
   use {'neovim/nvim-lspconfig'}
