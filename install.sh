@@ -1,11 +1,12 @@
 #!/bin/zsh
-function abort() {
+
+abort() {
   echo "# ERROR $*" >&2;
   exit 1;
 }
 
-function lnk() {
-  FROM="$(readlink -f $1)";
+lnk() {
+  FROM="$(readlink_f $1)";
   TO="$2";
   [ ! -e $1 ] && abort "$1 cannot be found";
   [ "x$IMPORT" = "x1" -a ! -L $TO ] && run cp $TO $FROM;
@@ -13,31 +14,35 @@ function lnk() {
   [ -L $TO ] || run ln -s $FROM $TO;
 }
 
-function run() {
+readlink_f() {
+  [ "x$UNAME" = "xDarwin" ] && readlink $* || readlink -f $*;
+}
+
+run() {
   echo "> $*" >&2;
   [ "x$DRY_RUN" = "x" ] && $*;
 }
 
-function install_misc() {
+install_misc() {
   lnk config/ackrc $HOME/.ackrc;
   lnk config/git/gitignore_global $HOME/.gitignore_global;
   lnk config/lf $XDG_CONFIG_DIR/lf;
   run perl config/git/generate.pl;
 }
 
-function install_tmux() {
+install_tmux() {
   lnk config/tmux/tmux.conf $HOME/.tmux.conf;
   [ -d ~/.tmux/plugins ] || mkdir -p ~/.tmux/plugins;
   [ -d ~/.tmux/plugins/tpm ] || git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 }
 
-function install_nvim() {
+install_nvim() {
   lnk config/nvim $XDG_CONFIG_DIR/nvim;
   [ -d "$XDG_DATA_HOME/nvim/site/pack/packer/start" ] \
     || git clone --depth 1 https://github.com/wbthomason/packer.nvim $XDG_DATA_HOME/nvim/site/pack/packer/start/packer.nvim;
 }
 
-function install_wezterm() {
+install_wezterm() {
   lnk config/wezterm $HOME/.config/wezterm;
   [ -e "$HOME/.config/wezterm/private_launch_menu.lua" ] || echo 'return {}' > "$HOME/.config/wezterm/private_launch_menu.lua";
   [ -e "$HOME/.config/wezterm/private_ssh_domains.lua" ] || echo 'return {}' > "$HOME/.config/wezterm/private_ssh_domains.lua";
@@ -45,7 +50,7 @@ function install_wezterm() {
   wget -qO $XDG_CONFIG_DIR/zsh/30-wezterm.sh https://raw.githubusercontent.com/wez/wezterm/main/assets/shell-integration/wezterm.sh;
 }
 
-function install_zsh() {
+install_zsh() {
   lnk config/zsh $XDG_CONFIG_DIR/zsh;
   lnk config/zsh/zshrc $HOME/.zshrc;
 

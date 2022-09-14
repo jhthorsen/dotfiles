@@ -91,7 +91,6 @@ run $BREW_BIN install telnet
 run $BREW_BIN install tesseract
 run $BREW_BIN install trash-cli
 run $BREW_BIN install tree
-run $BREW_BIN install vim
 run $BREW_BIN install wget
 run $BREW_BIN install z
 run $BREW_BIN install zsh
@@ -109,9 +108,16 @@ run make hosts-firefox-user;
 run cd -;
 
 run cpanm -n \
-  App::errno  App::githook_perltidy  App::httpstatus \
-  App::pause  App::podify            App::prowess    \
-  App::tt     Devel::Cover           PLS             ;
+  App::errno \
+  App::githook_perltidy \
+  App::httpstatus \
+  App::pause \
+  App::podify \
+  App::tt \
+  CPAN::Uploader \
+  Devel::Cover \
+  Pod::Markdown \
+  Term::ReadKey;
 
 # run pip install osxphotos;
 

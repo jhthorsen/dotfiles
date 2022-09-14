@@ -24,7 +24,8 @@ setopt notify
 unsetopt extendedglob # Allow "git show HEAD^"
 
 export UNAME=$(uname);
-function readlink_f() {
+
+readlink_f() {
   [ "x$UNAME" = "xDarwin" ] && readlink $* || readlink -f $*;
 }
 
