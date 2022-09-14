@@ -1,3 +1,10 @@
+PATH="/sbin:$PATH";
+PATH="/usr/sbin:$PATH";
+PATH="/usr/local/sbin:$PATH";
+PATH="/bin:$PATH";
+PATH="/usr/bin:$PATH";
+PATH="/usr/local/bin:$PATH";
+
 PATH="$HOMEBREW_PREFIX/opt/ruby/bin:$PATH";
 PATH="$HOMEBREW_PREFIX/lib/ruby/gems/3.1.0/bin:$PATH";
 PATH="$HOMEBREW_PREFIX/opt/python/libexec/bin:$PATH";
