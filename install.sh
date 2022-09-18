@@ -52,17 +52,10 @@ install_wezterm() {
 
 install_zsh() {
   lnk config/zsh $XDG_CONFIG_DIR/zsh;
+  lnk config/starship.toml $XDG_CONFIG_DIR/starship.toml;
   lnk config/zsh/zshrc $HOME/.zshrc;
-
   [ -d "$HOMEBREW_PREFIX" ] \
     && lnk $HOMEBREW_PREFIX/etc/profile.d/z.sh $XDG_CONFIG_DIR/zsh/15-z.sh;
-
-  if autoload -Uz is-at-least && is-at-least 5.1; then
-    [ -d "$XDG_CONFIG_DIR/zsh/powerlevel10k" ] \
-      || run git clone https://github.com/romkatv/powerlevel10k.git $XDG_CONFIG_DIR/zsh/powerlevel10k;
-    lnk $XDG_CONFIG_DIR/zsh/powerlevel10k/powerlevel10k.zsh-theme $XDG_CONFIG_DIR/zsh/20-theme-powerlevel10k.sh;
-  fi
-
   [ -d "$HOMEBREW_PREFIX" ] \
     && lnk $HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh $XDG_CONFIG_DIR/zsh/25-zsh-syntax-highlighting.zsh
 }

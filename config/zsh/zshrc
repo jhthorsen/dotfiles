@@ -4,12 +4,6 @@
 [ -z "$HOMEBREW_PREFIX" ] && export HOMEBREW_PREFIX="/opt/homebrew";
 [ -z "$HOMEBREW_REPOSITORY" ] && export HOMEBREW_REPOSITORY="/opt/homebrew";
 
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-[ -r "$XDG_CACHE_HOME/p10k-instant-prompt-${(%):-%n}.zsh" ] \
-  && source "$XDG_CACHE_HOME/p10k-instant-prompt-${(%):-%n}.zsh";
-
 # Lines configured by zsh-newuser-install
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall
@@ -35,3 +29,5 @@ for ZSH_SOURCE in $(find $ZSH_CONFIG_HOME -maxdepth 1 | grep 'zsh/[0-9]\+-' | so
   source $ZSH_SOURCE;
   unset ZSH_SOURCE;
 done
+
+command -v starship >/dev/null && eval "$(starship init zsh)";
