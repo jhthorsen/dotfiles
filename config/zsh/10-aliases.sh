@@ -7,6 +7,8 @@ alias gensecret='echo "$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 32)"'
 alias gti='git'
 alias hwinfo='dmidecode'
 alias imgcat='wezterm imgcat';
+alias l='ls --color=auto --group-directories-first -F -h'
+alias ll='l -l'
 alias limited='ulimit -d 600000 -m 600000 -v 600000 -t 2 -u 5000; ulimit -a'
 alias pass='stty sane && PASSWORD_STORE_ENABLE_EXTENSIONS=true pass'
 alias pcover='perl Makefile.PL; cover -ignore_re="t/.*" -prefer_lib -test; make clean'

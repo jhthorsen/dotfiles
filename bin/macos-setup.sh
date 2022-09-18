@@ -73,6 +73,7 @@ run $BREW_BIN install pinentry
 run $BREW_BIN install pinentry-mac
 run $BREW_BIN install pngcrush
 run $BREW_BIN install postgresql
+run $BREW_BIN install procs
 run $BREW_BIN install psgrep
 run $BREW_BIN install python
 run $BREW_BIN install qrencode
