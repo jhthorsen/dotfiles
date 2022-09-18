@@ -1,5 +1,6 @@
 *swp
 .pls_cache
+bin/starship
 local/
 config/nvim/spell
 config/nvim/plugin/
