@@ -44,8 +44,8 @@ style = "bg:236 yellow"
 
 [hostname]
 format = "[$ssh_symbol$hostname]($style)"
-ssh_symbol = "🌐"
-style = "bg:236 fg:249"
+ssh_symbol = "@"
+style = "bg:236 fg:139"
 
 [jobs]
 format = '[\[$number\] ]($style)'
