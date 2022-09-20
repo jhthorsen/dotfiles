@@ -91,3 +91,9 @@ https://hea-www.harvard.edu/~fine/Tech/vi.html
 | <       | unindent command                                                   | cursor motion command                                                   |                                                               |
 | >       | indent command                                                     | cursor motion command                                                   |                                                               |
 | ?       | search backward                                                    | search string, ESC or CR                                                | (DELETE) UNBOUND                                              |
+
+# Not used so much...
+
+    va{  # select everything between "{"
+    =ap  # Fix indentation inside a paragraph
+    o    # Move to top/bottom of visiual selection
