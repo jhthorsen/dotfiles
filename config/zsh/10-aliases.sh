@@ -1,6 +1,5 @@
 #!/bin/bash
-RG_COMMAND="$(command -v rg)";
-
+alias ack='rg';
 alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
 alias cpanm='cpanm -M https://cpan.metacpan.org'
 alias ddp="PERL5OPT=-MDDP=caller_info,1,colored,1,use_prototypes,0"
@@ -28,17 +27,4 @@ if [ "$(uname)" = "Linux" ]; then
   alias wp='sudo -u www-data wp';
 fi
 
-command -v launchctl  >/dev/null && alias psql.start="launchctl load $HOMEBREW_PREFIX/opt/postgresql/homebrew.mxcl.postgresql.plist"
-command -v tmux       >/dev/null && alias tma='tmux attach-session -t'
-
-rg() {
-  if [ -n "$RG_COMMAND" ]; then
-    $RG_COMMAND "$@";
-  else
-    ack "$@";
-  fi
-}
-
-alias rgi="rg --files-without-match"
-alias ack='rg';
-command -v ack-grep   >/dev/null && alias ack='ack-grep'
+command -v launchctl >/dev/null && alias psql.start="launchctl load $HOMEBREW_PREFIX/opt/postgresql/homebrew.mxcl.postgresql.plist"

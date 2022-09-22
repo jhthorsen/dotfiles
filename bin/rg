@@ -1,0 +1,20 @@
+#!/usr/bin/env perl
+use v5.10;
+use strict;
+use warnings;
+use Cwd;
+
+my $rg = which('rg');
+exec $rg => map { $_ eq '-S' ? '-L' : $_ eq '-L' ? '--files-without-match' : $_ } @ARGV if $rg;
+
+my $ack = which('ack-grep') || which('ack');
+exec $ack => @ARGV if $rg;
+
+exec grep => @ARGV;
+die $!;
+
+sub which {
+  my $name = shift;
+  state $self = Cwd::abs_path($0);
+  return +(grep { $_ ne $self and -x } map { "$_/$name" } reverse split /:/, $ENV{PATH} || '')[0];
+}
