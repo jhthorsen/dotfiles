@@ -1,4 +1,6 @@
-alias ack='rg';
+#!/bin/bash
+RG_COMMAND="$(command -v rg)";
+
 alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
 alias cpanm='cpanm -M https://cpan.metacpan.org'
 alias ddp="PERL5OPT=-MDDP=caller_info,1,colored,1,use_prototypes,0"
@@ -18,8 +20,7 @@ alias sort='LC_ALL=C sort'
 alias tmpdir='perl -le"use File::Spec;print File::Spec->tmpdir"'
 alias wttr='curl https://wttr.in/'
 
-if [ "x$(uname)" = "xLinux" ]; then
-  alias apt='sudo -i apt';
+if [ "$(uname)" = "Linux" ]; then
   alias btrfs='sudo -i btrfs';
   alias docker='sudo -i docker';
   alias nginx='sudo -i nginx';
@@ -29,8 +30,15 @@ fi
 
 command -v launchctl  >/dev/null && alias psql.start="launchctl load $HOMEBREW_PREFIX/opt/postgresql/homebrew.mxcl.postgresql.plist"
 command -v tmux       >/dev/null && alias tma='tmux attach-session -t'
-command -v ack-grep   >/dev/null && alias ack='ack-grep'
 
-freestyle_libre_fix() {
-  perl -pi -e's!,(\d\d)-(\d\d)-(\d\d\d\d) (\d\d):(\d\d),!,$3-$2-$1 $4:$5:00,!' $*;
+rg() {
+  if [ -n "$RG_COMMAND" ]; then
+    $RG_COMMAND "$@";
+  else
+    ack "$@";
+  fi
 }
+
+alias rgi="rg --files-without-match"
+alias ack='rg';
+command -v ack-grep   >/dev/null && alias ack='ack-grep'
