@@ -1,5 +1,4 @@
 #!/bin/bash
-alias ack='rg';
 alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
 alias cpanm='cpanm -M https://cpan.metacpan.org'
 alias ddp="PERL5OPT=-MDDP=caller_info,1,colored,1,use_prototypes,0"
@@ -28,3 +27,4 @@ if [ "$(uname)" = "Linux" ]; then
 fi
 
 command -v launchctl >/dev/null && alias psql.start="launchctl load $HOMEBREW_PREFIX/opt/postgresql/homebrew.mxcl.postgresql.plist"
+command -v rg >/dev/null && alias ack='rg';
