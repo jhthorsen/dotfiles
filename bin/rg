@@ -7,8 +7,11 @@ use Cwd;
 my $rg = which('rg');
 exec $rg => map { $_ eq '-S' ? '-L' : $_ eq '-L' ? '--files-without-match' : $_ } @ARGV if $rg;
 
+# rg --files without rg
+exec find => $ARGV[1] || '.', qw(-not -path */.* -type f) if grep { $_ eq '--files' } @ARGV;
+
 my $ack = which('ack-grep') || which('ack');
-exec $ack => @ARGV if $rg;
+exec $ack => @ARGV if $ack;
 
 exec grep => @ARGV;
 die $!;
