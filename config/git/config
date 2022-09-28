@@ -7,6 +7,7 @@
   co = !/bin/bash -c 'git checkout "$0" && [ -x ../co ] && ../co "$0"'
   cp = !/bin/bash -c 'git show "$0":"$1" > "$1"'
   dc = diff --cached
+  df = !diffu
   ds = diff --shortstat --numstat HEAD^
   gl = log --graph --pretty='format:%C(yellow)%h%Cred%d%Creset %s %C(white) %C(cyan)%an%Creset, %C(green)%ar%Creset'
   lg = log --pretty='format:%Cblue%h%Creset %s (%Cgreen%ar%Creset)'

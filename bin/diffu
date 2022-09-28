@@ -1,2 +1,27 @@
 #!/bin/bash
-git diff --no-index --color "$1" "$2" | diff-so-fancy | less -RFX
+
+run_diff() {
+  if [ ! -t 0 ]; then
+    cat -;
+  elif [ -n "$2" ] && [ -r "$2" ] && [ -r "$1" ]; then
+    diff -u "$1" "$2";
+  else
+    git diff "$@";
+  fi
+}
+
+run_pager() {
+  less -RX -x2 -F;
+}
+
+run_prettifier() {
+  if [ -n "$(command -v delta)" ]; then
+    delta --dark --line-numbers --syntax-theme=Dracula --zero-style "dim syntax";
+  elif [ -n "$(command -v diff-so-fancy)" ]; then
+    diff-so-fancy --color;
+  else
+    cat;
+  fi
+}
+
+run_diff "$@" | run_prettifier | run_pager;
