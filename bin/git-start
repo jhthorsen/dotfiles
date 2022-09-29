@@ -36,7 +36,7 @@ rsync_a() {
   run rsync -a --copy-unsafe-links --info=name2,skip1 "$@" | sort | while read -r l; do
     n="$(echo "$l" | cut -d' ' -f1)";
     [ -d "$n" ] || echo "$l";
-    [ -n "$DIFF_EXISTING" ] && echo "$l" | grep -q " exists" && diff -u "$n" "$source_dir$n" | diff-so-fancy | head -n"$DIFF_EXISTING";
+    [ -n "$DIFF_EXISTING" ] && echo "$l" | grep -q " exists" && diffu "$n" "$source_dir$n" | head -n"$DIFF_EXISTING";
   done
   set -e;
 }

@@ -1,27 +1,119 @@
-#!/bin/bash
+#!/usr/bin/env perl
+use v5.10;
+use strict;
+use warnings;
 
-run_diff() {
-  if [ ! -t 0 ]; then
-    cat -;
-  elif [ -n "$2" ] && [ -r "$2" ] && [ -r "$1" ]; then
-    diff -u "$1" "$2";
-  else
-    git diff "$@";
-  fi
+#
+# Colors can be customized in ~/.gitconfig:
+#
+# [color "diff"]
+#   diff = "#f3be00"
+#   old = "#AD000A"
+#   new = "#6A9955"
+#   func = "#cc99cc"
+#   frag = "#666666"
+#   context = "#958679"
+#
+
+# In case "diff HEAD^ --stat" or other fancy options
+exec qw(git diff), @ARGV if grep {/^-/} @ARGV;
+
+my $DIFF_COLOR = get_ansi_color("color.diff.diff", "#f3be00", "#111111");
+my $NEW_COLOR  = get_ansi_color("color.diff.new",  "#6A9955", "#111111");
+my $OLD_COLOR  = get_ansi_color("color.diff.old",  "#aa2334", "#111111");
+
+my $ANSI_RE    = qr/\e\[[a-fA-F0-9;]*[mK]/;
+my $ANSI_RESET = "\e[m";
+
+$ENV{COLUMNS} ||= get_terminal_width();
+
+my @diff_cmd
+  = (@ARGV == 2 && -e $ARGV[0] && -e $ARGV[1])
+  ? qw(git diff --color --no-index --)
+  : qw(git diff --color);
+
+open my $DIFF, "-|", @diff_cmd, @ARGV or die "git diff: $!";
+open my $PAGER, "|-", qw(less -RX -x2 -F +/^---) or die "less: $!";
+
+diff_to_pager($DIFF, $PAGER);
+
+sub diff_to_pager {
+  my ($DIFF, $PAGER) = @_;
+  my %header = (clear => 1);
+
+  while (defined(my $line = readline $DIFF)) {
+    chomp $line;
+    local $| = 1;
+    my $formatting = $line =~ s/($ANSI_RE)// ? $1 : "";
+    $line =~ s/\e\[0?m//go; # Remove $ANSI_RESET
+
+    if ($line =~ /^diff --git/ ... $line =~ /^@@\s/) {
+      %header = (op => "changed") if $header{clear};
+
+      # diff --git a/.eslintignore b/.eslintignore
+      # new file mode 100644
+      # index 000000000..78b3681a4
+      # --- /dev/null
+      # +++ b/.eslintignore
+      # @@ -0,0 +1,5 @@
+
+      @header{qw(from to)} = map { s!^[ab]/!!; $_ } split /\s/, $1, 2 if $line =~ /diff --git (.*)/;
+      $header{op}          = "added"   if $line =~ /new file/;
+      $header{op}          = "deleted" if $line =~ /deleted/;
+      $header{op}          = "renamed" if $line =~ /renamed/;
+
+      next unless $line =~ /^@@\s/;
+      print {$PAGER} format_header($header{op}, \%header), "\n";
+      print {$PAGER} "$formatting$line\n";
+      $header{clear} = 1;
+    }
+    else {
+      $line =~ s/^[-+]// if $header{op} eq "added" or $header{op} eq "deleted";
+      print {$PAGER} "$formatting$line$ANSI_RESET\n";
+    }
+  }
 }
 
-run_pager() {
-  less -RX -x2 -F;
+sub format_header {
+  my ($op, $h) = @_;
+
+  state $pad = sub {
+    my ($color, $left, $right) = @_;
+    sprintf "%s%s%s%s%s", $color, $left, (" " x ($ENV{COLUMNS} - length "$left$right")), $right,
+      $ANSI_RESET;
+  };
+
+  return $pad->($NEW_COLOR,  "--- $h->{from}",          "#added")   if $op eq "added";
+  return $pad->($OLD_COLOR,  "--- $h->{from}",          "#deleted") if $op eq "deleted";
+  return $pad->($DIFF_COLOR, "--- $h->{from} $h->{to}", "#renamed") if $op eq "renamed";
+  return $pad->($DIFF_COLOR, "--- $h->{from}",          "#changed") if $h->{from} eq $h->{to};
+  return $pad->($DIFF_COLOR, "--- $h->{from} $h->{to}", "#diff");
 }
 
-run_prettifier() {
-  if [ -n "$(command -v delta)" ]; then
-    delta --dark --line-numbers --syntax-theme=Dracula --zero-style "dim syntax";
-  elif [ -n "$(command -v diff-so-fancy)" ]; then
-    diff-so-fancy --color;
-  else
-    cat;
-  fi
+sub get_ansi_color {
+  my ($config_path, @default) = @_;
+
+  my @colors = (split /\s+/, git_config_get($config_path));
+  $colors[0] //= $default[0] if $default[0];
+  $colors[1] //= $default[1] if $default[1];
+
+  my @fg_bg_code = qw(38 48);
+  for (@colors) {
+    my $type = shift @fg_bg_code;
+    $_ = length($_) < 6 ? "" : sprintf "\e[%d;2;%d;%d;%dm", $type, map {hex} m!(\w\w)!g;
+  }
+
+  return join "", @colors;
 }
 
-run_diff "$@" | run_prettifier | run_pager;
+sub get_terminal_width {
+  my $width = qx{tput cols};
+  return $width && $width =~ m!(\d+)! ? $1 : 80;
+}
+
+sub git_config_get {
+  my ($path) = @_;
+  my $val = qx{git config --get $path};
+  chomp $val;
+  return $val;
+}
