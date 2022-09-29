@@ -25,9 +25,8 @@ run() {
 
 install_misc() {
   lnk config/ackrc $HOME/.ackrc;
-  lnk config/git/gitignore_global $HOME/.gitignore_global;
+  lnk config/git $XDG_CONFIG_DIR/git;
   lnk config/lf $XDG_CONFIG_DIR/lf;
-  run perl config/git/generate.pl;
 }
 
 install_tmux() {
