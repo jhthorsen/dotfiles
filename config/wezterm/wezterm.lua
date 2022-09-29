@@ -49,8 +49,8 @@ return {
   hide_tab_bar_if_only_one_tab = true,
   native_macos_fullscreen_mode = false,
   window_padding = {
-    left = 1,
-    right = 1,
+    left = 0,
+    right = 0,
     top = 0,
     bottom = 0,
   },
