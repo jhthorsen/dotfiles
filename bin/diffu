@@ -64,8 +64,8 @@ sub diff_to_pager {
 
       @patch{qw(from to)} = map { s!^[ab]/!!; $_ } split /\s/, $1, 2 if $line =~ /diff --git (.*)/;
       $patch{op}          = "added"   if $line =~ /new file/;
-      $patch{op}          = "deleted" if $line =~ /deleted/;
-      $patch{op}          = "renamed" if $line =~ /renamed/;
+      $patch{op}          = "deleted" if $line =~ /deleted?/;
+      $patch{op}          = "renamed" if $line =~ /renamed?/;
 
       next unless $line =~ /^$UNIFIED_RE/;
       print {$PAGER} format_header($patch{op}, \%patch),      "\n";
@@ -88,11 +88,11 @@ sub diff_to_pager {
 sub format_header {
   my ($op, $i) = @_;
 
-  return pad($COLORS{"diff.new"},  "--- $i->{from}",          "#added")   if $op eq "added";
-  return pad($COLORS{"diff.old"},  "--- $i->{from}",          "#deleted") if $op eq "deleted";
-  return pad($COLORS{"diff.diff"}, "--- $i->{from} $i->{to}", "#renamed") if $op eq "renamed";
-  return pad($COLORS{"diff.diff"}, "--- $i->{from}",          "#changed") if $i->{from} eq $i->{to};
-  return pad($COLORS{"diff.diff"}, "--- $i->{from} $i->{to}", "#diff");
+  return pad($COLORS{"diff.new"},  "--- $i->{from}",             "#added")   if $op eq "added";
+  return pad($COLORS{"diff.old"},  "--- $i->{from}",             "#deleted") if $op eq "deleted";
+  return pad($COLORS{"diff.diff"}, "--- $i->{from} -> $i->{to}", "#renamed") if $op eq "renamed";
+  return pad($COLORS{"diff.diff"}, "--- $i->{from}", "#changed") if $i->{from} eq $i->{to};
+  return pad($COLORS{"diff.diff"}, "--- $i->{from} -> $i->{to}", "#diff");
 }
 
 sub get_terminal_width {
