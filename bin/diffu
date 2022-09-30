@@ -13,17 +13,17 @@ use warnings;
 #   func = "#775500 #191919"
 #   frag = "#aa8800 #181818"
 #   context = "#998877"
-# [diffu]
-#   pager = "less -FRX -x2"
 
 # Shortcut the translator for some known options
 exec qw(git diff), @ARGV if grep {/^--(?:name-\w+|no-patch|s\b|stat)/} @ARGV;
 
-my $DIFF_COLOR   = get_ansi_color("color.diff.diff",   "#ffbb00", "#111111");
-my $FRAG_COLOR   = get_ansi_color("color.diff.frag",   "#aa8800", "#181818");
-my $NEW_COLOR    = get_ansi_color("color.diff.new",    "#709055", "#111111");
-my $OLD_COLOR    = get_ansi_color("color.diff.old",    "#b15544", "#111111");
-my $COMMIT_COLOR = get_ansi_color("color.diff.commit", "#ffbb00", "#000000");
+my %COLORS = make_ansi_colors(
+  "diff.diff"   => "#ffbb00 #111111",
+  "diff.frag"   => "#aa8800 #181818",
+  "diff.new"    => "#709055 #111111",
+  "diff.old"    => "#b15544 #111111",
+  "diff.commit" => "#ffbb00 #000000",
+);
 
 my $ANSI_RE    = qr/\e\[[a-fA-F0-9;]*[mK]/;
 my $ANSI_RESET = "\e[m";
@@ -38,8 +38,7 @@ my @diff_cmd
 
 my $DIFF = -t STDIN ? undef : \*STDIN;
 open $DIFF, "-|", @diff_cmd, @ARGV or die "git diff: $!" unless $DIFF;
-open my $PAGER, "|-", split(/\s+/, git_config_get("diffu.pager", $ENV{PAGER} || 'less'))
-  or die "pager: $!";
+open my $PAGER, "|-", $ENV{PAGER} || 'less' or die "pager: $!";
 
 diff_to_pager($DIFF, $PAGER);
 
@@ -69,15 +68,15 @@ sub diff_to_pager {
       $patch{op}          = "renamed" if $line =~ /renamed/;
 
       next unless $line =~ /^$UNIFIED_RE/;
-      print {$PAGER} format_header($patch{op}, \%patch), "\n";
-      print {$PAGER} pad($FRAG_COLOR, $line, '', 1),     "\n";
+      print {$PAGER} format_header($patch{op}, \%patch),      "\n";
+      print {$PAGER} pad($COLORS{"diff.frag"}, $line, '', 1), "\n";
       $patch{clear} = 1;
     }
     elsif ($line =~ /^commit [a-fA-F0-9]+$/) {
-      print {$PAGER} pad($COMMIT_COLOR, "--- $line", ''), "\n";
+      print {$PAGER} pad($COLORS{"diff.commit"}, "--- $line", ''), "\n";
     }
     elsif ($line =~ /^$UNIFIED_RE/) {
-      print {$PAGER} pad($FRAG_COLOR, $line, '', 1), "\n";
+      print {$PAGER} pad($COLORS{"diff.frag"}, $line, '', 1), "\n";
     }
     else {
       $line =~ s/^[-+]// if $patch{op} eq "added" or $patch{op} eq "deleted";
@@ -89,27 +88,11 @@ sub diff_to_pager {
 sub format_header {
   my ($op, $i) = @_;
 
-  return pad($NEW_COLOR,  "--- $i->{from}",          "#added")   if $op eq "added";
-  return pad($OLD_COLOR,  "--- $i->{from}",          "#deleted") if $op eq "deleted";
-  return pad($DIFF_COLOR, "--- $i->{from} $i->{to}", "#renamed") if $op eq "renamed";
-  return pad($DIFF_COLOR, "--- $i->{from}",          "#changed") if $i->{from} eq $i->{to};
-  return pad($DIFF_COLOR, "--- $i->{from} $i->{to}", "#diff");
-}
-
-sub get_ansi_color {
-  my ($config_path, @default) = @_;
-
-  my @colors = (split /\s+/, git_config_get($config_path));
-  $colors[0] //= $default[0] if $default[0];
-  $colors[1] //= $default[1] if $default[1];
-
-  my @fg_bg_code = qw(38 48);
-  for (@colors) {
-    my $type = shift @fg_bg_code;
-    $_ = length($_) < 6 ? "" : sprintf "\e[%d;2;%d;%d;%dm", $type, map {hex} m!(\w\w)!g;
-  }
-
-  return join "", @colors;
+  return pad($COLORS{"diff.new"},  "--- $i->{from}",          "#added")   if $op eq "added";
+  return pad($COLORS{"diff.old"},  "--- $i->{from}",          "#deleted") if $op eq "deleted";
+  return pad($COLORS{"diff.diff"}, "--- $i->{from} $i->{to}", "#renamed") if $op eq "renamed";
+  return pad($COLORS{"diff.diff"}, "--- $i->{from}",          "#changed") if $i->{from} eq $i->{to};
+  return pad($COLORS{"diff.diff"}, "--- $i->{from} $i->{to}", "#diff");
 }
 
 sub get_terminal_width {
@@ -117,11 +100,28 @@ sub get_terminal_width {
   return $width && $width =~ m!(\d+)! ? $1 : 80;
 }
 
-sub git_config_get {
-  my ($path, $default) = @_;
-  my $val = qx{git config --get $path};
-  chomp $val;
-  return length($val) ? $val : $default // '';
+sub make_ansi_colors {
+  my %colors = @_;
+  open my $GIT, '-|', qw(git config --get-regexp color.*) or die "git: $!";
+  while (<$GIT>) {
+    my ($key, $val) = /^color\.(\S+)\s+(.+)/ or next;
+    my @val = split /\s/, $val;
+    $val[1] //= $1 if +($colors{$key} // '') =~ m!\s(#.+)!;    # default background
+    $colors{$key} = join ' ', @val;
+  }
+
+  for my $key (keys %colors) {
+    my @colors     = split /\s+/, $colors{$key};
+    my @fg_bg_code = qw(38 48);
+    for (@colors) {
+      my $type = shift @fg_bg_code;
+      $_ = length($_) < 6 ? "" : sprintf "\e[%d;2;%d;%d;%dm", $type, map {hex} m!(\w\w)!g;
+    }
+
+    $colors{$key} = join "", @colors;
+  }
+
+  return %colors;
 }
 
 sub pad {
