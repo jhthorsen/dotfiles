@@ -6,6 +6,7 @@ use warnings;
 # Example ~/.gitconfig:
 #
 # [color "diff"]
+#   commit = "#ffbb00"
 #   diff = "#ffbb00"
 #   old = "#b15544"
 #   new = "#709055"
@@ -13,15 +14,16 @@ use warnings;
 #   frag = "#aa8800 #181818"
 #   context = "#998877"
 # [diffu]
-#   pager = "less -RX -x2 -F +/^---"
+#   pager = "less -FRX -x2"
 
-# In case "diff HEAD^ --stat" or other fancy options
-exec qw(git diff), @ARGV if grep {/^-/} @ARGV;
+# Shortcut the translator for some known options
+exec qw(git diff), @ARGV if grep {/^--(?:name-\w+|no-patch|s\b|stat)/} @ARGV;
 
-my $DIFF_COLOR = get_ansi_color("color.diff.diff", "#f3be00", "#111111");
-my $FRAG_COLOR = get_ansi_color("color.diff.frag", "#ffbb00", "#111111");
-my $NEW_COLOR  = get_ansi_color("color.diff.new",  "#709055", "#111111");
-my $OLD_COLOR  = get_ansi_color("color.diff.old",  "#b15544", "#111111");
+my $DIFF_COLOR   = get_ansi_color("color.diff.diff",   "#ffbb00", "#111111");
+my $FRAG_COLOR   = get_ansi_color("color.diff.frag",   "#aa8800", "#181818");
+my $NEW_COLOR    = get_ansi_color("color.diff.new",    "#709055", "#111111");
+my $OLD_COLOR    = get_ansi_color("color.diff.old",    "#b15544", "#111111");
+my $COMMIT_COLOR = get_ansi_color("color.diff.commit", "#ffbb00", "#000000");
 
 my $ANSI_RE    = qr/\e\[[a-fA-F0-9;]*[mK]/;
 my $ANSI_RESET = "\e[m";
@@ -43,16 +45,16 @@ diff_to_pager($DIFF, $PAGER);
 
 sub diff_to_pager {
   my ($DIFF, $PAGER) = @_;
-  my %header = (clear => 1);
+  my %patch = (clear => 1, op => '');
 
   while (defined(my $line = readline $DIFF)) {
     chomp $line;
-    local $| = 1;
+    local $| = 1 if $ENV{LINE_BUFFERED};
     my $formatting = $line =~ s/($ANSI_RE)// ? $1 : "";
     $line =~ s/\e\[0?m//go;    # Remove $ANSI_RESET
 
     if ($line =~ /^diff --git/ .. $line =~ /^$UNIFIED_RE/) {
-      %header = (op => "changed") if $header{clear};
+      %patch = (op => "changed") if $patch{clear};
 
       # diff --git a/.eslintignore b/.eslintignore
       # new file mode 100644
@@ -61,34 +63,37 @@ sub diff_to_pager {
       # +++ b/.eslintignore
       # @@ -0,0 +1,5 @@
 
-      @header{qw(from to)} = map { s!^[ab]/!!; $_ } split /\s/, $1, 2 if $line =~ /diff --git (.*)/;
-      $header{op}          = "added"   if $line =~ /new file/;
-      $header{op}          = "deleted" if $line =~ /deleted/;
-      $header{op}          = "renamed" if $line =~ /renamed/;
+      @patch{qw(from to)} = map { s!^[ab]/!!; $_ } split /\s/, $1, 2 if $line =~ /diff --git (.*)/;
+      $patch{op}          = "added"   if $line =~ /new file/;
+      $patch{op}          = "deleted" if $line =~ /deleted/;
+      $patch{op}          = "renamed" if $line =~ /renamed/;
 
       next unless $line =~ /^$UNIFIED_RE/;
-      print {$PAGER} format_header($header{op}, \%header), "\n";
-      print {$PAGER} pad($FRAG_COLOR, $line, '', 1),       "\n";
-      $header{clear} = 1;
+      print {$PAGER} format_header($patch{op}, \%patch), "\n";
+      print {$PAGER} pad($FRAG_COLOR, $line, '', 1),     "\n";
+      $patch{clear} = 1;
+    }
+    elsif ($line =~ /^commit [a-fA-F0-9]+$/) {
+      print {$PAGER} pad($COMMIT_COLOR, "--- $line", ''), "\n";
     }
     elsif ($line =~ /^$UNIFIED_RE/) {
       print {$PAGER} pad($FRAG_COLOR, $line, '', 1), "\n";
     }
     else {
-      $line =~ s/^[-+]// if $header{op} eq "added" or $header{op} eq "deleted";
+      $line =~ s/^[-+]// if $patch{op} eq "added" or $patch{op} eq "deleted";
       print {$PAGER} "$formatting$line$ANSI_RESET\n";
     }
   }
 }
 
 sub format_header {
-  my ($op, $h) = @_;
+  my ($op, $i) = @_;
 
-  return pad($NEW_COLOR,  "--- $h->{from}",          "#added")   if $op eq "added";
-  return pad($OLD_COLOR,  "--- $h->{from}",          "#deleted") if $op eq "deleted";
-  return pad($DIFF_COLOR, "--- $h->{from} $h->{to}", "#renamed") if $op eq "renamed";
-  return pad($DIFF_COLOR, "--- $h->{from}",          "#changed") if $h->{from} eq $h->{to};
-  return pad($DIFF_COLOR, "--- $h->{from} $h->{to}", "#diff");
+  return pad($NEW_COLOR,  "--- $i->{from}",          "#added")   if $op eq "added";
+  return pad($OLD_COLOR,  "--- $i->{from}",          "#deleted") if $op eq "deleted";
+  return pad($DIFF_COLOR, "--- $i->{from} $i->{to}", "#renamed") if $op eq "renamed";
+  return pad($DIFF_COLOR, "--- $i->{from}",          "#changed") if $i->{from} eq $i->{to};
+  return pad($DIFF_COLOR, "--- $i->{from} $i->{to}", "#diff");
 }
 
 sub get_ansi_color {
