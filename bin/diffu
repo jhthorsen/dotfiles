@@ -127,5 +127,7 @@ sub git_config_get {
 sub pad {
   my ($color, $left, $right, $search_replace) = @_;
   my $len = length($search_replace ? "$left$right" =~ s/$ANSI_RE//gr : "$left$right");
-  sprintf "%s%s%s%s%s", $color, $left, (" " x ($ENV{COLUMNS} - $len)), $right, $ANSI_RESET;
+  $len = $ENV{COLUMNS} - $len;
+  $len = 0 if $len < 0;
+  sprintf "%s%s%s%s%s", $color, $left, " " x $len, $right, $ANSI_RESET;
 }
