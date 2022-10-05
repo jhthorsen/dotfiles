@@ -28,7 +28,6 @@ require('extensions/sync-file')
 -- external extensions
 return require('packer').startup(function()
   use {'wbthomason/packer.nvim'}
-  use {'akinsho/bufferline.nvim', requires = 'kyazdani42/nvim-web-devicons'}
   use {'ap/vim-css-color'}
   use {'hrsh7th/nvim-cmp', requires = {
     'hrsh7th/cmp-buffer',
@@ -37,12 +36,14 @@ return require('packer').startup(function()
     'L3MON4D3/LuaSnip',
   }}
   use {'kylechui/nvim-surround', config = function() require('nvim-surround').setup() end}
+  use {'kyazdani42/nvim-web-devicons'}
   use {'lucas1/vim-perl', branch = 'dev'}
   use {'mattn/emmet-vim'}
   use {'mg979/vim-visual-multi'}
   use {'neovim/nvim-lspconfig'}
   use {'numToStr/Comment.nvim', config = function() require('Comment').setup() end} -- gcc, gci{, gbat
   use {'NTBBloodbath/color-converter.nvim'}
+  use {'nvim-lualine/lualine.nvim', requires = {'kyazdani42/nvim-web-devicons', opt = true}}
   use {'nvim-telescope/telescope.nvim', requires = {'nvim-lua/plenary.nvim'}}
   use {'nvim-treesitter/nvim-treesitter'}
   use {'osamuaoki/vim-spell-under'}

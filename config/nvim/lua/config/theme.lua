@@ -4,13 +4,14 @@ vim.g.codedark_transparent = 1
 vim.g.codedark_italics = 1
 
 vim.o.background = 'dark'
-vim.o.laststatus = 1
+vim.o.cmdheight = 1
+vim.o.laststatus = 0
 vim.o.number = true
 vim.o.numberwidth = 4
 vim.o.relativenumber = true
-vim.o.ruler = true
+vim.o.ruler = false
+vim.o.showcmd = false
 vim.o.showmode = false
-vim.o.showcmd = true
 vim.o.signcolumn = 'yes'
 vim.o.termguicolors = true
 
@@ -21,47 +22,33 @@ vim.api.nvim_exec([[
   highlight Normal ctermbg=none guibg=none guifg=252
 ]], false)
 
-require('bufferline').setup({
-  options = {
-    custom_areas = {
-      right = function()
-        local result = {}
-        local seve = vim.diagnostic.severity
-        local error = #vim.diagnostic.get(0, {severity = seve.ERROR})
-        local warning = #vim.diagnostic.get(0, {severity = seve.WARN})
+vim.o.showtabline = 0
+vim.o.statusline = ''
+vim.o.winbar = ''
 
-        if error ~= 0 then table.insert(result, {text = '  ' .. error, fg = '#EC5241'}) end
-        if warning ~= 0 then table.insert(result, {text = '  ' .. warning, fg = '#EFB839'}) end
+local function number_of_buffers()
+  return #vim.fn.getbufinfo({buflisted = 1})
+end
 
-        return result
-      end,
+local ok, mod = pcall(require, 'lualine')
+if ok then
+  mod.setup({
+    sections = {
+      lualine_a = {number_of_buffers},
+      lualine_b = {{'tabs', max_length = 100, mode = 1}},
+      lualine_c = {},
+      lualine_x = {'%B', 'diff', 'diagnostics'},
+      lualine_y = {'filetype', },
+      lualine_z = {'progress', 'location'},
     },
-
-    mode = 'buffers',
-    numbers = 'none',
-    close_command = 'bdelete! %d',
-    left_mouse_command = 'buffer %d',
-    middle_mouse_command = nil,
-    right_mouse_command = nil,
-
-    indicator = {style = 'none'},
-    modified_icon = '●',
-    separator_style = {'|', '|'},
-    left_trunc_marker = '',
-    right_trunc_marker = '',
-
-    max_name_length = 22,
-    max_prefix_length = 8,
-    tab_size = 8,
-
-    always_show_bufferline = true,
-    color_icons = true,
-    diagnostics = false,
-    enforce_regular_tabs = false,
-    show_buffer_close_icons = false,
-    show_buffer_default_icon = true,
-    show_buffer_icons = true,
-    show_close_icon = false,
-    show_tab_indicators = false,
-  },
-})
+    options = {
+      globalstatus = true,
+      icons_enabled = true,
+      theme = 'jellybeans',
+    },
+    -- inactive_sections = {},
+    statusline = {},
+    tabline = {},
+    winbar = {},
+  })
+end
