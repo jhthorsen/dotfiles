@@ -35,7 +35,7 @@ bindkey('n', '<leader>c', function()
 end)
 
 -- spelling
-bindkey('i', '<leader>ss', function() require('telescope.builtin').spell_suggest() end)
+bindkey('i', '<c-s>', function() require('telescope.builtin').spell_suggest() end)
 bindkey('n', '<leader>st', ':set spell!<CR>')
 
 -- visual-multi
