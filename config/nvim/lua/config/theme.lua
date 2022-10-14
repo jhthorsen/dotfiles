@@ -26,25 +26,23 @@ vim.o.showtabline = 0
 vim.o.statusline = ''
 vim.o.winbar = ''
 
-local function number_of_buffers()
-  return #vim.fn.getbufinfo({buflisted = 1})
-end
-
 local ok, mod = pcall(require, 'lualine')
 if ok then
   mod.setup({
     sections = {
-      lualine_a = {number_of_buffers},
-      lualine_b = {{'tabs', max_length = 100, mode = 1}},
+      lualine_a = {{'buffers', max_length = 100, mode = 0, symbols = {alternate_file = ''}}},
+      lualine_b = {},
       lualine_c = {},
-      lualine_x = {'%B', 'diff', 'diagnostics'},
-      lualine_y = {'filetype', },
+      lualine_x = {'diagnostics'},
+      lualine_y = {'%B'},
       lualine_z = {'progress', 'location'},
     },
     options = {
       globalstatus = true,
       icons_enabled = true,
       theme = 'jellybeans',
+      component_separators = { left = '', right = ''},
+      section_separators = { left = '', right = ''},
     },
     -- inactive_sections = {},
     statusline = {},
