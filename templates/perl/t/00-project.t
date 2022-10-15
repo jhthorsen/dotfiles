@@ -1,6 +1,7 @@
 use Test2::V0;
 use File::Find;
 
+skip_all 'No such directory: .git' unless $ENV{TEST_ALL} or -d '.git';
 skip_all 'HARNESS_PERL_SWITCHES =~ /Devel::Cover/'
   if +($ENV{HARNESS_PERL_SWITCHES} || '') =~ /Devel::Cover/;
 
