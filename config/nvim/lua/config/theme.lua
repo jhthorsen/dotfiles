@@ -41,7 +41,7 @@ if ok then
       globalstatus = true,
       icons_enabled = true,
       theme = 'jellybeans',
-      component_separators = { left = '', right = ''},
+      component_separators = { left = '', right = ''},
       section_separators = { left = '', right = ''},
     },
     -- inactive_sections = {},
