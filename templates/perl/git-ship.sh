@@ -10,6 +10,7 @@ prepare_project() {
   NEXT_VERSION="$(grep 'Not Released' ./Changes | head -n1 | awk '{print $1}')";
   [ -z "$NEXT_VERSION" ] && usage 1 'Unable to find version from ./Changes';
   [ -e 'Makefile' ] && run make clean;
+  [ -e 'MANIFEST' ] && run rm MANIFEST;
   for f in Changes.bak Makefile META.json META.yml; do [ -e "$f" ] && run rm "$f"; done
   run find ./lib -type f -name '*pm' -exec sed -i '' -e "s/our[ ].*\$VERSION[ ]*=.*/our \$VERSION = '$NEXT_VERSION';/" '{}' \;
   run sed -i '' -e "s/[ ]Not Released.*/ $RELEASE_DATE/" Changes;
@@ -37,4 +38,5 @@ ship_project() {
   run cpan-upload ./*.tar.gz;
   run make clean;
   run git clean -f -d;
+  [ -e 'MANIFEST' ] && run rm MANIFEST;
 }
