@@ -60,7 +60,9 @@ HERE
 [ -z "$SNIPCLIP_FILE" ] && SNIPCLIP_FILE="$HOME/.snipclip";
 [ -n "$SSH_TTY" ] && ensure_hostname_and_port;
 
-if [ "$OP" = "-i" ] || [ ! -t 0 ]; then
+if [ "$OP" = "-o" ]; then
+  clipboard_to_stdout;
+elif [ "$OP" = "-i" ] || [ ! -t 0 ]; then
   stdin_to_clipboard;
 elif [ "$OP" = "--server" ] || [ "$OP" = "-l" ]; then
   ensure_hostname_and_port;
@@ -70,5 +72,5 @@ elif [ "$OP" = "--server" ] || [ "$OP" = "-l" ]; then
 elif [ "$OP" = "--help" ] || [ "$OP" = "-h" ]; then
   usage;
 else
-  clipboard_to_stdout;
+  exit 1;
 fi
