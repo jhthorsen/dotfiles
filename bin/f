@@ -4,11 +4,11 @@ use warnings;
 
 my $ignore = $ENV{IGNORE} || '\.DS_Store|\.nuxt|\.swp|git|node_modules|packed|sass-cache';
 my (%opts, @cmd) = (type => 'f');
-parse() while @ARGV;
+parse(shift @ARGV) while @ARGV;
 
 delete $opts{type} if $opts{type} eq 'a';
 $opts{$_} and unshift @cmd, "-$_" => $opts{$_}
-  for reverse qw(type atime ctime mtime size maxdepth);
+  for reverse qw(iname ipath iregex name path regex type atime ctime mtime size maxdepth);
 
 unshift @cmd, find => $opts{dir} || '.';
 die "@cmd\n" if $ENV{TEST};
@@ -24,12 +24,15 @@ sub add {
 }
 
 sub parse {
-  my $arg = shift @ARGV;
+  my $arg = shift;
   return usage()                      if $arg eq '-h';
   return add(dir => $arg)             if -d $arg;
   return add(maxdepth => shift @ARGV) if $arg eq '-d';
   return add(size => $1)              if $arg =~ m!^([+-]?[0-9]+[kMGTP])$!;
   return add(type => $arg)            if $arg =~ m!^([abcdflps])$!;
+  return add("${2}name" => $1)            if $arg =~ m!^n/(.+)/(i?)$!;
+  return add("${2}path" => $1)            if $arg =~ m!^p/(.+)/(i?)$!;
+  return add("${2}regex" => $1)            if $arg =~ m!^m/(.+)/(i?)$!;
   return add("${1}time" => "-$2")     if $arg =~ m!^([acm])([0-9]+[smhdw])$!;
   return push @cmd, $arg;
 }
@@ -47,6 +50,12 @@ sub usage {
   - a[0-9]+[smhdw] = -atime -<arg>
   - c[0-9]+[smhdw] = -ctime -<arg>
   - m[0-9]+[smhdw] = -mtime -<arg>
+  - m/foo/         = -regex foo
+  - n/foo/         = -name foo
+  - p/foo/         = -path foo
+  - m/foo/i        = -iregex foo
+  - n/foo/i        = -iname foo
+  - p/foo/i        = -ipath foo
   - -a             = Find all kinds of files, and not just "-type f"
   - -d <arg>       = -depth <arg>
   - -h             = Will show this help screen
