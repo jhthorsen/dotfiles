@@ -21,40 +21,29 @@ vim.o.tabstop = 2
 vim.o.virtualedit = 'block'
 vim.o.wrap = false
 
+-- TODO: Are these plugins loaded?
+-- ap/vim-css-color
+-- lucas1/vim-perl
+-- mattn/emmet-vim
+-- osamuaoki/vim-spell-under
+-- yko/mojo.vim
+
+local ok, mod = pcall(require, 'telescope')
+
+local ok, mod = pcall(require, 'nvim-surround')
+if ok then mod.setup({}) end
+
+local ok, mod = pcall(require, 'Comment')
+if ok then mod.setup() end
+
 require('config/keymap')
 require('config/netrw')
 require('config/syntax')
 require('config/clipboard')
 require('extensions/sync-file')
 
--- external extensions
-return require('packer').startup(function()
-  use {'wbthomason/packer.nvim'}
-  use {'ap/vim-css-color'}
-  use {'hrsh7th/nvim-cmp', requires = {
-    'hrsh7th/cmp-buffer',
-    'hrsh7th/cmp-nvim-lsp',
-    'hrsh7th/cmp-path',
-    'L3MON4D3/LuaSnip',
-  }}
-  use {'kylechui/nvim-surround', config = function() require('nvim-surround').setup() end}
-  use {'kyazdani42/nvim-web-devicons'}
-  use {'lucas1/vim-perl', branch = 'dev'}
-  use {'mattn/emmet-vim'}
-  use {'mg979/vim-visual-multi'}
-  use {'neovim/nvim-lspconfig'}
-  use {'numToStr/Comment.nvim', config = function() require('Comment').setup() end} -- gcc, gci{, gbat
-  use {'NTBBloodbath/color-converter.nvim'}
-  use {'nvim-lualine/lualine.nvim', requires = {'kyazdani42/nvim-web-devicons', opt = true}}
-  use {'nvim-telescope/telescope.nvim', requires = {'nvim-lua/plenary.nvim'}}
-  use {'nvim-treesitter/nvim-treesitter'}
-  use {'osamuaoki/vim-spell-under'}
-  use {'tomasiser/vim-code-dark'}
-  use {'yko/mojo.vim', ft = {'ep', 'epl'}}
-
-  local ok, mod = pcall(require, 'config/theme')
-  local ok, mod = pcall(require, 'config/lsp')
-  local ok, mod = pcall(require, 'config/cmp')
-  local ok, mod = pcall(require, 'config/telescope')
-  local ok, mod = pcall(require, 'config/treesitter')
-end)
+local ok, mod = pcall(require, 'config/theme')
+local ok, mod = pcall(require, 'config/lsp')
+local ok, mod = pcall(require, 'config/cmp')
+local ok, mod = pcall(require, 'config/telescope')
+local ok, mod = pcall(require, 'config/treesitter')

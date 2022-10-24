@@ -1,0 +1,63 @@
+[submodule "share/nvim/site/pack/batpack/start/mojo.vim"]
+	path = share/nvim/site/pack/batpack/start/mojo.vim
+	url = https://github.com/yko/mojo.vim
+[submodule "share/nvim/site/pack/batpack/start/vim-css-color"]
+	path = share/nvim/site/pack/batpack/start/vim-css-color
+	url = https://github.com/ap/vim-css-color
+[submodule "share/nvim/site/pack/batpack/start/nvim-cmp"]
+	path = share/nvim/site/pack/batpack/start/nvim-cmp
+	url = https://github.com/hrsh7th/nvim-cmp
+[submodule "share/nvim/site/pack/batpack/start/cmp-buffer"]
+	path = share/nvim/site/pack/batpack/start/cmp-buffer
+	url = https://github.com/hrsh7th/cmp-buffer
+[submodule "share/nvim/site/pack/batpack/start/cmp-nvim-lsp"]
+	path = share/nvim/site/pack/batpack/start/cmp-nvim-lsp
+	url = https://github.com/hrsh7th/cmp-nvim-lsp
+[submodule "share/nvim/site/pack/batpack/start/cmp-path"]
+	path = share/nvim/site/pack/batpack/start/cmp-path
+	url = https://github.com/hrsh7th/cmp-path
+[submodule "share/nvim/site/pack/batpack/start/LuaSnip"]
+	path = share/nvim/site/pack/batpack/start/LuaSnip
+	url = https://github.com/L3MON4D3/LuaSnip
+[submodule "share/nvim/site/pack/batpack/start/nvim-surround"]
+	path = share/nvim/site/pack/batpack/start/nvim-surround
+	url = https://github.com/kylechui/nvim-surround
+[submodule "share/nvim/site/pack/batpack/start/nvim-web-devicons"]
+	path = share/nvim/site/pack/batpack/start/nvim-web-devicons
+	url = https://github.com/kyazdani42/nvim-web-devicons
+[submodule "share/nvim/site/pack/batpack/start/vim-perl"]
+	path = share/nvim/site/pack/batpack/start/vim-perl
+	url = https://github.com/lucas1/vim-perl
+[submodule "share/nvim/site/pack/batpack/start/emmet-vim"]
+	path = share/nvim/site/pack/batpack/start/emmet-vim
+	url = https://github.com/mattn/emmet-vim
+[submodule "share/nvim/site/pack/batpack/start/vim-visual-multi"]
+	path = share/nvim/site/pack/batpack/start/vim-visual-multi
+	url = https://github.com/mg979/vim-visual-multi
+[submodule "share/nvim/site/pack/batpack/start/nvim-lspconfig"]
+	path = share/nvim/site/pack/batpack/start/nvim-lspconfig
+	url = https://github.com/neovim/nvim-lspconfig
+[submodule "share/nvim/site/pack/batpack/start/Comment.nvim"]
+	path = share/nvim/site/pack/batpack/start/Comment.nvim
+	url = https://github.com/numToStr/Comment.nvim
+[submodule "share/nvim/site/pack/batpack/start/color-converter.nvim"]
+	path = share/nvim/site/pack/batpack/start/color-converter.nvim
+	url = https://github.com/NTBBloodbath/color-converter.nvim
+[submodule "share/nvim/site/pack/batpack/start/lualine.nvim"]
+	path = share/nvim/site/pack/batpack/start/lualine.nvim
+	url = https://github.com/nvim-lualine/lualine.nvim
+[submodule "share/nvim/site/pack/batpack/start/telescope.nvim"]
+	path = share/nvim/site/pack/batpack/start/telescope.nvim
+	url = https://github.com/nvim-telescope/telescope.nvim
+[submodule "share/nvim/site/pack/batpack/start/nvim-treesitter"]
+	path = share/nvim/site/pack/batpack/start/nvim-treesitter
+	url = https://github.com/nvim-treesitter/nvim-treesitter
+[submodule "share/nvim/site/pack/batpack/start/vim-spell-under"]
+	path = share/nvim/site/pack/batpack/start/vim-spell-under
+	url = https://github.com/osamuaoki/vim-spell-under
+[submodule "share/nvim/site/pack/batpack/start/vim-code-dark"]
+	path = share/nvim/site/pack/batpack/start/vim-code-dark
+	url = https://github.com/tomasiser/vim-code-dark
+[submodule "share/nvim/site/pack/batpack/start/plenary.nvim"]
+	path = share/nvim/site/pack/batpack/start/plenary.nvim
+	url = https://github.com/nvim-lua/plenary.nvim

@@ -37,8 +37,8 @@ install_tmux() {
 
 install_nvim() {
   lnk config/nvim $XDG_CONFIG_DIR/nvim;
-  [ -d "$XDG_DATA_HOME/nvim/site/pack/packer/start" ] \
-    || git clone --depth 1 https://github.com/wbthomason/packer.nvim $XDG_DATA_HOME/nvim/site/pack/packer/start/packer.nvim;
+  [ -d "$XDG_DATA_HOME/nvim/site/pack" ] || mkdir -p "$XDG_DATA_HOME/nvim/site/pack"
+  lnk "share/nvim/site/pack/batpack" "$XDG_DATA_HOME/nvim/site/pack/batpack";
 }
 
 install_wezterm() {
