@@ -61,3 +61,6 @@
 [submodule "share/nvim/site/pack/batpack/start/plenary.nvim"]
 	path = share/nvim/site/pack/batpack/start/plenary.nvim
 	url = https://github.com/nvim-lua/plenary.nvim
+[submodule "share/nvim/site/pack/batpack/start/tokyonight.nvim"]
+	path = share/nvim/site/pack/batpack/start/tokyonight.nvim
+	url = https://github.com/folke/tokyonight.nvim

@@ -1,7 +1,12 @@
-vim.g.spell_under = 'codedark'
-vim.g.codedark_conservative = 0
-vim.g.codedark_transparent = 1
-vim.g.codedark_italics = 1
+local use = require('utils').use;
+
+vim.g.spell_under = 'tokyonight-night'
+use('tokyonight', function (mod)
+  mod.setup({
+    sidebars = {'qf', 'help'},
+    transparent = true,
+  })
+end)
 
 vim.o.background = 'dark'
 vim.o.cmdheight = 1
