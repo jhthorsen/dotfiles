@@ -29,7 +29,6 @@ vim.api.nvim_exec([[
 
 vim.o.showtabline = 0
 vim.o.statusline = ''
-vim.o.winbar = ''
 
 local ok, mod = pcall(require, 'lualine')
 if ok then
@@ -52,6 +51,5 @@ if ok then
     -- inactive_sections = {},
     statusline = {},
     tabline = {},
-    winbar = {},
   })
 end
