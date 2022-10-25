@@ -64,3 +64,6 @@
 [submodule "share/nvim/site/pack/batpack/start/tokyonight.nvim"]
 	path = share/nvim/site/pack/batpack/start/tokyonight.nvim
 	url = https://github.com/folke/tokyonight.nvim
+[submodule "share/nvim/site/pack/batpack/start/nvim-colorizer.lua"]
+	path = share/nvim/site/pack/batpack/start/nvim-colorizer.lua
+	url = https://github.com/norcalli/nvim-colorizer.lua

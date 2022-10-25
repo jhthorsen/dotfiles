@@ -23,11 +23,11 @@ local use = require('utils').use;
 
 use('config/keymap')
 use('config/netrw')
-use('config/syntax')
 use('config/clipboard')
 use('config/theme')
 use('config/lsp')
 use('config/cmp')
+use('config/syntax')
 use('config/treesitter')
 use('config/telescope')
 

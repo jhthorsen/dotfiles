@@ -1,10 +1,18 @@
 local bindkey = require('../utils').bindkey
+local use = require('../utils').use;
+
+-- colors
+use('colorizer', function (mod)
+  local css = {css = true}
+  local html = {RGB = true, RRGGBB = true}
+  mod.setup({css = css, html = html, scss = css, svelte = html, vue = html})
+end)
 
 -- emmet
 vim.g.user_emmet_install_global = 0
 vim.g.user_emmet_leader_key = '<c-e>'
 vim.g.user_emmet_mode = 'i'
-vim.cmd('autocmd FileType css,html,html.epl,svelte,vue EmmetInstall')
+vim.cmd('autocmd FileType css,html,html.epl,scss,svelte,vue EmmetInstall')
 bindkey('i', '<leader>st', ':set spell!<CR>')
 
 -- perl
