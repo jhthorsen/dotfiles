@@ -35,10 +35,6 @@ bindkey('n', '<leader>c', function()
   vim.wo.relativenumber = show
 end)
 
--- spelling
-bindkey('i', '<c-s>', function() require('telescope.builtin').spell_suggest() end)
-bindkey('n', '<leader>st', ':set spell!<CR>')
-
 -- visual-multi
 bindkey('n', '<c-d>', '<c-n>', {remap = true})
 bindkey('v', '<c-d>', '<c-n>', {remap = true})

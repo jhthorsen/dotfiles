@@ -21,29 +21,18 @@ vim.o.tabstop = 2
 vim.o.virtualedit = 'block'
 vim.o.wrap = false
 
--- TODO: Are these plugins loaded?
--- ap/vim-css-color
--- lucas1/vim-perl
--- mattn/emmet-vim
--- osamuaoki/vim-spell-under
--- yko/mojo.vim
+local use = require('utils').use;
 
-local ok, mod = pcall(require, 'telescope')
+use('config/keymap')
+use('config/netrw')
+use('config/syntax')
+use('config/clipboard')
+use('config/theme')
+use('config/lsp')
+use('config/cmp')
+use('config/treesitter')
+use('config/telescope')
 
-local ok, mod = pcall(require, 'nvim-surround')
-if ok then mod.setup({}) end
-
-local ok, mod = pcall(require, 'Comment')
-if ok then mod.setup() end
-
-require('config/keymap')
-require('config/netrw')
-require('config/syntax')
-require('config/clipboard')
-require('extensions/sync-file')
-
-local ok, mod = pcall(require, 'config/theme')
-local ok, mod = pcall(require, 'config/lsp')
-local ok, mod = pcall(require, 'config/cmp')
-local ok, mod = pcall(require, 'config/telescope')
-local ok, mod = pcall(require, 'config/treesitter')
+use('extensions/sync-file')
+use('nvim-surround', function (mod) mod.setup({}) end)
+use('Comment', function (mod) mod.setup() end)
