@@ -4,7 +4,7 @@ local act = wezterm.action
 local clearScrollbackAndSendClearKey = act.Multiple {
   act.ClearScrollback 'ScrollbackAndViewport',
   act.SendString '\x03',
-  act.SendString 'clear',
+  act.SendString 'clear;reset',
   act.SendString '\x0d',
 }
 
