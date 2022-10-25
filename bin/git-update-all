@@ -11,6 +11,7 @@ for p in *; do
   cd "$p" >/dev/null || continue;
   run git fetch --all;
   run git pull --quiet --ff-only;
+  run git status -sb;
   [ -e "cpanfile" ] || [ -e "Makefile.PL" ] && [ -n "$CPANM" ] && run $CPANM -n --installdeps .;
   cd "$ROOT_DIR" || exit;
 done
