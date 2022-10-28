@@ -13,7 +13,7 @@ vim.g.user_emmet_install_global = 0
 vim.g.user_emmet_leader_key = '<c-e>'
 vim.g.user_emmet_mode = 'i'
 vim.cmd('autocmd FileType css,html,html.epl,scss,svelte,vue EmmetInstall')
-bindkey('i', '<leader>st', ':set spell!<CR>')
+bindkey('n', '<leader>ss', ':set spell!<CR>')
 
 -- perl
 vim.g.perl_fold = 0
