@@ -67,3 +67,6 @@
 [submodule "share/nvim/site/pack/batpack/start/nvim-colorizer.lua"]
 	path = share/nvim/site/pack/batpack/start/nvim-colorizer.lua
 	url = https://github.com/norcalli/nvim-colorizer.lua
+[submodule "share/nvim/site/pack/batpack/start/mini.surround"]
+	path = share/nvim/site/pack/batpack/start/mini.surround
+	url = https://github.com/echasnovski/mini.surround

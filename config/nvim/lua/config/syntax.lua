@@ -26,3 +26,10 @@ vim.g.perl_sync_dist = 1
 -- spelling
 bindkey('i', '<c-s>', function() require('telescope.builtin').spell_suggest() end)
 bindkey('n', '<leader>st', ':set spell!<CR>')
+
+-- surround
+use('mini.surround', function (mod)
+  mod.setup({
+    mappings = {add = 'sa', delete = 'sd', find = 'sf', find_left = 'sF', replace = 'sr'},
+  });
+end)
