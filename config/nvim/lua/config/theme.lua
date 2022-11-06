@@ -1,9 +1,9 @@
 local use = require('utils').use;
 
-vim.g.spell_under = 'tokyonight-night'
-use('tokyonight', function (mod)
+vim.g.spell_under = 'kanagawa'
+use('kanagawa', function (mod)
   mod.setup({
-    sidebars = {'qf', 'help'},
+    dimInactive = true,
     transparent = true,
   })
 end)

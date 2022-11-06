@@ -3,8 +3,9 @@ local keymap = require 'keymap'
 local key_table_copy_mode = require 'key_table_copy_mode'
 local key_table_search_mode = require 'key_table_search_mode'
 local launch_menu = require 'private_launch_menu'
-local ssh_domains = require 'ssh_domains'
 local mouse_bindings = require 'mouse_bindings'
+local ssh_domains = require 'ssh_domains'
+local theme_kanagawa = require 'theme_kanagawa'
 
 return {
   launch_menu = launch_menu,
@@ -21,7 +22,8 @@ return {
   -- send_composed_key_when_left_alt_is_pressed = false,
   -- send_composed_key_when_right_alt_is_pressed = true,
 
-  color_scheme = 'Gruvbox Dark',
+  colors = theme_kanagawa,
+  force_reverse_video_cursor = true,
   font = wezterm.font_with_fallback {
     {family = 'Hack'},
     {family = 'JetBrains Mono'},
