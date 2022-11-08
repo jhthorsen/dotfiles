@@ -1,6 +1,14 @@
 #!/bin/bash
 
+runi() {
+  INTERVAL="$1"; shift;
+  echo "\$ $*";
+  while "$@"; do sleep "$INTERVAL"; done
+  exit $?;
+}
+
 runx() {
+  echo "\$ $*";
   "$@";
   exit $?;
 }
@@ -19,12 +27,11 @@ run_dns_flush () {
   sudo killall -HUP mDNSResponder;
 }
 
-[ "$1" = "airplay" ] && [ "$2" = "down" ] && runx sudo ifconfig awdl0 down;
-[ "$1" = "airplay" ] && [ "$2" = "up" ] && runx sudo ifconfig awdl0 up;
+[ "$1" = "wifriedx" ] && runi 30 sudo ifconfig awdl0 down;
 [ "$1" = "app-id" ] && runx osascript -e 'id of app "Finder"';
 [ "$1" = "dns-flush" ] && runx run_dns_flush;
 [ "$1" = "fwd" ] && runx run_pfctl "$2" "$3" "$4";
 [ "$1" = "leases" ] && runx sudo cat /private/var/db/dhcpd_leases;
 [ "$1" = "ssh-add" ] && runx ssh-add --apple-use-keychain "$2";
 
-echo "$0 [airplay|app-id|fwd|dns-flush|leases|ssh-add]";
+echo "$0 [app-id|fwd|dns-flush|leases|ssh-add|wifriedx]";
