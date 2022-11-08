@@ -6,6 +6,6 @@ return {
   {key = '[',      mods = 'SUPER',       action = 'ActivateCopyMode'},
   {key = 'n',      mods = 'SUPER',       action = act.CopyMode 'PriorMatch'},
   {key = 'N',      mods = 'SUPER|SHIFT', action = act.CopyMode 'NextMatch'},
-  {key = 'r',      mods = 'SUPER',       action = act.CopyMode 'CycleMatchType'},
-  {key = 'u',      mods = 'SUPER',       action = act.CopyMode 'ClearPattern'},
+  {key = 't',      mods = 'SUPER',       action = act.CopyMode 'CycleMatchType'},
+  {key = 'l',      mods = 'SUPER',       action = act.CopyMode 'ClearPattern'},
 }
