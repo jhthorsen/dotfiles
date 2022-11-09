@@ -1,15 +1,13 @@
+PATH="/bin:$PATH";
 PATH="/sbin:$PATH";
+PATH="/usr/bin:$PATH";
 PATH="/usr/sbin:$PATH";
 PATH="/usr/local/sbin:$PATH";
-PATH="/bin:$PATH";
-PATH="/usr/bin:$PATH";
 PATH="/usr/local/bin:$PATH";
 
 PATH="$HOMEBREW_PREFIX/opt/ruby/bin:$PATH";
-PATH="$HOMEBREW_PREFIX/lib/ruby/gems/3.1.0/bin:$PATH";
 PATH="$HOMEBREW_PREFIX/opt/python/libexec/bin:$PATH";
 PATH="$HOMEBREW_PREFIX/opt/go/libexec/bin:$PATH";
-PATH="$HOMEBREW_PREFIX/Cellar/perl/5.34.0_1/bin:$PATH";
 #PATH="$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin:$PATH";
 PATH="$HOMEBREW_PREFIX/opt/gettext/bin:$PATH";
 PATH="$HOMEBREW_PREFIX/opt/ncurses/bin:$PATH";
@@ -17,6 +15,14 @@ PATH="$HOMEBREW_PREFIX/opt/sqlite/bin:$PATH";
 PATH="$HOMEBREW_PREFIX/opt/openssl/bin:$PATH";
 PATH="$HOMEBREW_PREFIX/bin:$PATH";
 PATH="$HOMEBREW_PREFIX/sbin:$PATH";
+
+for dir in lib/ruby/gems Cellar/perl; do
+  dir="$HOMEBREW_PREFIX/$dir";
+  [ -d "$dir" ] || continue;
+  for version in $(find "$dir" -mindepth 1 -maxdepth 1 -exec basename {} \; | sort -V); do
+    PATH="$dir/$version/bin:$PATH";
+  done
+done
 
 export PNPM_HOME="$HOME/Library/pnpm";
 PATH="$PNPM_HOME:$PATH";

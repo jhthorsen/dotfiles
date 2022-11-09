@@ -24,7 +24,7 @@ for d in ${MANPATH//:/ }; do
     p="$d/man$s/$PAGE.$s";
     [ -r "$p" ] || continue;
     [ -n "$DEBUG" ] && echo echo "groff -mman -Tutf8 $p | $PAGER" >&2;
-    groff -mman -Tascii "$p" 2>/dev/null | $PAGER && exit 0;
+    groff -mman -Tascii "$p" 2>/dev/null | $PAGER -R && exit 0;
   done
 done
 

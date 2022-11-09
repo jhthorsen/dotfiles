@@ -27,5 +27,6 @@ if [ "$(uname)" = "Linux" ]; then
   alias wp='sudo -u www-data wp';
 fi
 
-command -v launchctl >/dev/null && alias psql.start="launchctl load $HOMEBREW_PREFIX/opt/postgresql/homebrew.mxcl.postgresql.plist"
+command -v getcwd || alias getcwd='echo $PWD';
+command -v launchctl >/dev/null && alias psql.start="launchctl load "$HOMEBREW_PREFIX/opt/postgresql/homebrew.mxcl.postgresql.plist"";
 command -v rg >/dev/null && alias ack='rg';

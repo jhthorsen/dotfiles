@@ -53,6 +53,7 @@ run $BREW_BIN install gnupg
 run $BREW_BIN install gnutls
 run $BREW_BIN install go
 run $BREW_BIN install gpg-suite
+run $BREW_BIN install groff
 run $BREW_BIN install imagemagick
 run $BREW_BIN install jpeg
 run $BREW_BIN install jpegoptim
@@ -103,10 +104,7 @@ run $BREW_BIN install zsh-syntax-highlighting
 # browserpass
 run $BREW_BIN tap amar1729/formulae
 run $BREW_BIN install browserpass;
-
-run cd $HOMEBREW_PREFIX/opt/browserpass/lib/browserpass;
-run make hosts-firefox-user;
-run cd -;
+PREFIX='/opt/homebrew/opt/browserpass' make hosts-firefox-user -f '/opt/homebrew/opt/browserpass/lib/browserpass/Makefile';
 
 run cpanm -n \
   App::errno \
