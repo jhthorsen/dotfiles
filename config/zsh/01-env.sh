@@ -1,12 +1,20 @@
-export ANSIBLE_NOCOWS=1
-export EDITOR=vi
-export GPG_TTY="$(tty)"
-export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-export LESS=XFR;
+export ANSIBLE_NOCOWS="1";
+export EDITOR="vi";
+export GPG_TTY="$(tty)";
+export LANG="en_US.UTF-8";
+export LC_ALL="en_US.UTF-8";
+export LESS="XFR";
 export LS_COLORS=
-export POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
-export TT_HOURS_PER_MONTH=150
+export TT_HOURS_PER_MONTH="150";
+
+# colors for man
+LESS_TERMCAP_mb="$(tput blink)"; export LESS_TERMCAP_mb;
+LESS_TERMCAP_md="$(tput bold; tput setaf 4)"; export LESS_TERMCAP_md;
+LESS_TERMCAP_me="$(tput sgr0)"; export LESS_TERMCAP_me;
+LESS_TERMCAP_se="$(tput rmso)"; export LESS_TERMCAP_se;
+LESS_TERMCAP_so="$(tput smso)"; export LESS_TERMCAP_so;
+LESS_TERMCAP_ue="$(tput sgr0)"; export LESS_TERMCAP_ue;
+LESS_TERMCAP_us="$(tput setaf 2)"; export LESS_TERMCAP_us;
 
 [ -x "/usr/bin/nvim" ] && export VIM_BIN="/usr/bin/nvim"
 [ -x "/usr/local/bin/nvim" ] && export VIM_BIN="/usr/local/bin/nvim"
