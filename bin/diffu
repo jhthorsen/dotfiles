@@ -74,7 +74,8 @@ sub diff_to_pager {
       print {$PAGER} pad($COLORS{"diff.frag"}, $line, '', 1), "\n";
       $patch{clear} = 1;
     }
-    elsif ($line =~ /^commit [a-fA-F0-9]+$/) {
+    elsif ($line =~ /^commit [a-fA-F0-9]{40}/) {
+      $line =~ s/($ANSI_RE)//g;
       print {$PAGER} pad($COLORS{"diff.commit"}, "--- $line", ''), "\n";
     }
     elsif ($line =~ /^$UNIFIED_RE/) {
