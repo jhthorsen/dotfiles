@@ -38,7 +38,9 @@ my @diff_cmd
 
 my $DIFF = -t STDIN ? undef : \*STDIN;
 open $DIFF, "-|", @diff_cmd, @ARGV or die "git diff: $!" unless $DIFF;
-open my $PAGER, "|-", $ENV{PAGER} || 'less' or die "pager: $!";
+my $pager = $ENV{PAGER} || 'less';
+$pager = 'less' if $pager =~ m!\bdiffu\b!;
+open my $PAGER, "|-", $pager or die "pager: $!";
 
 diff_to_pager($DIFF, $PAGER);
 
