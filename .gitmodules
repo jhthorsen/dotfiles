@@ -76,3 +76,6 @@
 [submodule "share/nvim/site/pack/batpack/start/legendary.nvim"]
 	path = share/nvim/site/pack/batpack/start/legendary.nvim
 	url = https://github.com/mrjones2014/legendary.nvim
+[submodule "share/nvim/site/pack/batpack/start/venn.nvim"]
+	path = share/nvim/site/pack/batpack/start/venn.nvim
+	url = https://github.com/jbyuki/venn.nvim
