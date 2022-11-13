@@ -73,3 +73,6 @@
 [submodule "share/nvim/site/pack/batpack/start/kanagawa.nvim"]
 	path = share/nvim/site/pack/batpack/start/kanagawa.nvim
 	url = https://github.com/rebelot/kanagawa.nvim
+[submodule "share/nvim/site/pack/batpack/start/legendary.nvim"]
+	path = share/nvim/site/pack/batpack/start/legendary.nvim
+	url = https://github.com/mrjones2014/legendary.nvim
