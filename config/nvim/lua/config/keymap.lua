@@ -35,6 +35,24 @@ bindkey('n', '<leader>c', function()
   vim.wo.relativenumber = show
 end)
 
+-- venn
+bindkey('n', '<leader>v', function()
+  local venn_enabled = vim.inspect(vim.b.venn_enabled)
+  if venn_enabled == 'nil' then
+    vim.b.venn_enabled = true
+    vim.cmd[[setlocal ve=all]]
+    bindkey('n', 'J', '<C-v>j:VBox<CR>')
+    bindkey('n', 'K', '<C-v>k:VBox<CR>')
+    bindkey('n', 'L', '<C-v>l:VBox<CR>')
+    bindkey('n', 'H', '<C-v>h:VBox<CR>')
+    bindkey('v', 'f', ':VBox<CR>')
+  else
+    vim.cmd[[setlocal ve=]]
+    vim.cmd[[mapclear <buffer>]]
+    vim.b.venn_enabled = nil
+  end
+end)
+
 -- visual-multi
 bindkey('n', '<c-d>', '<c-n>', {remap = true})
 bindkey('v', '<c-d>', '<c-n>', {remap = true})
