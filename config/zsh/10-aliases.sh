@@ -21,7 +21,8 @@ alias wttr='curl https://wttr.in/'
 
 if [ "$(uname)" = "Linux" ]; then
   alias btrfs='sudo -i btrfs';
-  alias docker='sudo -i docker';
+  alias docker='sudo docker';
+  alias kubectl='sudo kubectl';
   alias nginx='sudo -i nginx';
   alias wo='sudo -i wo';
   alias wp='sudo -u www-data wp';
