@@ -28,7 +28,3 @@ fi
 [ -r "/usr/share/doc/fzf/examples/key-bindings.zsh" ] && source "/usr/share/doc/fzf/examples/key-bindings.zsh";
 
 which rg &>/dev/null && export FZF_DEFAULT_COMMAND='rg --files';
-
-[ -f "$HOME/.config/zsh/completion" ] && FPATH="$HOME/.config/zsh/completion:$FPATH";
-[ -f "$HOMEBREW_PREFIX/share/zsh/site-functions" ] && FPATH="$HOMEBREW_PREFIX/share/zsh/site-functions:$FPATH";
-[ -f "$HOMEBREW_PREFIX/share/zsh-completions" ] && FPATH="$HOMEBREW_PREFIX/share/zsh-completions:$FPATH";

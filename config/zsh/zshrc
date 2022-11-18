@@ -1,9 +1,3 @@
-[ -z "$XDG_CACHE_HOME" ] && export XDG_CACHE_HOME="$HOME/.cache";
-[ -z "$XDG_CONFIG_HOME" ] && export XDG_CONFIG_HOME="$HOME/.config";
-[ -z "$HOMEBREW_CELLAR" ] && export HOMEBREW_CELLAR="/opt/homebrew/Cellar";
-[ -z "$HOMEBREW_PREFIX" ] && export HOMEBREW_PREFIX="/opt/homebrew";
-[ -z "$HOMEBREW_REPOSITORY" ] && export HOMEBREW_REPOSITORY="/opt/homebrew";
-
 # Lines configured by zsh-newuser-install
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall
@@ -16,8 +10,6 @@ compinit
 umask 0002
 setopt notify
 unsetopt extendedglob # Allow "git show HEAD^"
-
-export UNAME=$(uname);
 
 readlink_f() {
   [ "x$UNAME" = "xDarwin" ] && readlink $* || readlink -f $*;
