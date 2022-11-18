@@ -1,0 +1,4 @@
+[include]
+  path = ~/.config/git/base.ini
+  path = ~/.config/git/alias.ini
+  path = ~/.config/git/gpg.ini
