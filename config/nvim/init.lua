@@ -17,6 +17,8 @@ vim.o.splitright = true
 vim.o.swapfile = false
 vim.o.tabstop = 2
 vim.o.virtualedit = 'block'
+vim.o.wildmenu = true
+vim.o.wildmode = 'longest,list,full'
 vim.o.wrap = false
 
 local use = require('utils').use;
