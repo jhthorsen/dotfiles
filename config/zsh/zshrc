@@ -1,3 +1,13 @@
+[ -z "$XDG_CACHE_HOME" ] && XDG_CACHE_HOME="$HOME/.cache";
+[ -z "$XDG_CONFIG_HOME" ] && XDG_CONFIG_HOME="$HOME/.config";
+[ -z "$HOMEBREW_CELLAR" ] && HOMEBREW_CELLAR="/opt/homebrew/Cellar";
+[ -z "$HOMEBREW_PREFIX" ] && HOMEBREW_PREFIX="/opt/homebrew";
+[ -z "$HOMEBREW_REPOSITORY" ] && HOMEBREW_REPOSITORY="/opt/homebrew";
+
+[ -d "$HOME/.config/zsh/completion" ] && fpath=("$HOME/.config/zsh/completion" $fpath);
+[ -d "$HOMEBREW_PREFIX/share/zsh/site-functions" ] && fpath=("$HOMEBREW_PREFIX/share/zsh/site-functions" $fpath);
+[ -d "$HOMEBREW_PREFIX/share/zsh-completions" ] && fpath=("$HOMEBREW_PREFIX/share/zsh-completions" $fpath);
+
 # Lines configured by zsh-newuser-install
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall

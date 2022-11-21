@@ -52,7 +52,6 @@ install_wezterm() {
 install_zsh() {
   lnk config/zsh $XDG_CONFIG_DIR/zsh;
   lnk config/starship.toml $XDG_CONFIG_DIR/starship.toml;
-  lnk config/zsh/zshenv $HOME/.zshenv;
   lnk config/zsh/zshrc $HOME/.zshrc;
   [ -d "$HOMEBREW_PREFIX" ] \
     && lnk $HOMEBREW_PREFIX/etc/profile.d/z.sh $XDG_CONFIG_DIR/zsh/15-z.sh;
