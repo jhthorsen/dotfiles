@@ -7,7 +7,8 @@ bindkey '^E' end-of-line
 bindkey '^K' kill-line
 
 function clear-scrollback-buffer {
-  printf '\e[3J' && clear;
+  clear && printf '\e[3J'
+  zle && zle .reset-prompt && zle -R
 }
 
 zle -N clear-scrollback-buffer
