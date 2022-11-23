@@ -18,6 +18,10 @@ bindkey('n', '<c-p>', function() require('telescope.builtin').find_files() end)
 bindkey('n', '<c-t>', ':tabnew<CR>')
 bindkey('n', ',e', ':e <C-R>=expand("%:h")<CR>', {silent = false})
 
+-- stay in indent mode
+bindkey('v', '<', '<gv')
+bindkey('v', '>', '>gv')
+
 -- movement
 bindkey('n', 'G', 'Gzz')
 bindkey('n', '<c-j>', '10j')
@@ -62,5 +66,10 @@ bindkey('n', '<leader>h', '<c-w><c-h>')
 bindkey('n', '<leader>j', '<c-w><c-j>')
 bindkey('n', '<leader>k', '<c-w><c-k>')
 bindkey('n', '<leader>l', '<c-w><c-l>')
+bindkey('n', '<leader><s-j>', ':resize -3<cr>')
+bindkey('n', '<leader><s-k>', ':resize +3<cr>')
+bindkey('n', '<leader><s-h>', ':vertical resize -3<cr>')
+bindkey('n', '<leader><s-l>', ':vertical resize +3<cr>')
+
 bindkey('n', 'sp', ':sp<CR>')
 bindkey('n', 'vs', ':vs<CR>')
