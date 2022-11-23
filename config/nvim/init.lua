@@ -23,15 +23,15 @@ vim.o.wrap = false
 
 local use = require('utils').use;
 
-use('config/keymap')
-use('config/netrw')
-use('config/clipboard')
-use('config/theme')
-use('config/lsp')
-use('config/cmp')
-use('config/syntax')
-use('config/treesitter')
-use('config/telescope')
+use('user/keymap')
+use('user/netrw')
+use('user/clipboard')
+use('user/theme')
+use('user/lsp')
+use('user/cmp')
+use('user/syntax')
+use('user/treesitter')
+use('user/telescope')
 
 use('extensions/sync-file')
 use('nvim-surround', function (mod) mod.setup({}) end)
