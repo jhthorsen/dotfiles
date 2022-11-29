@@ -17,7 +17,6 @@ local function on_attach(client, bufnr)
   bindkey('n', 'gr', vim.lsp.buf.references, opts)
   bindkey('n', 'K', vim.lsp.buf.hover, opts)
   bindkey('n', '<leader>rn', vim.lsp.buf.rename, opts)
-  bindkey('n', '<leader>q', vim.diagnostic.setloclist, opts)
 end
 
 local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())
