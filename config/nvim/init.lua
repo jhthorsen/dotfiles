@@ -33,6 +33,6 @@ use('user/syntax')
 use('user/treesitter')
 use('user/telescope')
 
-use('extensions/sync-file')
+use('extensions/external-hook')
 use('nvim-surround', function (mod) mod.setup({}) end)
 use('Comment', function (mod) mod.setup() end)
