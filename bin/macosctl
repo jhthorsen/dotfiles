@@ -1,12 +1,5 @@
 #!/bin/bash
 
-runi() {
-  INTERVAL="$1"; shift;
-  echo "\$ $*";
-  while "$@"; do sleep "$INTERVAL"; done
-  exit $?;
-}
-
 runx() {
   echo "\$ $*";
   "$@";
@@ -27,7 +20,15 @@ run_dns_flush () {
   sudo killall -HUP mDNSResponder;
 }
 
-[ "$1" = "wifriedx" ] && runi 30 sudo ifconfig awdl0 down;
+wifriedx() {
+  while echo "ifconfig awdl0+llw0 down"; do
+    sudo ifconfig awdl0 down || exit $?
+    sudo ifconfig llw0 down || exit $?;
+    sleep 20;
+  done
+}
+
+[ "$1" = "wifriedx" ] && wifriedx;
 [ "$1" = "app-id" ] && runx osascript -e 'id of app "Finder"';
 [ "$1" = "dns-flush" ] && runx run_dns_flush;
 [ "$1" = "fwd" ] && runx run_pfctl "$2" "$3" "$4";
