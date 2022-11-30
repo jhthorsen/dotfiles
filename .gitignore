@@ -17,3 +17,4 @@ config/zsh/jhthorsen.sh
 config/zsh/powerlevel10k/
 config/zsh/zsh_history
 config/wezterm/private_*.lua
+.nvim-external-hook
