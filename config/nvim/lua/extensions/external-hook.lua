@@ -1,9 +1,10 @@
+local dirname = require('../utils').dirname
 local hook_script = nil
 local vim_leave = false
 
 local find_hook_script = function(path)
   while #path > 1 do
-    path = vim.fs.dirname(path)
+    path = dirname(path)
     local script = path .. '/.nvim-external-hook'
     local stat = vim.loop.fs_stat(script)
     if stat then return script end

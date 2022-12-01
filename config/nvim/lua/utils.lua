@@ -4,6 +4,8 @@ local fn = vim.fn;
 
 local M = {}
 
+M.dirname = vim.fs and vim.fs.dirname or function(p) return vim.fn.fnamemodify(p, ':h') end
+
 function M.bindkey(mode, key, action, opts)
   local options = {silent = true}
   if opts then options = vim.tbl_extend('force', options, opts) end
