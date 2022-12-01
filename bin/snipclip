@@ -26,7 +26,7 @@ stdin_to_clipboard() {
   cat - > "$SNIPCLIP_FILE.tmp";
   mv "$SNIPCLIP_FILE.tmp" "$SNIPCLIP_FILE";
 
-  if [ -n "$SNIPCLIP_HOSTNAME" ]; then nc -N "$SNIPCLIP_HOSTNAME" $SNIPCLIP_PORT < "$SNIPCLIP_FILE";
+  if [ -n "$SNIPCLIP_HOSTNAME" ]; then ncat --send-only "$SNIPCLIP_HOSTNAME" $SNIPCLIP_PORT < "$SNIPCLIP_FILE" &>/dev/null;
   elif has_command pbcopy;        then pbcopy < "$SNIPCLIP_FILE";
   elif has_command xclip;         then xclip -selection clipboard < "$SNIPCLIP_FILE";
   elif has_command xsel;          then xsel -i -b < "$SNIPCLIP_FILE";
@@ -67,7 +67,7 @@ elif [ "$OP" = "-i" ] || [ ! -t 0 ]; then
 elif [ "$OP" = "--server" ] || [ "$OP" = "-l" ]; then
   ensure_hostname_and_port;
   while echo "[$(date +'%H:%M:%S')] Waiting for clipboard data on $SNIPCLIP_HOSTNAME:$SNIPCLIP_PORT"; do
-    nc -l "$SNIPCLIP_HOSTNAME" "$SNIPCLIP_PORT" | SNIPCLIP_HOSTNAME="" stdin_to_clipboard;
+    ncat --listen "$SNIPCLIP_HOSTNAME" "$SNIPCLIP_PORT" | SNIPCLIP_HOSTNAME="" stdin_to_clipboard;
   done
 elif [ "$OP" = "--help" ] || [ "$OP" = "-h" ]; then
   usage;
