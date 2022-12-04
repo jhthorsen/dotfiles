@@ -4,7 +4,6 @@ alias cl='clear;reset'
 alias cpanm='cpanm -M https://cpan.metacpan.org'
 alias ddp="PERL5OPT=-MDDP=caller_info,1,colored,1,use_prototypes,0"
 alias doctl='doctl --access-token=$DO_API_TOKEN'
-alias gensecret='echo "$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 32)"'
 alias gti='git'
 alias hwinfo='dmidecode'
 alias imgcat='wezterm imgcat';
