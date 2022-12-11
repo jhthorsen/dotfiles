@@ -1,0 +1,2 @@
+#!/bin/bash
+echo "$*" | perl -pe's/\bx\b/*/g' | bc --mathlib;
