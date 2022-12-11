@@ -1,0 +1,4 @@
+#!/bin/bash
+[ "$*" = "" ] && exec echo "0";
+[ "$1" = "-i" ] && exec rlwrap --always-readline -H "$HOME/.config/bc/history" bc --mathlib "$@";
+echo "$*" | perl -pe's/\bx\b/*/g' | bc --mathlib;
