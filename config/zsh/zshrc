@@ -7,6 +7,8 @@
 [ -d "$HOME/.config/zsh/completion" ] && fpath=("$HOME/.config/zsh/completion" $fpath);
 [ -d "$HOMEBREW_PREFIX/share/zsh/site-functions" ] && fpath=("$HOMEBREW_PREFIX/share/zsh/site-functions" $fpath);
 [ -d "$HOMEBREW_PREFIX/share/zsh-completions" ] && fpath=("$HOMEBREW_PREFIX/share/zsh-completions" $fpath);
+[ -d "/usr/share/zsh/site-functions" ] && fpath=("/usr/share/zsh/site-functions" $fpath);
+[ -d "/usr/share/zsh/vendor-completions" ] && fpath=("/usr/share/zsh/vendor-completions" $fpath);
 
 # Lines configured by zsh-newuser-install
 # End of lines configured by zsh-newuser-install

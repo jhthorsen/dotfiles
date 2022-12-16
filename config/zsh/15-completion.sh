@@ -23,6 +23,9 @@ if [ -d $FZF_HOME ]; then
   source "$FZF_HOME/shell/key-bindings.zsh";
 fi
 
+# fedora
+[ -r "/usr/share/fzf/shell/key-bindings.zsh" ] && source "/usr/share/fzf/shell/key-bindings.zsh";
+
 # ubuntu
 [ -r "/usr/share/doc/fzf/examples/completion.zsh" ] && source "/usr/share/doc/fzf/examples/completion.zsh";
 [ -r "/usr/share/doc/fzf/examples/key-bindings.zsh" ] && source "/usr/share/doc/fzf/examples/key-bindings.zsh";
