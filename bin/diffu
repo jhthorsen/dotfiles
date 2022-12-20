@@ -54,7 +54,11 @@ sub diff_to_pager {
     my $formatting = $line =~ s/($ANSI_RE)// ? $1 : "";
     $line =~ s/\e\[0?m//go;    # Remove $ANSI_RESET
 
-    if ($line =~ /^diff --git/ .. $line =~ /^$UNIFIED_RE/) {
+    if ($. == 1 and $line =~ /^(\d+)\t(\d+)\t(\S.*)/) {
+      # git diff --numstat
+      return numstat_to_pager($DIFF, $PAGER, $line);
+    }
+    elsif ($line =~ /^diff --git/ .. $line =~ /^$UNIFIED_RE/) {
       %patch = (op => "changed") if $patch{clear};
 
       # diff --git a/.eslintignore b/.eslintignore
@@ -70,20 +74,20 @@ sub diff_to_pager {
       $patch{op}          = "renamed" if $line =~ /renamed?/;
 
       next unless $line =~ /^$UNIFIED_RE/;
-      print {$PAGER} format_header($patch{op}, \%patch),      "\n";
-      print {$PAGER} pad($COLORS{"diff.frag"}, $line, '', 1), "\n";
+      say {$PAGER} format_header($patch{op}, \%patch);
+      say {$PAGER} pad($COLORS{"diff.frag"}, $line, '', 1);
       $patch{clear} = 1;
     }
     elsif ($line =~ /^commit [a-fA-F0-9]{40}/) {
       $line =~ s/($ANSI_RE)//g;
-      print {$PAGER} pad($COLORS{"diff.commit"}, "--- $line", ''), "\n";
+      say {$PAGER} pad($COLORS{"diff.commit"}, "--- $line", '');
     }
     elsif ($line =~ /^$UNIFIED_RE/) {
-      print {$PAGER} pad($COLORS{"diff.frag"}, $line, '', 1), "\n";
+      say {$PAGER} pad($COLORS{"diff.frag"}, $line, '', 1);
     }
     else {
       $line =~ s/^[-+]// if $patch{op} eq "added" or $patch{op} eq "deleted";
-      print {$PAGER} "$formatting$line$ANSI_RESET\n";
+      say {$PAGER} "$formatting$line$ANSI_RESET";
     }
   }
 }
@@ -101,6 +105,24 @@ sub format_header {
 sub get_terminal_width {
   my $width = qx{tput cols};
   return $width && $width =~ m!(\d+)! ? $1 : 80;
+}
+
+sub numstat_to_pager {
+  my ($DIFF, $PAGER, $line) = @_;
+
+  while (defined $line) {
+    chomp $line;
+    local $| = 1 if $ENV{LINE_BUFFERED};
+    my $color
+      = $line =~ /^0\t0\t/  ? $COLORS{'diff.frag'}
+      : $line =~ /^0\t\d/   ? $COLORS{'diff.old'}
+      : $line =~ /^\d+\t0/  ? $COLORS{'diff.new'}
+      : $line =~ /^\d+\t\d/ ? $COLORS{'diff.diff'}
+      :                       $COLORS{'diff.context'};
+
+    printf {$PAGER} sprintf "%s%s%s\n", $color, $line, $ANSI_RESET;
+    $line = readline $DIFF;
+  }
 }
 
 sub make_ansi_colors {
