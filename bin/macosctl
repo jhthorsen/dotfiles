@@ -20,19 +20,10 @@ run_dns_flush () {
   sudo killall -HUP mDNSResponder;
 }
 
-wifriedx() {
-  while echo "ifconfig awdl0+llw0 down"; do
-    sudo ifconfig awdl0 down || exit $?
-    sudo ifconfig llw0 down || exit $?;
-    sleep 20;
-  done
-}
-
-[ "$1" = "wifriedx" ] && wifriedx;
 [ "$1" = "app-id" ] && runx osascript -e 'id of app "Finder"';
 [ "$1" = "dns-flush" ] && runx run_dns_flush;
 [ "$1" = "fwd" ] && runx run_pfctl "$2" "$3" "$4";
 [ "$1" = "leases" ] && runx sudo cat /private/var/db/dhcpd_leases;
 [ "$1" = "ssh-add" ] && runx ssh-add --apple-use-keychain "$2";
 
-echo "$0 [app-id|fwd|dns-flush|leases|ssh-add|wifriedx]";
+echo "$0 [app-id|fwd|dns-flush|leases|ssh-add]";
