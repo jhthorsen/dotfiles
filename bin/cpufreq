@@ -1,0 +1,25 @@
+#!/bin/sh
+
+[ "$1" = "watch" ] && exec watch -n0.5 $0;
+
+CPUS=($(ls -d /sys/devices/system/cpu/cpu[0-9]* | sort));
+COLUMNS="${#CPUS[@]}";
+COLUMNS="$((COLUMNS+1))";
+
+cpufreq_tabs() {
+  for f in "${CPUS[@]}"; do cat "$f/cpufreq/$1"; done | tr "\n" " ";
+}
+
+cpuinfo() {
+  echo $(cat /proc/cpuinfo | grep "$1" | head -n1 | cut -d: -f2);
+}
+
+echo "model:             $(cpuinfo "model name")";
+echo "bogomips:          $(cpuinfo "bogomips")";
+
+(
+  echo "scaling_governor: $(cpufreq_tabs scaling_governor)";
+  echo "scaling_min_freq: $(cpufreq_tabs scaling_min_freq)";
+  echo "scaling_cur_freq: $(cpufreq_tabs scaling_cur_freq)";
+  echo "scaling_max_freq: $(cpufreq_tabs scaling_max_freq)";
+) | tablify --columns "$COLUMNS";
