@@ -1,16 +1,48 @@
 #!/bin/bash
 set -e; # Exit on command error
 DOTFILES_ROOT="$(dirname "$(dirname "$0")")";
+PROJECT_NAME="";
 AF="6";
 PS5="> ";
 
-getopt() {
-  while [ -n "$*" ]; do case "$1" in
-    --dry-run) shift; AF="7"; PS5="# " ;;
-    --no-test) shift; RUN_TESTS="no" ;;
-    -t|--template) shift; TEMPLATE="$1"; shift ;;
-    *) shift ;;
-  esac done
+# From templates/$TEMPLATE:
+# - build_project
+# - command_clean
+# - command_ship
+# - prepare_project
+# - start_project
+
+command_authors() {
+  local ref="$1";
+  [ -z "$ref" ] && ref="$(git for-each-ref --format '%(refname)' --sort=-creatordate refs/tags | head -n1)";
+  [ -z "$ref" ] && ref="origin/main";
+  run git log --format="%an <%ae>" "$ref..HEAD" | sort | uniq;
+}
+
+command_build() {
+  git status --porcelain | grep "." && usage 1 "Cannot release from unclean repository. (git clean -fd)";
+  prepare_project;
+  build_project;
+  [ "$RUN_TESTS" = "no" ] || command_test;
+  echo -ne "\n$(tput setaf 2)# Project is ready. Run 'git ship' again to push it upstream.$(tput sgr0)\n\n";
+}
+
+command_clean() {
+  run git clean -f -d;
+}
+
+command_start() {
+  [ -z "$PROJECT_NAME" ] && usage 0 "$0 --start [project-name]";
+  echo "$PROJECT_NAME" | grep -qi '^[a-z]' || usage 1 "Not a valid project name: $PROJECT_NAME";
+  PROJECT_NAME_LC="$(echo "$PROJECT_NAME" | tr "[:upper:]" "[:lower:]")";
+
+  [ -d ".git" ] || run git init --initial-branch="main" "$PROJECT_NAME_LC";
+  [ -d "../$PROJECT_NAME_LC" ] || run cd "$PROJECT_NAME_LC";
+  [ -f ".gitignore" ] || run touch .gitignore && gt add .gitignore && git commit "Started $PROJECT_NAME";
+
+  run_rsync --ignore-existing --exclude="git-*.sh" "$TEMPLATE_DIR/" "./";
+  start_project;
+  git_commit_maybe "Ran github.com/jhthorsen/dotfiles/tree/main/templates/$TEMPLATE/git-start.sh";
 }
 
 git_commit_maybe() {
@@ -19,17 +51,29 @@ git_commit_maybe() {
 }
 
 main() {
-  source "$TEMPLATE_DIR/git-ship.sh";
+  local command="command_build";
+  local -a unparsed;
 
-  if project_is_ready; then
-    ship_project;
-  else
-    git status --porcelain | grep "." && usage 1 "Cannot release from unclean repository. (git clean -fd)";
-    prepare_project;
-    build_project;
-    [ "$RUN_TESTS" = "no" ] || test_project;
-    echo -ne "\n$(tput setaf 2)# Project is ready. Run 'git ship' again to push it upstream.$(tput sgr0)\n\n";
-  fi
+  while [ -n "$*" ]; do case "$1" in
+    --dry-run) shift; AF="7"; PS5="# " ;;
+    --authors) shift; command="command_authors" ;;
+    --clean) shift; command="command_clean" ;;
+    --diff) shift; DIFF_EXISTING="$1"; shift ;;
+    --no-test) shift; RUN_TESTS="no" ;;
+    --start) shift; PROJECT_NAME="$1"; shift; command="command_start" ;;
+    -t|--template) shift; TEMPLATE="$1"; shift ;;
+    *) unparsed+=("$1"); shift ;;
+  esac done
+
+  [ -z "$TEMPLATE" ] && [ -e "Makefile.PL" ] && TEMPLATE="perl";
+  [ -z "$TEMPLATE" ] && TEMPLATE="default";
+  [ -z "$RELEASE_DATE" ] && RELEASE_DATE="$(date +"%Y-%m-%dT%H:%M:%S")";
+
+  TEMPLATE_DIR="$DOTFILES_ROOT/templates/$TEMPLATE";
+  [ -d "$TEMPLATE_DIR" ] && source "$TEMPLATE_DIR/git-ship.sh";
+
+  [ "$command" = "command_build" ] && project_is_ready && command="command_ship";
+  "$command" "${unparsed[@]}";
 }
 
 run() {
@@ -37,20 +81,31 @@ run() {
   [ "$PS5" = "# " ] || "$@";
 }
 
-setup() {
-  [ -z "$TEMPLATE" ] && [ -e "Makefile.PL" ] && TEMPLATE="perl";
-  [ -z "$TEMPLATE" ] && usage 0;
-  TEMPLATE_DIR="$DOTFILES_ROOT/templates/$TEMPLATE";
-  [ -d "$TEMPLATE_DIR" ] || usage 20 "Not a directory: $TEMPLATE_DIR";
-  [ -x "$TEMPLATE_DIR/git-ship.sh" ] || usage 2 "No such executable: $TEMPLATE_DIR/git-ship.sh";
-  [ -z "$RELEASE_DATE" ] && RELEASE_DATE="$(date +"%Y-%m-%dT%H:%M:%S")";
+run_rsync() {
+  local source_dir="${*: -2:1}";
+  set +e;
+  run rsync -a --copy-unsafe-links --info=name2,skip1 "$@" | sort | while read -r l; do
+    n="$(echo "$l" | cut -d' ' -f1)";
+    [ -d "$n" ] || echo "$l";
+    [ -n "$DIFF_EXISTING" ] && echo "$l" | grep -q " exists" && diffu "$n" "$source_dir$n" | head -n"$DIFF_EXISTING";
+  done
+  set -e;
 }
 
 usage() {
-  [ -z "$2" ] \
-    && echo "Usage: git ship [--dry-run] [--no-test] --template perl" \
-    || echo "$(tput setaf 1)$2$(tput sgr0)";
+  echo "Usage:
+
+  $0 --authors;
+  $0 --start;
+  $0 --test;
+  $0;
+
+  # Build and ship
+  $0 [--no-test];
+";
+
+  [ -n "$2" ] && echo "$(tput setaf 1)$2$(tput sgr0)";
   exit "$1";
 }
 
-getopt "$@" && setup && main;
+main "$@";
