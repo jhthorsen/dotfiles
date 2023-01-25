@@ -17,7 +17,7 @@ local keymap = {
   {key = ']',     mods = 'SUPER',       action = 'ShowDebugOverlay'},
   {key = 'm',     mods = 'SUPER',       action = 'ShowLauncher'},
   {key = 'Enter', mods = 'ALT',         action = 'ToggleFullScreen'},
-  {key = 'z',     mods = 'SUPER|SHIFT', action = 'TogglePaneZoomState'},
+  {key = 'z',     mods = 'SUPER',       action = 'TogglePaneZoomState'},
   {key = 'f',     mods = 'SUPER',       action = act.Search('CurrentSelectionOrEmptyString')},
   {key = 'c',     mods = 'SUPER',       action = act.CopyTo('Clipboard')},
   {key = 'v',     mods = 'SUPER',       action = act.PasteFrom('Clipboard')},
