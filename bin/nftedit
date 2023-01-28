@@ -1,0 +1,161 @@
+#!/bin/bash
+
+cleanup() {
+  tput cnorm;
+  [ -n "$TMPFILE" ] && [ -e "$TMPFILE" ] && run rm "$TMPFILE";
+}
+
+rollback() {
+  [ -z "$ROLLBACK_FILE" ] && return;
+  l local3.err "Revert $TABLE_NAME using $ROLLBACK_FILE";
+  run sudo nft flush table "$FAMILY_NAME" "$TABLE_NAME";
+  run sudo nft -f "$ROLLBACK_FILE";
+  exit;
+}
+
+l() {
+  local level="$1"; shift;
+
+  if echo "$level" | grep "\."; then
+    logger -p "$level" -t nftedit "$@";
+    level="$(echo "$level" | cut -d. -f2)";
+  fi
+
+  local color="2";
+  [ "$level" = "fatal" ] && color="1";
+  echo "$(tput setaf $color)$(date "+%FT%T") [$level] $*$(tput sgr0)" >&2;
+  [ "$level" = "fatal" ] && exit 1;
+}
+
+make_rule_file_content() {
+  echo "flush table $FAMILY_NAME $TABLE_NAME";
+  run sudo cat "$realfile";
+}
+
+parse() {
+  local file="$1";
+  sudo stat "$file" >/dev/null || exec l fatal "Can't read $file";
+
+  [ -z "$TABLE_NAME" ] && TABLE_NAME="$(sudo grep -Eo 'table\s+\S+\s+\S+' "$file" | head -n1 | awk '{print $3}')";
+  [ -z "$TABLE_NAME" ] && l fatal "Can't edit file without table definition";
+  export TABLE_NAME;
+
+  [ -z "$FAMILY_NAME" ] && FAMILY_NAME="$(sudo grep -Eo 'table\s+\S+\s+\S+' "$file" | head -n1 | awk '{print $2}')";
+  [ -z "$FAMILY_NAME" ] && l fatal "Found table $TABLE_NAME, but no family definition";
+  export FAMILY_NAME;
+}
+
+run() {
+  l info "$*";
+  "$@";
+}
+
+command_edit() {
+  local realfile="$1";
+  parse "$realfile";
+  touch "$TMPFILE" && chmod 600 "$TMPFILE" && make_rule_file_content "$realfile" > "$TMPFILE";
+
+  while :; do
+    run "$EDITOR" "$TMPFILE" || exit "$?";
+    run sudo diff -u -I "flush table" "$TMPFILE" "$realfile" && return 0;
+
+    if run sudo nft -c -f "$TMPFILE"; then
+      ROLLBACK_FILE="$realfile";
+      run sudo nft -f "$TMPFILE" || exit "$?";
+      read -t 5 -r -p "Do you want to make the changes permanent? [y/n] " answer || rollback;
+      ROLLBACK_FILE="";
+      [ "$answer" = "y" ] || continue;
+      grep -v "flush table" "$TMPFILE" | run sudo tee "$realfile";
+      break;
+    else
+      echo "Press enter to re-edit or ^C to abort" >&2;
+      read -r;
+    fi
+  done
+}
+
+command_edit_watch() {
+  command_edit "$1";
+  command_watch "";
+}
+
+command_list() {
+  run sudo find /etc/nftables -type f;
+  run sudo nft list ruleset | grep "table ";
+}
+
+command_usage() {
+  echo "Usage:
+  \$ nftedit -e /etc/nftables/main.nft;
+  \$ nftedit -w /etc/nftables/main.nft;
+  \$ nftedit -w /etc/nftables/main.nft -c my_chain
+  \$ nftedit -w /etc/nftables/main.nft -f inet -t my_table -c my_chain
+
+Options:
+  -f <str>    Family name (inet, ip, ...)
+  -t <str>    Table name
+  -c <str>    Chain name
+  -s <str>    Set name
+  -e <file>   Edit file
+  -ew <file>  Edit file, then watch
+  -w [file]   Watch nftable rule set
+";
+}
+
+command_watch() {
+  [ -n "$1" ] && parse "$1";
+
+  local cmd="";
+  if [ -n "$SET_NAME" ]; then
+    cmd="nft list set '$FAMILY_NAME' '$TABLE_NAME' '$SET_NAME'";
+  elif [ -n "$CHAIN_NAME" ]; then
+    cmd="nft list chain '$FAMILY_NAME' '$TABLE_NAME' '$CHAIN_NAME'";
+  elif [ -n "$TABLE_NAME" ]; then
+    cmd="nft list table '$FAMILY_NAME' '$TABLE_NAME' '$CHAIN_NAME'";
+  else
+    cmd="nft list ruleset";
+  fi
+
+  if [ -z "$WATCH_PAGER" ]; then
+    command -v "bat" >/dev/null \
+      && export WATCH_PAGER="bat -f -p -l Perl" \
+      || export WATCH_PAGER="grep --color=always -E 'table|chain|set|counter|$'";
+  fi
+
+  tput civis;    # hide cursor
+  tput -x clear; # clear screen, but not the scrollback
+  while :; do
+    tput cup 0 0;
+    echo "# $(date)       ";
+    eval "sudo $cmd | $WATCH_PAGER";
+    for x in $(seq 1 $COLUMNS); do echo -n "-"; done # create a horizontal line
+    sleep "${WATCH_INTERVAL:-1}";
+  done
+}
+
+main() {
+  local -a unparsed;
+  local command="command_list";
+
+  while [ -n "$*" ]; do case "$1" in
+    -c) shift; export CHAIN_NAME="$1"; shift ;;
+    -f) shift; export FAMILY_NAME="$1"; shift ;;
+    -s) shift; export SET_NAME="$1"; shift ;;
+    -e) shift; command="command_edit" ;;
+    -ew) shift; command="command_edit_watch" ;;
+    -w) shift; command="command_watch" ;;
+    -h) shift; command="command_usage"; break ;;
+    --help) shift; command="command_usage"; break ;;
+    *) unparsed+=("$1"); shift ;;
+  esac done
+
+  [ "$command" != "command_usage" ] && ! command -v "nft" >/dev/null \
+    && l fatal "nft is not available";
+
+  "$command" "${unparsed[@]}";
+}
+
+[ -z "$TMPFILE" ] && TMPFILE="$HOME/.cache/.nftedit.tmp.nft";
+trap rollback HUP;
+trap cleanup EXIT QUIT TERM;
+main "$@";
