@@ -12,9 +12,10 @@ sub input_to_rows {
   my @after  = defined $self->after  ? ($self->after)  : ();
   my $nc     = $self->columns;
 
-  my (@rows, @curr);
+  my ($sep, @rows, @curr);
   while (<$FH>) {
-    push @curr, grep length, split /\s+/;
+    $sep ||= /\t/ ? qr{\t} : qr{\s+};
+    push @curr, grep length, split $sep;
     push @rows, [@before, splice(@curr, 0, $nc), @after] while @curr >= $nc;
   }
 
