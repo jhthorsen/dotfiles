@@ -79,3 +79,6 @@
 [submodule "share/nvim/site/pack/batpack/start/venn.nvim"]
 	path = share/nvim/site/pack/batpack/start/venn.nvim
 	url = https://github.com/jbyuki/venn.nvim
+[submodule "share/nvim/site/pack/batpack/start/vim-nftables.git"]
+	path = share/nvim/site/pack/batpack/start/vim-nftables.git
+	url = https://github.com/nfnty/vim-nftables.git
