@@ -5,6 +5,13 @@ cleanup() {
   [ -n "$TMPFILE" ] && [ -e "$TMPFILE" ] && run rm "$TMPFILE";
 }
 
+fill() {
+  local str="$1";
+  local padding="${2:-=}";
+  padding="$(printf "%$(tput cols)s" "$padding" | sed "s/ /$padding/g")";
+  printf "%s%s\n" "$str" "${padding:${#str}}";
+}
+
 rollback() {
   [ -z "$ROLLBACK_FILE" ] && return;
   l local3.err "Revert $TABLE_NAME using $ROLLBACK_FILE";
@@ -118,7 +125,7 @@ command_watch() {
 
   if [ -z "$WATCH_PAGER" ]; then
     command -v "bat" >/dev/null \
-      && export WATCH_PAGER="bat -f -p -l Perl" \
+      && export WATCH_PAGER="bat -f -p -l Perl | sed -e 's/counter/\x1B\[7mcounter\x1B\[27m/'" \
       || export WATCH_PAGER="grep --color=always -E 'table|chain|set|counter|$'";
   fi
 
@@ -126,10 +133,9 @@ command_watch() {
   tput -x clear; # clear screen, but not the scrollback
   while :; do
     tput cup 0 0;
-    echo "# $(date)       ";
+    fill "# $(date) " "-";
     eval "sudo $cmd | $WATCH_PAGER";
-    for x in $(seq 1 $COLUMNS); do echo -n "-"; done # create a horizontal line
-    sleep "${WATCH_INTERVAL:-1}";
+    fill "#" "-";
   done
 }
 
