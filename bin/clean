@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+  lines="$(tput lines)";
+  echo -e "\n  --- screen cleared at $(date) ---                                             \n";
+  for _x in $(seq 2 "$lines"); do echo; done
+  tput cup 0 0;
+elif [ "$1" = "-a" ]; then
+  clear;
+  reset;
+  printf '\e[3J';
+fi

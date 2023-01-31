@@ -6,10 +6,11 @@ bindkey '^A' beginning-of-line
 bindkey '^E' end-of-line
 bindkey '^K' kill-line
 
-function clear-scrollback-buffer {
-  clear && printf '\e[3J'
-  zle && zle .reset-prompt && zle -R
+function ctrl-l {
+  echo;
+  clean;
+  zle && zle .reset-prompt && zle -R;
 }
 
-zle -N clear-scrollback-buffer
-bindkey '^L' clear-scrollback-buffer
+zle -N ctrl-l
+bindkey '^L' ctrl-l

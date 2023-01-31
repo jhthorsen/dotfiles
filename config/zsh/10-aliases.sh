@@ -1,6 +1,5 @@
 #!/bin/bash
 alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
-alias cl='clear;reset'
 alias cpanm='cpanm -M https://cpan.metacpan.org'
 alias ddp="PERL5OPT=-MDDP=caller_info,1,colored,1,use_prototypes,0"
 alias doctl='doctl --access-token=$DO_API_TOKEN'
@@ -27,6 +26,6 @@ if [ "$(uname)" = "Linux" ]; then
   alias wp='sudo -u www-data wp';
 fi
 
-command -v getcwd || alias getcwd='echo $PWD';
+command -v getcwd >/dev/null || alias getcwd='echo $PWD';
 command -v launchctl >/dev/null && alias psql.start="launchctl load "$HOMEBREW_PREFIX/opt/postgresql/homebrew.mxcl.postgresql.plist"";
 command -v rg >/dev/null && alias ack='rg';
