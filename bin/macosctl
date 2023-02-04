@@ -3,7 +3,7 @@
 runx() {
   echo "\$ $*";
   "$@";
-  exit $?;
+  exit "$?";
 }
 
 run_pfctl() {
@@ -15,15 +15,22 @@ run_pfctl() {
   echo "rdr pass inet proto tcp from any to any port $2 -> $4 port $3" | sudo pfctl -;
 }
 
-run_dns_flush () {
+run_dns_flush() {
   sudo dscacheutil -flushcache;
   sudo killall -HUP mDNSResponder;
+}
+
+seed_random() {
+  sudo echo "# Seeding /dev/random - https://github.com/drduh/YubiKey-Guide#entropy";
+  echo "SCD RANDOM 512" | gpg-connect-agent | sudo tee /dev/random | hexdump -C;
+  exit "$?";
 }
 
 [ "$1" = "app-id" ] && runx osascript -e 'id of app "Finder"';
 [ "$1" = "dns-flush" ] && runx run_dns_flush;
 [ "$1" = "fwd" ] && runx run_pfctl "$2" "$3" "$4";
 [ "$1" = "leases" ] && runx sudo cat /private/var/db/dhcpd_leases;
+[ "$1" = "seed" ] && seed_random;
 [ "$1" = "ssh-add" ] && runx ssh-add --apple-use-keychain "$2";
 
-echo "$0 [app-id|fwd|dns-flush|leases|ssh-add]";
+echo "$0 [app-id|fwd|dns-flush|leases|seed|ssh-add]";

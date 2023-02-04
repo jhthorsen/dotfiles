@@ -1,0 +1,75 @@
+#!/bin/bash
+
+runx() {
+  echo "\$ $*" >&2;
+  "$@";
+}
+
+command_list_known_hosts() {
+  grep "^[a-z][a-z0-9-]\+\." "$HOME/.ssh/known_hosts" | cut -d" " -f1 | sort | uniq | while read -r h; do
+    h="$(echo "$h" | cut -d, -f1)"; # Remove IP address after hostname
+    echo "$h";
+  done
+}
+
+command_ssh_copy_id() {
+  local host="$1";
+  local newkey; newkey="$(ssh-add -L | head -n1)";
+  [ -z "$host" ] && exec echo "! Usage: dotgpg --ssh-copy-id <host>";
+  [ -z "$newkey" ] && exec echo "! ssh-add -L found no key";
+  [ -z "$OLD_KEY" ] && OLD_KEY="$HOME/.ssh/oldkey";
+  [ -r "$OLD_KEY" ] || exec echo "! Could not read $OLD_KEY";
+  runx ssh -o ConnectTimeout=3 -i "$OLD_KEY" "$host" "mkdir -p ~/.ssh; grep -q '$newkey' ~/.ssh/authorized_keys || echo '$newkey' >> ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys";
+}
+
+command_switch_key() {
+  gpg-connect-agent "scd serialno" "learn --force" /bye;
+}
+
+command_test() {
+  local keyid="${KEYID:-}";
+  [ -z "$keyid" ] && keyid="$(gpg -K | perl -ne'print $1 if /sec>.*(0x\S+)/')";
+  [ -z "$keyid" ] && exec echo "! gpg -K did not return a key ID" >&2;
+  [ -n "$GNUPGHOME" ] && export GNUPGHOME;
+
+  local file="dotgpg-test.txt";
+  echo "test message string" | runx gpg --clearsign;
+  echo "test message string" | runx gpg --encrypt --armor --recipient "$keyid" | tee "$file";
+  runx gpg --decrypt --armor "$file";
+  rm "$file";
+}
+
+command_usage() {
+  echo "Usage:
+
+  \$ dotgpg --switch-key
+  \$ gpgconf --kill gpg-agent; gpgconf --launch gpg-agent
+  \$ ykman openpgp access set-retries 3 3 3 -f -a "\$\(cat secretpinfile\)"
+  \$ for i in aut enc sig; do ykman openpgp keys set-touch "\$i" on; done
+
+Options:
+  --known-hosts  List hosts that have been logged in to before
+  --ssh-copy-id  Copy the ssh key to a remote server
+  --switch-key   Use a different YubiKey
+  --test         Test the GPG setup
+";
+}
+
+main() {
+  local -a unparsed;
+  local command="command_usage";
+
+  while [ -n "$*" ]; do case "$1" in
+    --known-hosts) shift; command="command_list_known_hosts" ;;
+    --ssh-copy-id) shift; command="command_ssh_copy_id" ;;
+    --switch-key) shift; command="command_switch_key" ;;
+    --test) shift; command="command_test"; break ;;
+    --help) shift; command="command_usage"; break ;;
+    --) shift; unparsed+=("$@"); break ;;
+    *) unparsed+=("$1"); shift ;;
+  esac done
+
+  "$command" "${unparsed[@]}";
+}
+
+main "$@";

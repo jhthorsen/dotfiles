@@ -9,6 +9,14 @@ function find_password_entries() {
 
 if [ "$1" = "ls" ]; then
   find_password_entries;
+elif [ "$1" = "export" ]; then
+  OUTPUT="$2";
+  [ -d "$OUTPUT" ] || exec echo "Output directory does not exists";
+  for i in $(find_password_entries); do
+    mkdir -p "$OUTPUT/$(dirname "$i")";
+    echo "pass show $i > $OUTPUT/$i.yaml";
+    pass show "$i" > "$OUTPUT/$i.yaml";
+  done
 else
   found=$(find_password_entries | fzf --no-mouse --preview "pass show {} | perl -ne'print if $. > 1'");
   [ -n "$found" ] && pass show -c "$found";

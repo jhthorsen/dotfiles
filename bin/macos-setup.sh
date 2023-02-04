@@ -54,6 +54,7 @@ run $BREW_BIN install gnutls
 run $BREW_BIN install go
 run $BREW_BIN install gpg-suite
 run $BREW_BIN install groff
+run $BREW_BIN install hopenpgp-tools
 run $BREW_BIN install imagemagick
 run $BREW_BIN install jpeg
 run $BREW_BIN install jpegoptim
@@ -67,6 +68,7 @@ run $BREW_BIN install neovim
 run $BREW_BIN install nginx
 run $BREW_BIN install nmap
 run $BREW_BIN install node
+run $BREW_BIN install openssh
 run $BREW_BIN install openssl
 run $BREW_BIN install pass
 run $BREW_BIN install perl
@@ -94,6 +96,8 @@ run $BREW_BIN install tesseract
 run $BREW_BIN install trash-cli
 run $BREW_BIN install tree
 run $BREW_BIN install wget
+run $BREW_BIN install ykman
+run $BREW_BIN install yubikey-personalization
 run $BREW_BIN install z
 run $BREW_BIN install zsh
 run $BREW_BIN install zsh-completions
