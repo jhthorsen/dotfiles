@@ -1,6 +1,13 @@
 #!/bin/bash
 [ -z "$PASSWORD_STORE_DIR" ] && PASSWORD_STORE_DIR="$HOME/.password-store";
 
+if [ -n "$IMPORT_FILE" ] ; then
+  echo "\$ EDITOR=$0 pass edit < $IMPORT_FILE";
+  [ -z "$1" ] && exit 1;
+  cat "$IMPORT_FILE" > "$1";
+  exit "$?";
+fi
+
 function find_password_entries() {
   find -L "$PASSWORD_STORE_DIR" -not -name .git -a -name '*.gpg' 2>/dev/null \
     | sed -e "s#${PASSWORD_STORE_DIR}/\{0,1\}##" -e 's#\.gpg##' -e 's#\\#\\\\#g' -e 's#:#\\:#g' \
@@ -16,6 +23,16 @@ elif [ "$1" = "export" ]; then
     mkdir -p "$OUTPUT/$(dirname "$i")";
     echo "pass show $i > $OUTPUT/$i.yaml";
     pass show "$i" > "$OUTPUT/$i.yaml";
+  done
+elif [ "$1" = "import" ]; then
+  export SOURCE_DIR="$2";
+  [ -d "$SOURCE_DIR" ] || exec echo "Usage: gof import /path/to/exported/files";
+  for f in $(find "$SOURCE_DIR" -type f | grep '\.yaml$'); do
+    export EDITOR="$0";
+    export IMPORT_FILE="$f";
+    name="${IMPORT_FILE%.*}";
+    name="$(echo "$name" | sed -e "s#${SOURCE_DIR}/\{0,1\}##")";
+    pass edit "$name";
   done
 else
   found=$(find_password_entries | fzf --no-mouse --preview "pass show {} | perl -ne'print if $. > 1'");
