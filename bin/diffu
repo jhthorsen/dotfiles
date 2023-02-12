@@ -27,7 +27,9 @@ my %COLORS = make_ansi_colors(
 
 my $ANSI_RE    = qr/\e\[[a-fA-F0-9;]*[mK]/;
 my $ANSI_RESET = "\e[m";
-my $UNIFIED_RE = qr/@@\s+-(\d+)(?:,(\d+))\s+\+(\d+)(?:,(\d+))?\s+@@/;
+
+my $RANGE_RE = qr/(\d+)\s*(?:,(\d+))?/;
+my $UNIFIED_RE = qr/@@ \s+ -$RANGE_RE \s+ \+$RANGE_RE \s+ @@/x;
 
 $ENV{COLUMNS} ||= get_terminal_width();
 
