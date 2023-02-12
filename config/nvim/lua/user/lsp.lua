@@ -2,6 +2,7 @@ local bindkey = require('../utils').bindkey
 
 local cmd = vim.cmd
 cmd('autocmd BufRead,BufNewFile *.css set filetype=scss')
+cmd('autocmd BufRead,BufNewFile *.pcss set filetype=scss')
 cmd('autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focus=false})')
 
 vim.diagnostic.config({virtual_text = false})
