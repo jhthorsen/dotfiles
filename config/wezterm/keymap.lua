@@ -9,10 +9,10 @@ local clearScrollbackAndSendClearKey = act.Multiple {
 }
 
 local keymap = {
-  {key = '[',     mods = 'SUPER',       action = 'ActivateCopyMode'},
+  {key = '|',     mods = 'SUPER|SHIFT', action = 'ActivateCopyMode'},
   {key = 'Enter', mods = 'SUPER',       action = 'QuickSelect'},
   {key = '-',     mods = 'SUPER',       action = 'DecreaseFontSize'},
-  {key = '_',     mods = 'SUPER|SHIFT', action = 'IncreaseFontSize'},
+  {key = '^',     mods = 'SUPER',       action = 'IncreaseFontSize'},
   {key = '0',     mods = 'SUPER',       action = 'ResetFontSize'},
   {key = ']',     mods = 'SUPER',       action = 'ShowDebugOverlay'},
   {key = 'm',     mods = 'SUPER',       action = 'ShowLauncher'},
