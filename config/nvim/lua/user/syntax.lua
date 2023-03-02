@@ -10,7 +10,7 @@ end)
 
 -- emmet
 vim.g.user_emmet_install_global = 0
-vim.g.user_emmet_leader_key = '<c-e>'
+vim.g.user_emmet_leader_key = '<c-y>'
 vim.g.user_emmet_mode = 'i'
 vim.cmd('autocmd FileType css,html,html.epl,scss,svelte,vue EmmetInstall')
 bindkey('n', '<leader>ss', ':set spell!<CR>')

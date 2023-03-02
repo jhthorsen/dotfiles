@@ -1,6 +1,6 @@
 local bindkey = require('../utils').bindkey
 
-vim.o.timeoutlen = 300
+vim.o.timeoutlen = 350
 vim.g.mapleader = ' '
 
 --- NTBBloodbath/color-converter.nvim
