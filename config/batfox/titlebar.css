@@ -1,3 +1,29 @@
+/* #titlebar
+ * |- #toolbar-menubar
+ * |  |- #menubar-items
+ * |  '- .titlebar-buttonbox-container
+ * |     '- .titlebar-buttonbox
+ * |        |- .titlebar-button.titlebar-min
+ * |        |- .titlebar-button.titlebar-max
+ * |        |- .titlebar-button.titlebar-restore
+ * |        '- .titlebar-button.titlebar-close
+ * |- #TabsToolbar
+ * |  |- .titlebar-spacer
+ * |  |- .toolbar-items
+ * |  |  '- #TabsToolbar-customization-target
+ * |  |     |- #tabbrowser-tabs
+ * |  |     |- #alltabs-button
+ * |  |     |- #new-tab-button
+ * |  |- .titlebar-spacer
+ * |  |- .private-browsing-indicator
+ * |  |- .private-browsing-indicator-with-label
+ * |  '- .titlebar-buttonbox-container
+ */
+
+#titlebar {
+  box-shadow: none !important;
+}
+
 /* remove gap after pinned tabs */
 #tabbrowser-tabs[haspinnedtabs]:not([positionpinnedtabs])
   > #tabbrowser-arrowscrollbox
@@ -10,17 +36,10 @@
   display: var(--uc-show-all-tabs-button) !important;
 }
 
-/* remove tab shadow */
-.tabbrowser-tab > .tab-stack > .tab-background {
-  box-shadow: none !important;
-}
-
-/* multi tab selection */
-#tabbrowser-tabs:not([noshadowfortests])
-  .tabbrowser-tab:is([multiselected])
-  > .tab-stack
-  > .tab-background:-moz-lwtheme {
-  outline-color: var(--toolbarseparator-color) !important;
+#new-tab-button,
+#new-tab-button-popup,
+#tabs-newtab-button {
+  display: var(--uc-show-new-tab-button) !important;
 }
 
 /* tab close button options */
@@ -42,10 +61,7 @@
 }
 
 /* container tabs indicator */
-.tabbrowser-tab[usercontextid]
-  > .tab-stack
-  > .tab-background
-  > .tab-context-line {
+.tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
   margin: -1px var(--container-tabs-indicator-margin) 0 var(--container-tabs-indicator-margin) !important;
   height: 1px !important;
   box-shadow: var(--uc-identity-glow) var(--identity-tab-color) !important;
@@ -59,47 +75,41 @@
 /* Makes the speaker icon to always appear if the tab is playing (not only on hover) */
 .tab-icon-overlay:not([crashed]),
 .tab-icon-overlay[pinned][crashed][selected] {
-  top: 5px !important;
-  z-index: 1 !important;
   padding: 1.5px !important;
-  inset-inline-end: -8px !important;
+  border-radius: 10px !important;
   width: 16px !important;
   height: 16px !important;
-  border-radius: 10px !important;
+  inset-inline-end: -8px !important;
+  top: 5px !important;
+  z-index: 1 !important;
 }
 
 /* style and position speaker icon */
-.tab-icon-overlay:not([sharing], [crashed]):is(
-    [soundplaying],
-    [muted],
-    [activemedia-blocked]
-  ) {
-  stroke: transparent !important;
+.tab-icon-overlay:not([sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) {
   background: transparent !important;
-  opacity: 1 !important;
-  fill-opacity: 0.8 !important;
+  background-color: var(--toolbar-bgcolor) !important;
   color: currentColor !important;
   stroke: var(--toolbar-bgcolor) !important;
-  background-color: var(--toolbar-bgcolor) !important;
+  opacity: 1 !important;
+  fill-opacity: 0.8 !important;
 }
 
-/* change the colours of the speaker icon on active tab to match tab colours */
-.tabbrowser-tab[selected]
-  .tab-icon-overlay:not([sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) {
-  stroke: var(--toolbar-bgcolor) !important;
-  background-color: var(--toolbar-bgcolor) !important;
+/* change the colors of the speaker icon on active tab to match tab colors */
+.tabbrowser-tab[selected] .tab-icon-overlay:not([sharing],
+[crashed]):is([soundplaying], [muted], [activemedia-blocked]) {
+  stroke: var(--toolbar-active-bgcolor) !important;
+  background-color: var(--toolbar-active-bgcolor) !important;
 }
 
-.tab-icon-overlay:not([pinned], [sharing], [crashed]):is(
-  [soundplaying], [muted], [activemedia-blocked]) {
+.tab-icon-overlay:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) {
   margin-inline-end: 9.5px !important;
 }
 
 .tabbrowser-tab:not([image]) .tab-icon-overlay:not([pinned], [sharing], [crashed]) {
-  top: 0 !important;
   padding: 0 !important;
   margin-inline-end: 5.5px !important;
   inset-inline-end: 0 !important;
+  top: 0 !important;
 }
 
 .tab-icon-overlay:not([crashed])[soundplaying]:hover,
@@ -118,6 +128,10 @@
   stroke: var(--toolbar-color) !important;
   background-color: var(--toolbar-color) !important;
   fill-opacity: 0.95 !important;
+}
+
+#TabsToolbar {
+  padding-inline: var(--tabs-toolbar-padding-inline) !important;
 }
 
 /* speaker icon colour fix */

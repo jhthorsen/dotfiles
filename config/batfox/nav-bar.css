@@ -1,0 +1,103 @@
+/* #nav-bar
+ * |- #nav-bar-customization-target
+ * |  |- #back-button
+ * |  |- #forward-button
+ * |  '- #urlbar-container
+ * |     '- #urlbar
+ * |        |- #urlbar-background
+ * |        |- #urlbar-input-container
+ * |        |  |- #remote-control-box
+ * |        |  |- #urlbar-search-button
+ * |        |  |- #tracking-protection-icon-container
+ * |        |  |- #identity-box
+ * |        |  |- #urlbar-label-box
+ * |        |  |- #urlbar-search-mode-indicator
+ * |        |  |- .urlbar-input-box
+ * |        |  |- #urlbar-go-button
+ * |        |  '- #page-action-buttons
+ * |        '- urlbarView
+ * |           |- .urlbarView-body-outer
+ * |           |  '- .urlbarView-body-inner
+ * |           |- .urlbarView-result-menu
+ * |           '- .search-one-offs
+ * |- #nav-bar-overflow-button
+ * |- #unified-extensions-button
+ * '- #PanelUI-button
+ */
+
+#nav-bar {
+  box-shadow: none !important;
+  padding-inline: var(--nav-bar-padding-inline) !important;
+}
+
+#nav-bar,
+#nav-bar[downloadsbuttonshown] #urlbar-container,
+#nav-bar[unifiedextensionsbuttonshown] #urlbar-container {
+  min-width: 200px !important;
+}
+
+#urlbar-background {
+  background-color: var(--uc-search-result-bgcolor) !important;
+  border-color: transparent !important;
+}
+
+.urlbarView {
+  --urlbar-popup-url-color: rgb(var(--toolbar-color--rgb));
+  background-color: var(--uc-search-result-bgcolor) !important;
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
+  outline-color: var(--toolbar-field-focus-border-color);
+  border-color: transparent;
+  margin-top: 0 !important;
+  box-shadow: var(--uc-search-result-box-shadow) !important;
+  width: min(var(--uc-search-result-min-width), 100vw) !important;
+  position: absolute !important;
+  top: var(--urlbar-container-height) !important;
+  left: var(--uc-search-result-left) !important;
+  right: var(--uc-search-result-right) !important;
+  opacity: 0.97;
+  z-index: 4;
+}
+
+.search-one-offs,
+.urlbarView-body-outer {
+  background-color: var(--uc-search-result-bgcolor) !important;
+}
+
+#urlbar,
+.urlbarView-body-inner,
+.urlbarView-results {
+  border: 0 !important;
+}
+
+.urlbarView-results {
+  padding-block: 0 !important;
+}
+
+.urlbarView-row {
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.urlbarView-row:hover {
+  background-color: var(--uc-search-result-row-hover-bgcolor) !important;
+}
+
+.urlbarView-row[selected] {
+  background-color: var(--uc-search-result-row-selected-bgcolor) !important;
+}
+
+.urlbarView-row > .urlbarView-row-inner {
+  padding-inline: var(--uc-search-result-padding-inline) !important;
+  padding-block: var(--uc-search-result-padding-block) !important;
+}
+
+.search-one-offs {
+  padding: var(--uc-search-result-padding-inline) !important;
+  border: 0 !important;
+}
+
+.urlbarView-url {
+  opacity: 0.8 !important;
+  font-style: italic;
+}

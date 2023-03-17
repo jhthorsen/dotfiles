@@ -1,8 +1,7 @@
 @import "config.css";
 @import "colors.css";
 @import "layout.css";
-@import "navbar.css";
-@import "responsive.css";
-@import "tabs.css";
+@import "nav-bar.css";
+@import "titlebar.css";
 @import "hide_tabs_scrollbuttons.css";
 @import "overlay_sidebar_header.css";

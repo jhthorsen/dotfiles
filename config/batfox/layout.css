@@ -1,3 +1,50 @@
+/* Disable the Navigation Buttons */
+#back-button,
+#forward-button {
+  display: none !important;
+}
+
+/* Hide everything BUT the zoom indicator within the URL Bar */
+#page-action-buttons > :not(#urlbar-zoom-button) {
+  display: none !important;
+}
+
+#PersonalToolbar {
+  display: none !important;
+}
+
+/* Hide the »Go«-arrow in the URL Bar */
+#urlbar-go-button {
+  display: none !important;
+}
+
+#PanelUI-menu-button .toolbarbutton-icon {
+  width: 1px !important;
+}
+
+#PanelUI-menu-button .toolbarbutton-badge-stack {
+  padding: 0 !important;
+}
+
+#navigator-toolbox {
+  background-color: var(--toolbar-bgcolor) !important;
+}
+
+/* Hide the secondary Tab Label
+ * e.g. playing indicator (the text, not the icon) */
+.tab-secondary-label {
+  display: none !important;
+}
+
+.private-browsing-indicator-with-label {
+  display: none !important;
+}
+
+/* remove "padding" left and right from tabs */
+.titlebar-spacer {
+  display: none !important;
+}
+
 /* remove window control buttons */
 .titlebar-buttonbox-container {
   display: none !important;
@@ -8,109 +55,23 @@
 }
 
 #PanelUI-menu-button {
-  padding: 0px !important;
+  padding: 0 !important;
 }
 
-#PanelUI-menu-button .toolbarbutton-icon {
-  width: 1px !important;
-}
-
-#PanelUI-menu-button .toolbarbutton-badge-stack {
-  padding: 0px !important;
-}
-
-/* Disable the Navigation Buttons */
-#back-button,
-#forward-button {
-  display: none !important;
-}
-
-/* Disables the Tracking Protection Shield */
-/* #tracking-protection-icon-container { display: none !important; } */
-/* Encryption and Permissions icons */
-/* Only hides permission items */
-#identity-permission-box {
-  display: none !important;
-}
-
-/* Hides encryption AND permission items */
-/* #identity-box { display: none !important } */
-/* Hide everything BUT the zoom indicator within the URL Bar */
-#page-action-buttons > :not(#urlbar-zoom-button) {
-  display: none !important;
-}
-
-/* Hide the »Go«-arrow in the URL Bar */
-#urlbar-go-button {
-  display: none !important;
-}
-
-/* Hide the secondary Tab Label
- * e.g. playing indicator (the text, not the icon) */
-.tab-secondary-label {
-  display: none !important;
-}
-
-#TabsToolbar,
-#main-window,
-#nav-bar,
-#navigator-toolbox,
-#sidebar-box,
-#toolbar-menubar {
-  box-shadow: none !important;
-}
-
-#PersonalToolbar,
-#TabsToolbar,
-#main-window,
-#nav-bar,
-#navigator-toolbox,
-#sidebar-box,
-#toolbar-menubar {
-  border: none !important;
-}
-
-/* remove "padding" left and right from tabs */
-.titlebar-spacer {
-  display: none !important;
-}
-
-#PersonalToolbar {
-  padding: 6px !important;
-  box-shadow: inset 0 0 50vh rgba(0, 0, 0, var(--uc-darken-toolbar)) !important;
-}
-
-#statuspanel #statuspanel-label {
-  border: none !important;
-  border-radius: var(--uc-border-radius) !important;
-}
-
-@media (min-width: 1000px) {
+@media (min-width: 768px) {
   #nav-bar {
     order: var(--uc-urlbar-position);
     width: var(--uc-urlbar-min-width);
+    flex: 0 1 var(--uc-urlbar-min-width);
   }
 
   #navigator-toolbox {
     display: flex;
-    flex-wrap: wrap;
-  }
-
-  #navigator-toolbox:focus-within #nav-bar {
-    width: var(--uc-urlbar-max-width);
-  }
-
-  #navigator-toolbox:focus-within #titlebar {
-    width: calc(100vw - var(--uc-urlbar-max-width) - 1px);
-  }
-
-  #PersonalToolbar {
-    order: var(--uc-toolbar-position);
-    width: 100%;
+    flex-wrap: nowrap;
   }
 
   #titlebar {
-    order: 2;
-    width: calc(100vw - var(--uc-urlbar-min-width) - 1px);
+    order: var(--uc-toolbar-position);
+    flex: 1 0 auto;
   }
 }
