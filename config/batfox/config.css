@@ -1,155 +1,163 @@
-/*---+---+---+---+---+---+
- | G | L | O | B | A | L |
- +---+---+---+---+---+---*/
-
-
+/* Down here I'm just reassigning variables based on the colours set above.
+ * Feel free to play around with these but there is no editing necessary below this line. c:
+ */
 :root {
+  --lwt-frame: var(--uc-base-colour) !important;
+  --lwt-accent-color: var(--lwt-frame) !important;
+  --lwt-text-color: var(--uc-inverted-colour) !important;
 
-  /*  Global Border Radius
-   *  applied to ALL UI elements
-   */ --uc-border-radius: 0px;
+  --toolbar-field-color: var(--uc-inverted-colour) !important;
 
+  --toolbar-field-focus-color: var(--uc-inverted-colour) !important;
+  --toolbar-field-focus-background-color: var(--uc-highlight-colour) !important;
+  --toolbar-field-focus-border-color: transparent !important;
 
-  /*  The distance the Statuspanel floats
-   *  away from the window border
-   *  0 places directly in the corner
-   */ --uc-status-panel-spacing: 12px;
+  --toolbar-field-background-color: var(--lwt-frame) !important;
+  --lwt-toolbar-field-highlight: var(--uc-inverted-colour) !important;
+  --lwt-toolbar-field-highlight-text: var(--uc-highlight-colour) !important;
+  --urlbar-popup-url-color: var(--uc-accent-colour) !important;
 
+  --lwt-tab-text: var(--lwt-text-colour) !important;
+
+  --lwt-selected-tab-background-color: var(--uc-highlight-colour) !important;
+
+  --toolbar-bgcolor: var(--lwt-frame) !important;
+  --toolbar-color: var(--lwt-text-color) !important;
+  --toolbarseparator-color: var(--uc-accent-colour) !important;
+  --toolbarbutton-hover-background: var(--uc-highlight-colour) !important;
+  --toolbarbutton-active-background: var(
+    --toolbarbutton-hover-background
+  ) !important;
+
+  --lwt-sidebar-background-color: var(--lwt-frame) !important;
+  --sidebar-background-color: var(--lwt-sidebar-background-color) !important;
+
+  --urlbar-box-bgcolor: var(--uc-highlight-colour) !important;
+  --urlbar-box-text-color: var(--uc-muted-colour) !important;
+  --urlbar-box-hover-bgcolor: var(--uc-highlight-colour) !important;
+  --urlbar-box-hover-text-color: var(--uc-inverted-colour) !important;
+  --urlbar-box-focus-bgcolor: var(--uc-highlight-colour) !important;
+
+  /* Global Border Radius
+   * applied to ALL UI elements
+   */
+  --uc-border-radius: 0px;
+
+  /* The distance the Statuspanel floats
+   * away from the window border
+   * 0 places directly in the corner
+   */
+  --uc-status-panel-spacing: 12px;
+
+  --toolbarbutton-border-radius: var(--uc-border-radius) !important;
+  --tab-border-radius: var(--uc-border-radius) !important;
+  --arrowpanel-border-radius: var(--uc-border-radius) !important;
+
+  /* Position of the Personal Toolbar
+   * possible values:
+   * 0 – toolbar on top
+   * 4 – toolbar on bottom
+   */
+  --uc-toolbar-position: 0;
+
+  /* Darken the Personal Toolbar by X amount
+   * where X = 1 means pure black
+   * and X = 0 means no darkening at all
+   */
+  --uc-darken-toolbar: 0.2;
+
+  /* Width of the URL Bar for the Oneline layout */
+  --uc-urlbar-min-width: 35vw;
+  --uc-urlbar-max-width: 35vw;
+
+  /* Position of the URL Bar
+   * possible values:
+   * 1 – tabs on the right
+   * 3 – tabs on the left
+   */
+  --uc-urlbar-position: 1;
+
+  /* Firefox can be a little wonky with the vertical
+   * URL Bar placement. Change this variable to adapt
+   * to this when necessary.
+   */
+  --uc-urlbar-top-spacing: 1px;
+
+  /* Allow tabs to have dynamic widths based on the Tab Bars maximum width */
+  --uc-active-tab-width: clamp(150px, 30vw, 300px);
+  --uc-inactive-tab-width: clamp(75px, 20vw, 200px);
+
+  /* Enable this to always show the Tab Close button
+   * possible values:
+   * show: -moz-inline-block
+   * hide: none
+   */
+  --show-tab-close-button: none;
+
+  /* Enable this to only show the Tab Close button on tab hover
+   * possible values:
+   * show: -moz-inline-block
+   * hide: none
+   */
+  --show-tab-close-button-hover: none;
+
+  /* Hide the all Tabs button from the Tab Bar
+   * possible values:
+   * show: -moz-box
+   * hide: none
+   */
+  --uc-show-all-tabs-button: none;
+
+  /* Left and Right "dip" of the container indicator
+   * 0px equals tab width
+   * higer values make the indicator smaller
+   */
+  --container-tabs-indicator-margin: 10px;
+
+  /* Amount of Glow to add to the container indicator
+   * Setting it to 0 disables the Glow
+   */
+  --uc-identity-glow: 0 1px 10px 1px;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* These colours are (mainly) used by the Container Tabs Plugin */
+    --uc-identity-colour-blue: #7ed6df;
+    --uc-identity-colour-turquoise: #55e6c1;
+    --uc-identity-colour-green: #b8e994;
+    --uc-identity-colour-yellow: #f7d794;
+    --uc-identity-colour-orange: #f19066;
+    --uc-identity-colour-red: #fc5c65;
+    --uc-identity-colour-pink: #f78fb3;
+    --uc-identity-colour-purple: #786fa6;
 
-/* remove window control buttons */
-.titlebar-buttonbox-container { display: none !important; }
-
-
-#pageActionButton { display: none !important; }
-
-#PanelUI-menu-button { padding: 0px !important; }
-#PanelUI-menu-button .toolbarbutton-icon { width: 1px !important; }
-#PanelUI-menu-button .toolbarbutton-badge-stack { padding: 0px !important; }
-
-
-
-
-
-/*---+---+---+---+---+---+---+
- | T | O | O | L | B | A | R |
- +---+---+---+---+---+---+---*/
-
-
-:root {
-
-  /*  Position of the Personal Toolbar
-   *  possible values:
-   *  0 – toolbar on top
-   *  4 – toolbar on bottom
-   */ --uc-toolbar-position: 0;
-
-  /*  Darken the Personal Toolbar by X amount
-   *  where X = 1 means pure black
-   *  and X = 0 means no darkening at all
-   */ --uc-darken-toolbar: .2;
-
+    /* Cascades main Colour Scheme */
+    --uc-base-colour: #1e2021;
+    --uc-highlight-colour: #191b1c;
+    --uc-inverted-colour: #fafafc;
+    --uc-muted-colour: #aaaaac;
+    --uc-accent-colour: var(--uc-identity-colour-purple);
+  }
 }
 
+@media (prefers-color-scheme: light) {
+  :root {
+    /* These colours are (mainly) used by the Container Tabs Plugin */
+    --uc-identity-colour-blue: #1d65f5;
+    --uc-identity-colour-turquoise: #209fb5;
+    --uc-identity-colour-green: #40a02b;
+    --uc-identity-colour-yellow: #e49320;
+    --uc-identity-colour-orange: #fe640b;
+    --uc-identity-colour-red: #fc5c65;
+    --uc-identity-colour-pink: #ec83d0;
+    --uc-identity-colour-purple: #822fee;
 
-
-
-
-/*---+---+---+---+---+---+---+
- | U | R | L | — | B | A | R |
- +---+---+---+---+---+---+---*/
-
-
-:root {
-
-  /*  Width of the URL Bar for the Oneline layout
-   *  If enabled the max-width is applied on focus
-   *  otherwise the URL Bar will always be it's min-width
-   */ --uc-urlbar-min-width: 35vw;
-      --uc-urlbar-max-width: 35vw;
-
-  /*  Position of the URL Bar
-   *  possible values:
-   *  1 – tabs on the right
-   *  3 – tabs on the left
-   */ --uc-urlbar-position: 1;
-
-  /*  Firefox can be a little wonky with the vertical
-   *  URL Bar placement. Change this variable to adapt
-   *  to this when necessary.
-   */ --uc-urlbar-top-spacing: 1px;
-
+    /* Cascades main Colour Scheme */
+    --uc-base-colour: #fafafc;
+    --uc-highlight-colour: #dadadc;
+    --uc-inverted-colour: #1e2021;
+    --uc-muted-colour: #191b1c;
+    --uc-accent-colour: var(--uc-identity-colour-purple);
+  }
 }
-
-
-/* Disable the Navigation Buttons */
-#back-button,
-#forward-button { display: none !important; }
-
-/* Disables the Tracking Protection Shield */
-/* #tracking-protection-icon-container { display: none !important; } */
-
-/* Encryption and Permissions icons */
-  /* Only hides permission items */
-  #identity-permission-box { display: none !important; }
-  /* Hides encryption AND permission items */
-  /* #identity-box { display: none !important } */
-
-/* Hide everything BUT the zoom indicator within the URL Bar */
-#page-action-buttons > :not(#urlbar-zoom-button) { display: none !important; }
-
-/* Hide the »Go«-arrow in the URL Bar */
-#urlbar-go-button { display: none !important; }
-
-
-
-
-
-/*---+---+---+---+---+---+---+
- | T | A | B | — | B | A | R |
- +---+---+---+---+---+---+---*/
-
-
-:root {
-
-  /*  Allow tabs to have dynamic widths based on
-   *  the Tab Bars maximum width
-   */ --uc-active-tab-width:   clamp(100px, 30vw, 300px);
-      --uc-inactive-tab-width: clamp(100px, 20vw, 200px);
-
-
-  /*  Enable this to always show the Tab Close button
-   *  possible values:
-   *  show: -moz-inline-block
-   *  hide: none
-   */ --show-tab-close-button: none;
-
-  /*  Enable this to only show the Tab Close button on tab hover
-   *  possible values:
-   *  show: -moz-inline-block
-   *  hide: none
-   */ --show-tab-close-button-hover: none;
-
-  /*  Hide the all Tabs button from the Tab Bar
-   *  possible values:
-   *  show: -moz-box
-   *  hide: none
-   */ --uc-show-all-tabs-button: none;
-
-
-  /*  Left and Right "dip" of the container indicator
-   *  0px equals tab width
-   *  higer values make the indicator smaller
-   */ --container-tabs-indicator-margin: 10px;
-
-  /*  Amount of Glow to add to the container indicator
-   *  Setting it to 0 disables the Glow
-   */ --uc-identity-glow: 0 1px 10px 1px;
-
-}
-
-
-/* Hide the secondary Tab Label
- * e.g. playing indicator (the text, not the icon) */
-.tab-secondary-label { display: none !important; }
