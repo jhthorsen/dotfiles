@@ -12,9 +12,6 @@ vim.g.netrw_keepdir = 0
 vim.g.netrw_liststyle = 3
 vim.g.netrw_winsize = 30
 
-bindkey('n', '<leader>e', ':Lexplore<CR>')
-bindkey('n', '<leader>f', ':silent Lexplore %:p:h<CR>')
-
 netrw_bindkey('e', '<CR>:Lexplore<CR>')
 netrw_bindkey('h', 'gh')
 netrw_bindkey('<leader><tab>', 'mu')

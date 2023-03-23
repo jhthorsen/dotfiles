@@ -10,10 +10,9 @@ end)
 
 -- emmet
 vim.g.user_emmet_install_global = 0
-vim.g.user_emmet_leader_key = '<c-y>'
-vim.g.user_emmet_mode = 'i'
+vim.g.user_emmet_leader_key = '<c-e>'
 vim.cmd('autocmd FileType css,html,html.epl,scss,svelte,vue EmmetInstall')
-bindkey('n', '<leader>ss', ':set spell!<CR>')
+vim.cmd('autocmd FileType css,scss setlocal commentstring=/*%s*/')
 
 -- perl
 vim.g.perl_fold = 0
@@ -25,7 +24,7 @@ vim.g.perl_sync_dist = 1
 
 -- spelling
 bindkey('i', '<c-s>', function() require('telescope.builtin').spell_suggest() end)
-bindkey('n', '<leader>st', ':set spell!<CR>')
+bindkey('n', '<leader>ss', ':set spell!<CR>')
 
 -- surround
 use('mini.surround', function (mod)

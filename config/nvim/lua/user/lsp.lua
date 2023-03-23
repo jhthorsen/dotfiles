@@ -12,7 +12,7 @@ local function on_attach(client, bufnr)
   vim.o.omnifunc = 'v:lua.vim.lsp.omnifunc'
 
   local opts = {buffer = bufnr}
-  bindkey('n', 'gD', vim.lsp.buf.declaration, opts)
+  bindkey('n', 'gd', vim.diagnostic.open_float)
   bindkey('n', 'gd', vim.lsp.buf.definition, opts)
   bindkey('n', 'gi', vim.lsp.buf.implementation, opts)
   bindkey('n', 'gr', vim.lsp.buf.references, opts)

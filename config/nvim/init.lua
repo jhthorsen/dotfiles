@@ -34,5 +34,6 @@ use('user/treesitter')
 use('user/telescope')
 
 use('extensions/external-hook')
+use('extensions/mkdir')
 use('nvim-surround', function (mod) mod.setup({}) end)
 use('Comment', function (mod) mod.setup() end)
