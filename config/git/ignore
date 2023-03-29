@@ -3,9 +3,13 @@
 .DS_Store
 .gist_token
 .pls_cache
+/.svelte-kit
 .vim/bundle
 .vscode
 .vstags
 jsconfig.json
+coverage
+node_modules
+build
 /Shared With Me
 /local

@@ -23,8 +23,7 @@ vim.g.perl_no_scope_in_variables = 1
 vim.g.perl_sync_dist = 1
 
 -- spelling
-bindkey('i', '<c-s>', function() require('telescope.builtin').spell_suggest() end)
-bindkey('n', '<leader>ss', ':set spell!<CR>')
+bindkey('n', '<leader>ss', ':set spell!<CR>', {desc = 'Toggle spelling'})
 
 -- surround
 use('mini.surround', function (mod)

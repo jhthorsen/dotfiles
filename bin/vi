@@ -6,11 +6,9 @@ push @bin, $ENV{VIM_BIN} if $ENV{VIM_BIN};
 @bin = map { chomp; $_ } qx{which -a vim} unless @bin;
 die "Could not find real vim" unless @bin;
 
-# Normal vim
-do { exec $bin[0] => @ARGV } or die $! if @ARGV or !-d '.git';
+exec $bin[0],
+    @ARGV     ? (@ARGV)
+  : -d '.git' ? (-c => ':Telescope git_files')
+  :             (-c => ':Telescope oldfiles');
 
-# Vim from project directory without arguments
-my $file = qx"fzf --preview 'head -100 {}'";
-chomp $file;
-do { exec $bin[0] => $file } or die $! if $file;
-exit 0;
+die $!;

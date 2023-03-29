@@ -25,11 +25,11 @@ local hook = function(params)
     return
   end
 
-  local handle = vim.loop.spawn(
+  vim.loop.spawn(
     hook_script,
     {args = {event_name, file}},
-    vim.schedule_wrap(function(code, signal)
-      if code ~= 2 and not vim_leave then
+    vim.schedule_wrap(function(code, _)
+      if code ~= 0 and code ~= 2 and not vim_leave then
         print(event_name .. ' ' .. file .. ' = ' .. code)
       end
       if code == 35 then

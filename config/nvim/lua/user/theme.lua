@@ -1,8 +1,8 @@
 local use = require('utils').use;
 
 vim.g.spell_under = 'kanagawa'
-use('kanagawa', function (mod)
-  mod.setup({
+use('kanagawa', function (kanagawa)
+  kanagawa.setup({
     dimInactive = true,
     transparent = true,
   })

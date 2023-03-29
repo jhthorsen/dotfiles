@@ -2,6 +2,7 @@
 .pls_cache
 bin/starship
 local/
+config/nvim/lua/.luarc.json
 config/nvim/spell
 config/nvim/plugin/
 config/vim/autoload/plug.vim

@@ -1,0 +1,22 @@
+#!/bin/bash
+RECURSIVE="maxdepth-1";
+[ "$1" = "-r" ] && RECURSIVE="recursive" && shift;
+
+CURRENT_DIR="$1"
+[ -z "$CURRENT_DIR" ] && CURRENT_DIR="..";
+
+# Clean up old cache files
+[ -z "$TMPDIR" ] && TMPDIR="$(tmpdir)";
+find "$TMPDIR"/find-parent-directory-*.files -mmin +1 -exec rm {} \; 2>/dev/null;
+
+CURRENT_DIR_ID="$(realpath "$CURRENT_DIR" | md5)";
+CACHE_FILE="$TMPDIR/find-parent-directory-$RECURSIVE-$CURRENT_DIR_ID.files";
+if [ -f "$CACHE_FILE" ]; then
+  cat "$CACHE_FILE";
+elif [ "$RECURSIVE" = "recursive" ]; then
+  rg -g '!*/dotfiles/share/*' --files "$CURRENT_DIR" | tee "$CACHE_FILE";
+else
+  find "$CURRENT_DIR" -maxdepth 1 -type d | while read -r d; do
+    [ -d "$d/.git" ] && rg -g '!*/dotfiles/share/*' --files "$d";
+  done | tee "$CACHE_FILE";
+fi

@@ -15,13 +15,14 @@ local next_item = function(fallback)
   end
 end
 
-local previous_item = function(fallback)
+local previous_item = function(_)
   if cmp.visible() then
     cmp.select_prev_item()
   end
 end
 
 cmp.setup({
+  preselect = 'item',
   snippet = {
     expand = function(args)
       require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
@@ -39,5 +40,13 @@ cmp.setup({
     {name = 'nvim_lsp'},
     {name = 'buffer'},
     {name = 'path'},
-  })
+  }),
+  window = {
+    documentation = {
+      max_height = 15,
+      max_width = 80,
+      completion = cmp.config.window.bordered(),
+      documentation = cmp.config.window.bordered(),
+    },
+  },
 })

@@ -1,6 +1,5 @@
 -- https://github.com/nanotee/nvim-lua-guide
 local api = vim.api;
-local fn = vim.fn;
 
 local M = {}
 

@@ -1,6 +1,4 @@
-local bindkey = require('../utils').bindkey
-
-function netrw_bindkey(key, cmd)
+local function netrw_bindkey(key, cmd)
   vim.cmd('autocmd filetype netrw nmap <buffer> ' .. key .. ' ' .. cmd)
 end
 
