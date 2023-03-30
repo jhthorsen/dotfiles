@@ -1,0 +1,17 @@
+#!/bin/bash
+# macos-restart-app Home.app /System/Applications/Home.app/Contents/MacOS/Home
+
+APP_NAME="$1";
+APP_PATH="$2";
+[ -n "$APP_NAME" ] || exec echo "macos-restart-app <name> /path/to/name";
+[ -n "$APP_PATH" ] || exec echo "macos-restart-app $APP_NAME <path>";
+[ -x "$APP_PATH" ] || exec echo "$APP_PATH is not executable";
+
+APP_PID="$(pgrep "$APP_NAME" | head -n1)";
+echo "$APP_NAME: $APP_PID" >&2
+
+while [ -n "$APP_PID" ] && kill "$APP_PID"; do
+  sleep 1;
+done
+
+$APP_PATH &
