@@ -82,3 +82,6 @@
 [submodule "share/nvim/site/pack/batpack/start/vim-nftables.git"]
 	path = share/nvim/site/pack/batpack/start/vim-nftables.git
 	url = https://github.com/nfnty/vim-nftables.git
+[submodule "share/nvim/site/pack/batpack/start/undotree.git"]
+	path = share/nvim/site/pack/batpack/start/undotree.git
+	url = https://github.com/jiaoshijie/undotree.git
