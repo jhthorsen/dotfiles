@@ -1,7 +1,6 @@
 local bindkey = require('../utils').bindkey
 local nvim_create_autocmd = vim.api.nvim_create_autocmd;
 
-vim.o.clipboard = 'unnamed'
 bindkey('v', '<c-y>', ':w !snipclip -i<CR><CR>')
 bindkey('i', '<c-p>', '<ESC>:set paste<CR>:r !snipclip -o<CR>:set nopaste<CR>a')
 

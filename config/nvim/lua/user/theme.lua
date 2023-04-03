@@ -8,27 +8,12 @@ use('kanagawa', function (kanagawa)
   })
 end)
 
-vim.o.background = 'dark'
-vim.o.cmdheight = 1
-vim.o.laststatus = 0
-vim.o.number = true
-vim.o.numberwidth = 4
-vim.o.relativenumber = true
-vim.o.ruler = false
-vim.o.showcmd = false
-vim.o.showmode = false
-vim.o.signcolumn = 'yes'
-vim.o.termguicolors = true
-
 vim.api.nvim_exec([[
   syntax match NonASCII "[^\x00-\x7F]"
   highlight NonASCII ctermbg=red guibg=red
   highlight NonText ctermbg=none guibg=none guifg=250
   highlight Normal ctermbg=none guibg=none guifg=252
 ]], false)
-
-vim.o.showtabline = 0
-vim.o.statusline = ''
 
 local ok, mod = pcall(require, 'lualine')
 if ok then

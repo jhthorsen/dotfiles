@@ -1,6 +1,5 @@
 local bindkey = require('../utils').bindkey
 
-vim.o.timeoutlen = 350
 vim.g.mapleader = ' '
 
 bindkey('n', '<leader>u', require('undotree').toggle, {desc = 'Toggle undotree'})

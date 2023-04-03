@@ -9,7 +9,6 @@ cmd('autocmd BufRead,BufNewFile *.pcss set filetype=scss')
 vim.diagnostic.config({virtual_text = false})
 
 local function on_attach(_, bufnr)
-  vim.o.updatetime = 250
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
   cmd('autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focusable=false,source="always",prefix=" ",scope="cursor"})')
 
