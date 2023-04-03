@@ -15,18 +15,22 @@ vim.api.nvim_exec([[
   highlight Normal ctermbg=none guibg=none guifg=252
 ]], false)
 
-local ok, mod = pcall(require, 'lualine')
-if ok then
-  mod.setup({
+local function max_length()
+  return vim.o.columns - 50
+end
+
+use('lualine', function(lualine)
+  lualine.setup({
     sections = {
-      lualine_a = {{'buffers', max_length = 100, mode = 0, symbols = {alternate_file = ''}}},
-      lualine_b = {},
+      lualine_a = {{'buffers', max_length = max_length, mode = 0, symbols = {alternate_file = ''}}},
+      lualine_b = {{'filename', file_status = false, path = 1, shorting_target = 90}},
       lualine_c = {},
-      lualine_x = {'diagnostics'},
-      lualine_y = {'%B'},
-      lualine_z = {'progress', 'location'},
+      lualine_x = {},
+      lualine_y = {},
+      lualine_z = {'progress', 'selectioncount', 'location'},
     },
     options = {
+      always_divide_middle = true,
       globalstatus = true,
       icons_enabled = true,
       theme = 'jellybeans',
@@ -37,4 +41,4 @@ if ok then
     statusline = {},
     tabline = {},
   })
-end
+end)
