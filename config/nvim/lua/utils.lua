@@ -29,6 +29,13 @@ function M.close_buffer_or_nvim(cmd)
   api.nvim_command(cmd)
 end
 
+function M.find_and_edit_file()
+  local dir = M.dirname(vim.api.nvim_buf_get_name(0));
+  print(vim.api.nvim_buf_get_name(0));
+  api.nvim_feedkeys(':edit ' .. dir:gsub('[[]', '\\[') .. '/', 'n', false)
+  api.nvim_input('<TAB>')
+end
+
 function M.use(name, setup)
   local ok, mod = pcall(require, name)
   if ok == false then return print('Unable to load plugin ' .. name) end
