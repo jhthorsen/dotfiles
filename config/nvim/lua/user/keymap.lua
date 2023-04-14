@@ -14,6 +14,7 @@ bindkey('n', '<leader>-', ':ExternalHook RefreshFile<CR>', {desc = 'ExternalHook
 bindkey('n', '<leader>n', ':echo expand("%")<CR>', {desc = 'Show filename'})
 bindkey('n', '<tab>', ':bnext<CR>', {desc = 'Next buffer'})
 bindkey('n', '<s-tab>', ':bprevious<CR>', {desc = 'Previous buffer'})
+bindkey('n', ',d', ':DogeGenerate<CR>', {desc = 'Generate documentation from code'})
 bindkey('n', ',e', require('../utils').find_and_edit_file, {silent = false, desc = 'Find and edit file'})
 
 bindkey('v', '<', '<gv', {desc = 'Indent and stay in indent mode'})

@@ -85,3 +85,6 @@
 [submodule "share/nvim/site/pack/batpack/start/undotree.git"]
 	path = share/nvim/site/pack/batpack/start/undotree.git
 	url = https://github.com/jiaoshijie/undotree.git
+[submodule "share/nvim/site/pack/batpack/start/vim-doge"]
+	path = share/nvim/site/pack/batpack/start/vim-doge
+	url = https://github.com/kkoomen/vim-doge
