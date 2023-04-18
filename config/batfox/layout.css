@@ -68,10 +68,11 @@
   #navigator-toolbox {
     display: flex;
     flex-wrap: nowrap;
+    flex-direction: row;
   }
 
   #titlebar {
     order: var(--uc-toolbar-position);
-    flex: 1 0 auto;
+    flex: 1 1 auto;
   }
 }
