@@ -30,6 +30,8 @@ bindkey('n', '<c-f>', '<c-d>zz', {desc = 'Jump half a page down and center'})
 -- search
 bindkey('n', '<a-7>', '/', {silent = false, desc = 'Search'})  -- option+7 is mapped to "/" in BTT
 bindkey('n', '\\', ':%s!!', {silent = false, desc = 'Search and replace'}) -- option+shift+7 is mapped to "\" in BTT
+bindkey('v', '<c-r>', '"hy:s/<C-r>h//<left><left><left>', {silent = false, desc = 'Search and replace selected text'})
+bindkey('v', '<leader>rl', '"hy:s/<C-r>h/{$l(\'&\')}/<CR>', {silent = false, desc = 'Search and replace with $l'})
 
 -- signcolumn
 bindkey('n', '<leader>c', function()

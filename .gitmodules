@@ -19,9 +19,6 @@
 [submodule "share/nvim/site/pack/batpack/start/LuaSnip"]
 	path = share/nvim/site/pack/batpack/start/LuaSnip
 	url = https://github.com/L3MON4D3/LuaSnip
-[submodule "share/nvim/site/pack/batpack/start/nvim-surround"]
-	path = share/nvim/site/pack/batpack/start/nvim-surround
-	url = https://github.com/kylechui/nvim-surround
 [submodule "share/nvim/site/pack/batpack/start/nvim-web-devicons"]
 	path = share/nvim/site/pack/batpack/start/nvim-web-devicons
 	url = https://github.com/kyazdani42/nvim-web-devicons
@@ -67,9 +64,6 @@
 [submodule "share/nvim/site/pack/batpack/start/nvim-colorizer.lua"]
 	path = share/nvim/site/pack/batpack/start/nvim-colorizer.lua
 	url = https://github.com/norcalli/nvim-colorizer.lua
-[submodule "share/nvim/site/pack/batpack/start/mini.surround"]
-	path = share/nvim/site/pack/batpack/start/mini.surround
-	url = https://github.com/echasnovski/mini.surround
 [submodule "share/nvim/site/pack/batpack/start/kanagawa.nvim"]
 	path = share/nvim/site/pack/batpack/start/kanagawa.nvim
 	url = https://github.com/rebelot/kanagawa.nvim
