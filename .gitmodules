@@ -85,3 +85,6 @@
 [submodule "share/nvim/site/pack/batpack/start/lsp_signature.nvim"]
 	path = share/nvim/site/pack/batpack/start/lsp_signature.nvim
 	url = https://github.com/ray-x/lsp_signature.nvim
+[submodule "share/nvim/site/pack/batpack/start/harpoon"]
+	path = share/nvim/site/pack/batpack/start/harpoon
+	url = https://github.com/ThePrimeagen/harpoon
