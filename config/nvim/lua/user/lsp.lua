@@ -1,5 +1,6 @@
 local bindkey = require('../utils').bindkey
 local builtin = require('telescope.builtin');
+local use = require('../utils').use;
 
 local cmd = vim.cmd
 
@@ -11,6 +12,11 @@ vim.diagnostic.config({virtual_text = false})
 local function on_attach(_, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
   cmd('autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focusable=false,source="always",prefix=" ",scope="cursor"})')
+
+  use('lsp_signature', function(sig)
+    local config = {bind = true}
+    sig.on_attach(config, bufnr)
+  end)
 
   local buf = vim.lsp.buf
   bindkey('i', '<c-k>', buf.hover, {buffer = bufnr, desc = 'Displays hover information about the symbol under the cursor in a floating window'})

@@ -82,3 +82,6 @@
 [submodule "share/nvim/site/pack/batpack/start/vim-doge"]
 	path = share/nvim/site/pack/batpack/start/vim-doge
 	url = https://github.com/kkoomen/vim-doge
+[submodule "share/nvim/site/pack/batpack/start/lsp_signature.nvim"]
+	path = share/nvim/site/pack/batpack/start/lsp_signature.nvim
+	url = https://github.com/ray-x/lsp_signature.nvim
