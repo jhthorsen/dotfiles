@@ -58,6 +58,7 @@ local volar_init_options = {
 
 lspconfig.bashls.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.cssls.setup({capabilities = capabilities, on_attach = on_attach})
+lspconfig.eslint.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.html.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.perlpls.setup({capabilities = capabilities, on_attach = on_attach});
 lspconfig.svelte.setup({capabilities = capabilities, on_attach = on_attach})
