@@ -5,10 +5,11 @@ run() {
   if [ "$(uname)" = "Darwin" ]; then "$@"; else sudo "$@"; fi
 }
 
-run cpanm -n PLS::Server
-run npm install -g bash-language-server
-run npm install -g svelte-language-server
-run npm install -g typescript typescript-language-server
-run npm install -g @volar/vue-language-server
-run npm install -g vscode-langservers-extracted # css, html
-run npm install -g yaml-language-server
+run cpanm -n PLS::Server;
+run npm -g install bash-language-server;
+run npm -g install eslint;
+run npm -g install svelte-language-server;
+run npm -g install typescript typescript-language-server;
+run npm -g install @volar/vue-language-server;
+run npm -g install vscode-langservers-extracted; # css, html
+run npm -g install yaml-language-server
