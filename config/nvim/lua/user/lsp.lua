@@ -14,8 +14,10 @@ local function on_attach(_, bufnr)
   cmd('autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focusable=false,source="always",prefix=" ",scope="cursor"})')
 
   use('lsp_signature', function(sig)
-    local config = {bind = true}
-    sig.on_attach(config, bufnr)
+    sig.on_attach({
+      bind = true,
+      hint_enable = false,
+    }, bufnr)
   end)
 
   local buf = vim.lsp.buf
