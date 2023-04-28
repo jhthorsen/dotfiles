@@ -10,6 +10,5 @@ run npm -g install bash-language-server;
 run npm -g install svelte-language-server;
 run npm -g install typescript typescript-language-server;
 run npm -g install @volar/vue-language-server;
-run npm -g install vscode-eslint-language-server;
-run npm -g install vscode-langservers-extracted; # css, html
+run npm -g install vscode-langservers-extracted; # css, eslint, html
 run npm -g install yaml-language-server
