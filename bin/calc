@@ -1,2 +1,7 @@
 #!/bin/bash
-echo "$*" | perl -pe's/\bx\b/*/g' | bc --mathlib;
+if [ "$1" = "font-size" ]; then
+  [ -z "$BASE" ] && export BASE="16";
+  perl -nE'next unless my($t,$s,$l)=(m!^(\s*[0-9a-z.-]+).*?/\*\s+(\d+)\s+/\s+(\d+)!);printf "%s { font-size: %.3frem; line-height: %.3frem; } /* $s / $l */\n",$t,$s/$ENV{BASE},$l/$ENV{BASE}';
+else
+  echo "$*" | perl -pe's/\bx\b/*/g' | bc --mathlib;
+fi
