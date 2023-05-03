@@ -13,12 +13,15 @@ local function on_attach(_, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
   cmd('autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focusable=false,source="always",prefix=" ",scope="cursor"})')
 
-  use('lsp_signature', function(sig)
-    sig.on_attach({
-      bind = true,
-      hint_enable = false,
-    }, bufnr)
-  end)
+  local filetype = vim.api.nvim_buf_get_option(bufnr, 'filetype')
+  if filetype ~= 'perl' then
+    use('lsp_signature', function(sig)
+      sig.on_attach({
+        bind = true,
+        hint_enable = false,
+      }, bufnr)
+    end)
+  end
 
   local buf = vim.lsp.buf
   bindkey('i', '<c-k>', buf.hover, {buffer = bufnr, desc = 'Displays hover information about the symbol under the cursor in a floating window'})
