@@ -7,8 +7,9 @@ push @bin, $ENV{VIM_BIN} if $ENV{VIM_BIN};
 die "Could not find real vim" unless @bin;
 
 exec $bin[0],
-    @ARGV     ? (@ARGV)
-  : -d '.git' ? (-c => ':Telescope git_files')
-  :             (-c => ':Telescope oldfiles');
+    @ARGV      ? (@ARGV)
+  : -d '.git'  ? (-c => ':Telescope git_files')
+  : -e '.shim' ? (-c => ':Telescope find_files')
+  :              (-c => ':Telescope oldfiles');
 
 die $!;
