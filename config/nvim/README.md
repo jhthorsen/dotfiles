@@ -1,3 +1,18 @@
+# Install from source
+
+```
+cd $HOME/git;
+git clone -b master --depth 1 https://github.com/neovim/neovim.git;
+cd neovim;
+make CMAKE_BUILD_TYPE=RelWithDebInfo;
+sudo make install;
+
+cd $HOME/git;
+mkdir lua-language-server;
+curl -L https://github.com/LuaLS/lua-language-server/releases/download/3.6.19/lua-language-server-3.6.19-linux-arm64.tar.gz | tar xz -C $HOME/git/lua-language-server;
+sudo ln -s $HOME/git/lua-language-server/bin/lua-language-server /usr/local/bin;
+```
+
 # Keys
 
 https://hea-www.harvard.edu/~fine/Tech/vi.html
