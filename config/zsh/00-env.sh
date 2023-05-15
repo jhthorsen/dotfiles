@@ -29,6 +29,7 @@ export LESS_TERMCAP_us="$(tput setaf 2)";
 [ -x "/usr/bin/nvim" ] && export VIM_BIN="/usr/bin/nvim";
 [ -x "/usr/local/bin/nvim" ] && export VIM_BIN="/usr/local/bin/nvim";
 [ -x "$HOMEBREW_PREFIX/bin/nvim" ] && export VIM_BIN="$HOMEBREW_PREFIX/bin/nvim";
+[ -x "$HOMEBREW_PREFIX/bin/hx" ] && export VIM_BIN="$HOMEBREW_PREFIX/bin/hx";
 
 if command -v fd >/dev/null; then
   export FZF_CTRL_T_COMMAND="fd --type f";

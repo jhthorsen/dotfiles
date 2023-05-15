@@ -6,10 +6,19 @@ push @bin, $ENV{VIM_BIN} if $ENV{VIM_BIN};
 @bin = map { chomp; $_ } qx{which -a vim} unless @bin;
 die "Could not find real vim" unless @bin;
 
-exec $bin[0],
-    @ARGV      ? (@ARGV)
-  : -d '.git'  ? (-c => ':Telescope git_files')
-  : -e '.shim' ? (-c => ':Telescope find_files')
-  :              (-c => ':Telescope oldfiles');
+exec $bin[0] => @ARGV if @ARGV;
+exec $bin[0] unless -d '.git' or -e '.shim';
+
+if ($bin[0] =~ /hx/) {
+  open my $FZF, '-|', qw(fzf --no-mouse);
+  my ($file) = map { chomp; $_ } <$FZF>;
+  exec $bin[0], $file if $file;
+}
+else {
+  exec $bin[0],
+      -d '.git'  ? (-c => ':Telescope git_files')
+    : -e '.shim' ? (-c => ':Telescope find_files')
+    :              (-c => ':Telescope oldfiles');
+}
 
 die $!;
