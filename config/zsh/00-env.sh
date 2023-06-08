@@ -35,3 +35,6 @@ if command -v fd >/dev/null; then
   export FZF_CTRL_T_COMMAND="fd --type f";
   export FZF_DEFAULT_COMMAND="fd --type f";
 fi
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && source "/opt/homebrew/opt/nvm/nvm.sh";
