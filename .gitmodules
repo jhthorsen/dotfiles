@@ -88,3 +88,6 @@
 [submodule "share/nvim/site/pack/batpack/start/harpoon"]
 	path = share/nvim/site/pack/batpack/start/harpoon
 	url = https://github.com/ThePrimeagen/harpoon
+[submodule "share/nvim/site/pack/batpack/start/null-ls.nvim"]
+	path = share/nvim/site/pack/batpack/start/null-ls.nvim
+	url = https://github.com/jose-elias-alvarez/null-ls.nvim
