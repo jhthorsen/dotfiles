@@ -8,16 +8,15 @@ use Time::Piece;
 sub getopt_post_process_argv { }
 
 run(
-  'dry-run   # Dry run',
-  'v|verbose # Verbose output',
-  'year # Export to $year/... directory',
+  'dry-run  # Dry run',
+  'year-dir # Skip exporting to $year/... with --no-year-dir',
   sub ($self, @options) {
     my $dir = pop @options;
     return print extract_usage unless $dir and -d $dir;
 
     my @cmd = qw(osxphotos export --download-missing --exiftool --jpeg-ext jpg --touch-file --update);
     push @cmd, '--filename' => '{created.strftime,%Y-%m-%d-%H%M%S}_{uuid}';
-    push @cmd, '--directory' => '{created.year}' if $self->{year};
+    push @cmd, '--directory' => '{created.year}' if $self->{'year-dir'} // 1;
     push @cmd, @options, $dir;
 
     printf "\# %s\n", join ' ', @cmd;
@@ -30,6 +29,10 @@ __END__
 
 =head1 SYNOPSIS
 
-  filetk osxphotos-export <directory>
+  $ filetk osxphotos-export <directory>
+  $ filetk osxphotos-export --no-year-dir --album Temp ~/Nextcloud/Documents/TODO
+  $ filetk osxphotos-export --screenshot ~/Nextcloud/Photos/
+  $ filetk osxphotos-export --only-movies --not-in-album --from-date 2010-01-01 --to-date 2019-01-01 ~/Nextcloud/Photos/
+  $ filetk osxphotos-export --only-movies --min-size 100MB --dry-run --limit 10 ~/Nextcloud/Photos/
 
 =cut
