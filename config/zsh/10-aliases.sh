@@ -3,6 +3,7 @@ alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/C
 alias cpanm='cpanm -M https://cpan.metacpan.org'
 alias ddp="PERL5OPT=-MDDP=caller_info,1,colored,1,use_prototypes,0"
 alias doctl='doctl --access-token=$DO_API_TOKEN'
+alias grep='grep --color=auto --line-buffered';
 alias gti='git'
 alias h="history -i -D"
 alias hwinfo='dmidecode'
