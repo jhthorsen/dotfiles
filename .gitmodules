@@ -91,3 +91,9 @@
 [submodule "share/nvim/site/pack/batpack/start/null-ls.nvim"]
 	path = share/nvim/site/pack/batpack/start/null-ls.nvim
 	url = https://github.com/jose-elias-alvarez/null-ls.nvim
+[submodule "share/nvim/site/pack/batpack/start/nvim-neoclip.lua"]
+	path = share/nvim/site/pack/batpack/start/nvim-neoclip.lua
+	url = https://github.com/AckslD/nvim-neoclip.lua
+[submodule "share/nvim/site/pack/batpack/start/sqlite.lua"]
+	path = share/nvim/site/pack/batpack/start/sqlite.lua
+	url = https://github.com/kkharji/sqlite.lua
