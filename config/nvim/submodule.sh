@@ -13,6 +13,6 @@ elif [ "$1" = "update" ]; then
 elif [ -n "$1" ]; then
   URL="$1";
   NAME="$(basename "$URL")";
-  git submodule add "$URL" "share/nvim/site/pack/batpack/start/$NAME";
+  git submodule add --force "$URL" "share/nvim/site/pack/batpack/start/$NAME";
   git commit .gitmodules share/nvim/site/pack/batpack -m "Add neovim plugin $NAME";
 fi
