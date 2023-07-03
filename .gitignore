@@ -13,6 +13,7 @@ config/zsh/20-theme-powerlevel10k.sh
 config/zsh/25-zsh-syntax-highlighting.zsh
 config/zsh/30-wezterm.sh
 config/zsh/completion/_*
+config/zsh/completion/*.zsh-completion
 config/zsh/jhthorsen.sh
 config/zsh/powerlevel10k/
 config/zsh/zsh_history
