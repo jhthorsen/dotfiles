@@ -77,3 +77,5 @@ bindkey('n', '<leader><s-l>', ':vertical resize +3<cr>', {desc = 'Make window bi
 
 bindkey('n', '<leader>wv', ':sp<CR>', {desc = 'Split window vertically'})
 bindkey('n', '<leader>wh', ':vs<CR>', {desc = 'Split window horizontally'})
+
+require('which-key').setup();

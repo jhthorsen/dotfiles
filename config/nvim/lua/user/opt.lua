@@ -15,7 +15,7 @@ vim.opt.isfname:append("@-@")
 
 vim.opt.backup = false
 vim.opt.clipboard = 'unnamed'
-vim.opt.timeoutlen = 350
+vim.opt.timeoutlen = 250
 vim.opt.swapfile = false
 vim.opt.undodir = os.getenv('HOME') .. '/.cache/nvim/undo'
 vim.opt.undofile = true

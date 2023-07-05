@@ -35,8 +35,8 @@ bindkey('i', '<c-s>', builtin.spell_suggest, {desc = 'Spell suggestions'});
 bindkey('n', '<c-p>', builtin.find_files, {desc = 'Find files'});
 bindkey('n', '<leader>b', builtin.buffers, {desc = 'List buffers'});
 bindkey('n', '<leader>s', builtin.spell_suggest, {desc = 'Spell suggestions'});
-bindkey('n', '<leader>fp', function() builtin.find_files({find_command = {'find-files-cached', '..'}}) end, {desc = 'desc'})
-bindkey('n', '<leader>fr', function() builtin.find_files({find_command = {'find-files-cached', '-r', '..'}}) end, {desc = 'desc'})
+bindkey('n', '<leader>fp', function() builtin.find_files({find_command = {'find-files-cached', '..'}}) end, {desc = 'Find files cached'})
+bindkey('n', '<leader>fr', function() builtin.find_files({find_command = {'find-files-cached', '-r', '..'}}) end, {desc = 'Find files cached recursive'})
 bindkey('n', '<leader>fg', builtin.live_grep, {desc = 'Grep for file contents'})
 bindkey('n', '<leader>fo', builtin.oldfiles, {desc = 'Show file history'})
 bindkey('n', '<leader>gf', builtin.git_files, {desc = 'List git files'})
