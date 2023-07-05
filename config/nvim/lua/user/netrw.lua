@@ -1,17 +1,20 @@
-local function netrw_bindkey(key, cmd)
-  vim.cmd('autocmd filetype netrw nmap <buffer> ' .. key .. ' ' .. cmd)
-end
+local bindkey = require('../utils').bindkey
 
-vim.g.netrw_altv = 0
-vim.g.netrw_banner = 0
-vim.g.netrw_browse_split = 4
-vim.g.netrw_fastbrowse = 2
-vim.g.netrw_keepdir = 0
-vim.g.netrw_liststyle = 3
-vim.g.netrw_winsize = 30
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
 
-netrw_bindkey('e', '<CR>:Lexplore<CR>')
-netrw_bindkey('h', 'gh')
-netrw_bindkey('<leader><tab>', 'mu')
-netrw_bindkey('<s-tab>', 'mF')
-netrw_bindkey('<tab>', 'mf')
+require('nvim-tree').setup({
+  filters = {
+    dotfiles = false,
+  },
+  view = {
+    width = 30,
+  },
+  on_attach = function(bufnr)
+    local api = require('nvim-tree.api')
+    api.config.mappings.default_on_attach(bufnr)
+  end
+})
+
+local api = require('nvim-tree.api')
+bindkey('n', '<leader>e', function() api.tree.toggle({find_file = true}) end, {desc = 'Toggle nvim tree'})
