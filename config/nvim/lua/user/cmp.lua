@@ -22,7 +22,7 @@ local previous_item = function(_)
 end
 
 cmp.setup({
-  preselect = 'item',
+  preselect = cmp.PreselectMode.None,
   snippet = {
     expand = function(args)
       require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
@@ -37,9 +37,9 @@ cmp.setup({
     ['<CR>'] = cmp.mapping.confirm({select = true}),
   },
   sources = cmp.config.sources({
-    {name = 'nvim_lsp'},
-    {name = 'buffer'},
-    {name = 'path'},
+    {name = 'nvim_lsp', keyword_length = 2},
+    {name = 'buffer', keyword_length = 1},
+    {name = 'path', keyword_length = 2, trigger_characters = {'.', '/'}},
   }),
   window = {
     documentation = {
