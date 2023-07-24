@@ -1,7 +1,30 @@
-#!/bin/bash
-if [ "$1" = "font-size" ]; then
-  [ -z "$BASE" ] && export BASE="16";
-  perl -nE'next unless my($t,$s,$l)=(m!^(\s*[0-9a-z.-]+).*?/\*\s+(\d+)\s+/\s+(\d+)!);printf "%s { font-size: %.3frem; line-height: %.3frem; } /* $s / $l */\n",$t,$s/$ENV{BASE},$l/$ENV{BASE}';
-else
-  echo "$*" | perl -pe's/\bx\b/*/g' | bc --mathlib;
-fi
+#!/usr/bin/env perl
+use v5.36.0;
+die usage() unless @ARGV;
+exit(font_size() && 0) if $ARGV[0] eq 'font-size';
+exit(mathlib(@ARGV) && 0);
+
+sub font_size (@) {
+  my $base = $ENV{BASE} || 16;
+  while (<<>>) {
+    next unless my ($t,$s,$l) = m!^(\s*[0-9a-z.-]+)\D*(\d+)\s+/\s+(\d+)!;
+    printf "%s { font-size: %.3frem; line-height: %.3frem; } /* $s / $l */\n", $t, $s / $base, $l / $base;
+  }
+}
+
+sub mathlib (@argv) {
+  my $expr = join ' ', @argv;
+  $expr =~ s/\bx\b/*/g;
+  open my $MATHLIB, '|-', qw(bc --mathlib);
+  print {$MATHLIB} $expr;
+  print while <$MATHLIB>;
+}
+
+sub usage () {
+  return <<~'HERE';
+  Usage:
+    $ calc "14 x 15"
+    $ echo "h1 { 24 / 16 }" | calc font-size
+
+  HERE
+}
