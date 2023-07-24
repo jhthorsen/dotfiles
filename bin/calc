@@ -1,8 +1,32 @@
 #!/usr/bin/env perl
 use v5.36.0;
+use POSIX ();
+
 die usage() unless @ARGV;
+exit(shift @ARGV && duration(@ARGV) && 0) if $ARGV[0] eq 'duration';
 exit(font_size() && 0) if $ARGV[0] eq 'font-size';
 exit(mathlib(@ARGV) && 0);
+
+sub date_to_epoch (@ymd) {
+  return(POSIX::mktime(0, 0, 0, $ymd[2], $ymd[1] - 1, $ymd[0] - 1900)
+    // die "mktime(0, 0, 0, $ymd[2], $ymd[1] - 1, $ymd[0] - 1900)");
+}
+
+sub date_to_ymd ($str, @def) {
+  my @dmy = reverse map { s/^0+//; $_ } split /[\s-]+/, $str;
+  push @dmy, $def[1] if @dmy == 1;
+  push @dmy, $def[0] > 1900 ? $def[0] : $def[0] + 1900 if @dmy == 2;
+  return reverse @dmy;
+}
+
+sub duration ($from = '', $to = '') {
+  die usage() unless $from and $to;
+  my @from = date_to_ymd($from, (localtime)[5, 4, 3]);
+  my @to = date_to_ymd($to, @from);
+  print STDERR "# Number of days from @{[join '-', @from]} to @{[join '-', @to]}, including from date:\n\n  " if -t STDOUT;
+  printf "%.0f\n", 1 + (date_to_epoch(@to) - date_to_epoch(@from)) / 86400;
+  print STDERR "\n" if -t STDOUT;
+}
 
 sub font_size (@) {
   my $base = $ENV{BASE} || 16;
@@ -24,6 +48,7 @@ sub usage () {
   return <<~'HERE';
   Usage:
     $ calc "14 x 15"
+    $ calc duration 2023-01-23 2023-07-14
     $ echo "h1 { 24 / 16 }" | calc font-size
 
   HERE
