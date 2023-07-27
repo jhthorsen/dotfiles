@@ -36,6 +36,12 @@
   min-width: 200px !important;
 }
 
+#nav-bar[downloadsbuttonshown] #urlbar-container:focus-within,
+#nav-bar[unifiedextensionsbuttonshown] #urlbar-container:focus-within {
+  min-width: 100vw !important;
+  max-width: 100vw !important;
+}
+
 #urlbar-background {
   background-color: var(--uc-search-result-bgcolor) !important;
   border-color: transparent !important;
