@@ -1,129 +1,132 @@
 #!/bin/zsh
 
 function abort() {
-  echo "! $*" >&2;
+  echo "! $*" >&2
   exit 1;
 }
 
+function pkg() {
+  local name="$1"; [ -n "$1" ] && shift;
+  local file="$1"; [ -n "$1" ] && shift;
+  [ -z "$file" ] && file="$HOMEBREW_PREFIX/Cellar/$name";
+  [ -e "$file" ] || file="$(which "$name")";
+  if [ -e "$file" ]; then
+    echo "run> $BREW_BIN install" "$@" "$name" >&2
+  else
+    run $BREW_BIN install "$@" "$name";
+  fi
+}
+
 function run() {
-  echo "> $*" >&2;
+  echo "run> $*" >&2
   [ "x$DRY_RUN" = "x" ] && $*;
 }
 
 [ -z "$HOMEBREW_PREFIX" ] && abort "HOMEBREW_PREFIX=/opt/homebrew missing";
 BREW_BIN="$HOMEBREW_PREFIX/bin/brew";
+[ ! -x "$BREW_BIN" ] && run ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)";
 
-if [ ! -x "$BREW_BIN" ]; then
-  run ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)";
-  UPDATE=1;
-fi
+run $BREW_BIN tap amar1729/formulae;
+run $BREW_BIN tap wez/wezterm;
+run $BREW_BIN update && run $BREW_BIN upgrade;
 
-#if [ "x$UPDATE" = "x1" ]; then
-  #run arch -x86_64 $BREW_BIN update;
-#fi
+# https://github.com/biox/pa
+pkg wez/wezterm/wezterm /opt/homebrew/bin/wezterm --cask
+pkg age
+pkg age-plugin-se
+pkg age-plugin-yubikey
+pkg alt-tab /Applications/AltTab.app
+pkg bat
+pkg browserpass
+pkg cloc
+pkg coreutils
+pkg cowsay
+pkg cpanm
+pkg csvprintf
+pkg ctags
+pkg doctl
+pkg exiftool
+pkg fd
+pkg ffmpeg
+pkg figlet
+pkg fontconfig
+pkg freetype
+pkg fsevents-tools
+pkg fx
+pkg fzf
+pkg geoip
+pkg gh
+pkg git
+pkg glances
+pkg gnupg
+pkg gnutls
+pkg go
+pkg groff
+pkg hopenpgp-tools
+pkg imagemagick
+pkg jpeg
+pkg jpegoptim
+pkg less
+pkg lf
+pkg lynx
+pkg mkcert
+pkg mysql
+pkg mysql-client
+pkg neovim
+pkg nginx
+pkg nmap
+pkg node
+pkg openssh
+pkg openssl
+pkg pass
+pkg perl
+pkg pinentry
+pkg pinentry-mac
+pkg pngcrush
+pkg postgresql
+pkg procs
+pkg psgrep
+pkg python
+pkg qrencode
+pkg redis
+pkg rename
+pkg rg
+pkg rmlint
+pkg rsync
+pkg ruby
+pkg rust
+pkg smartmontools
+pkg sqlite
+pkg ssh-copy-id
+pkg sshuttle
+pkg telnet
+pkg tesseract
+pkg trash-cli
+pkg tree
+pkg wget
+pkg ykman
+pkg yubikey-personalization /opt/homebrew/Cellar/ykpers
+pkg z
+pkg zsh
+pkg zsh-completions
+pkg zsh-git-prompt
+pkg zsh-lovers
+pkg zsh-syntax-highlighting
 
-run $BREW_BIN tap wez/wezterm
-run $BREW_BIN install --cask wez/wezterm/wezterm
-
-#run arch -x86_64 $BREW_BIN install                         \
-run $BREW_BIN install alt-tab
-run $BREW_BIN install bat
-run $BREW_BIN install browserpass
-run $BREW_BIN install cloc
-run $BREW_BIN install coreutils
-run $BREW_BIN install cowsay
-run $BREW_BIN install cpanm
-run $BREW_BIN install csvprintf
-run $BREW_BIN install ctags
-run $BREW_BIN install doctl
-run $BREW_BIN install exiftool
-run $BREW_BIN install fd
-run $BREW_BIN install ffmpeg
-run $BREW_BIN install figlet
-run $BREW_BIN install fontconfig
-run $BREW_BIN install freetype
-run $BREW_BIN install fsevents-tools
-run $BREW_BIN install fx
-run $BREW_BIN install fzf
-run $BREW_BIN install geoip
-run $BREW_BIN install gh
-run $BREW_BIN install git
-run $BREW_BIN install glances
-run $BREW_BIN install gnupg
-run $BREW_BIN install gnutls
-run $BREW_BIN install go
-run $BREW_BIN install gpg-suite
-run $BREW_BIN install groff
-run $BREW_BIN install hopenpgp-tools
-run $BREW_BIN install imagemagick
-run $BREW_BIN install jpeg
-run $BREW_BIN install jpegoptim
-run $BREW_BIN install less
-run $BREW_BIN install lf
-run $BREW_BIN install lynx
-run $BREW_BIN install mkcert
-run $BREW_BIN install mysql
-run $BREW_BIN install mysql-client
-run $BREW_BIN install neovim
-run $BREW_BIN install nginx
-run $BREW_BIN install nmap
-run $BREW_BIN install node
-run $BREW_BIN install openssh
-run $BREW_BIN install openssl
-run $BREW_BIN install pass
-run $BREW_BIN install perl
-run $BREW_BIN install pinentry
-run $BREW_BIN install pinentry-mac
-run $BREW_BIN install pngcrush
-run $BREW_BIN install postgresql
-run $BREW_BIN install procs
-run $BREW_BIN install psgrep
-run $BREW_BIN install python
-run $BREW_BIN install qrencode
-run $BREW_BIN install redis
-run $BREW_BIN install rename
-run $BREW_BIN install rg
-run $BREW_BIN install rmlint
-run $BREW_BIN install rsync
-run $BREW_BIN install ruby
-run $BREW_BIN install rust
-run $BREW_BIN install smartmontools
-run $BREW_BIN install sqlite
-run $BREW_BIN install ssh-copy-id
-run $BREW_BIN install sshuttle
-run $BREW_BIN install telnet
-run $BREW_BIN install tesseract
-run $BREW_BIN install trash-cli
-run $BREW_BIN install tree
-run $BREW_BIN install wget
-run $BREW_BIN install ykman
-run $BREW_BIN install yubikey-personalization
-run $BREW_BIN install z
-run $BREW_BIN install zsh
-run $BREW_BIN install zsh-completions
-run $BREW_BIN install zsh-git-prompt
-run $BREW_BIN install zsh-lovers
-run $BREW_BIN install zsh-syntax-highlighting
-
-# browserpass
-run $BREW_BIN tap amar1729/formulae
-run $BREW_BIN install browserpass;
-PREFIX='/opt/homebrew/opt/browserpass' make hosts-firefox-user -f '/opt/homebrew/opt/browserpass/lib/browserpass/Makefile';
-
-run cpanm -n \
-  App::errno \
-  App::githook_perltidy \
-  App::httpstatus \
-  App::pause \
-  App::podify \
-  App::tt \
-  CPAN::Uploader \
-  Devel::Cover \
-  Pod::Markdown \
-  Term::ReadKey;
+run cpanm -n App::errno
+run cpanm -n App::githook_perltidy
+run cpanm -n App::httpstatus
+run cpanm -n App::pause
+run cpanm -n App::podify
+run cpanm -n App::tt
+run cpanm -n CPAN::Uploader
+run cpanm -n Devel::Cover
+run cpanm -n Pod::Markdown
+run cpanm -n Term::ReadKey
 
 # run pip install osxphotos;
 
+PREFIX='/opt/homebrew/opt/browserpass' make hosts-firefox-user -f '/opt/homebrew/opt/browserpass/lib/browserpass/Makefile';
 run rm /usr/local/bin/githook-perltidy;
 run ln -s "$(which githook-perltidy)" /usr/local/bin/githook-perltidy;
 
