@@ -27,10 +27,14 @@ BREW_BIN="$HOMEBREW_PREFIX/bin/brew";
 [ ! -x "$BREW_BIN" ] && run ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)";
 
 run $BREW_BIN tap amar1729/formulae;
+run $BREW_BIN tap remko/age-plugin-se https://github.com/remko/age-plugin-se;
 run $BREW_BIN tap wez/wezterm;
 run $BREW_BIN update && run $BREW_BIN upgrade;
 
 # https://github.com/biox/pa
+pkg age
+pkg age-plugin-se
+pkg age-plugin-yubikey
 pkg wez/wezterm/wezterm /opt/homebrew/bin/wezterm --cask
 pkg age
 pkg age-plugin-se
@@ -129,6 +133,8 @@ run cpanm -n Term::ReadKey
 PREFIX='/opt/homebrew/opt/browserpass' make hosts-firefox-user -f '/opt/homebrew/opt/browserpass/lib/browserpass/Makefile';
 run rm /usr/local/bin/githook-perltidy;
 run ln -s "$(which githook-perltidy)" /usr/local/bin/githook-perltidy;
+
+run curl -Ls https://github.com/biox/pa/raw/main/pa > /usr/local/bin/pa && chmod +x /usr/local/bin/pa;
 
 run defaults write NSGlobalDomain InitialKeyRepeat -int 15
 run defaults write NSGlobalDomain KeyRepeat -int 2
