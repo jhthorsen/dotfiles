@@ -1,5 +1,5 @@
 #!/bin/bash
-[ -z "$SHIMFILES_REMOTE_HOSTNAME" ] && SHIMFILES_REMOTE_HOSTNAME="SHIMFILES_REMOTE_HOSTNAME";
+[ -z "$SHIMFILES_REMOTE_HOSTNAME" ] && echo "Usage: SHIMFILES_REMOTE_HOSTNAME=git.example.com shimfiles-for-nvim-external-hook.sh [arguments]" && exit 0;
 [ -z "$SHIMFILES_REMOTE_PATH" ] && SHIMFILES_REMOTE_PATH="/home/$USER/Documents";
 [ -z "$SHIMFILES_IGNORE_FILES" ] && SHIMFILES_IGNORE_FILES="local/";
 [ -z "$SHIMFILES_TMPFILE" ] && SHIMFILES_TMPFILE="/tmp/$USER.nvim-external-hook.tmp";
