@@ -1,15 +1,9 @@
 #!/bin/bash
+[ -z "$EDITOR" ] && EDITOR="vi";
 
 cleanup() {
   tput cnorm;
   [ -n "$TMPFILE" ] && [ -e "$TMPFILE" ] && run rm "$TMPFILE";
-}
-
-fill() {
-  local str="$1";
-  local padding="${2:-=}";
-  padding="$(printf "%$(tput cols)s" "$padding" | sed "s/ /$padding/g")";
-  printf "%s%s\n" "$str" "${padding:${#str}}";
 }
 
 rollback() {
@@ -42,13 +36,12 @@ make_rule_file_content() {
 parse() {
   local file="$1";
   sudo stat "$file" >/dev/null || exec l fatal "Can't read $file";
-
-  [ -z "$TABLE_NAME" ] && TABLE_NAME="$(sudo grep -Eo 'table\s+\S+\s+\S+' "$file" | head -n1 | awk '{print $3}')";
-  [ -z "$TABLE_NAME" ] && l fatal "Can't edit file without table definition";
+  [ -z "$TABLE_NAME" ] && TABLE_NAME="$(sudo grep -Eo '^table\s+\S+\s+\S+' "$file" | head -n1 | awk '{print $3}')";
+  [ -z "$TABLE_NAME" ] && l fatal "Couldn't figure out \$TABLE_NAME (-t) from $file";
   export TABLE_NAME;
 
-  [ -z "$FAMILY_NAME" ] && FAMILY_NAME="$(sudo grep -Eo 'table\s+\S+\s+\S+' "$file" | head -n1 | awk '{print $2}')";
-  [ -z "$FAMILY_NAME" ] && l fatal "Found table $TABLE_NAME, but no family definition";
+  [ -z "$FAMILY_NAME" ] && FAMILY_NAME="$(sudo grep -Eo '^table\s+\S+\s+\S+' "$file" | head -n1 | awk '{print $2}')";
+  [ -z "$FAMILY_NAME" ] && l fatal "Found table $TABLE_NAME, but couldn't figure out \$FAMILY_NAME (-f) from $file";
   export FAMILY_NAME;
 }
 
@@ -118,24 +111,30 @@ command_watch() {
   elif [ -n "$CHAIN_NAME" ]; then
     cmd="nft list chain '$FAMILY_NAME' '$TABLE_NAME' '$CHAIN_NAME'";
   elif [ -n "$TABLE_NAME" ]; then
-    cmd="nft list table '$FAMILY_NAME' '$TABLE_NAME' '$CHAIN_NAME'";
+    cmd="nft list table '$FAMILY_NAME' '$TABLE_NAME'";
   else
     cmd="nft list ruleset";
   fi
 
-  if [ -z "$WATCH_PAGER" ]; then
-    command -v "bat" >/dev/null \
-      && export WATCH_PAGER="bat -f -p -l Perl | sed -e 's/counter/\x1B\[7mcounter\x1B\[27m/'" \
-      || export WATCH_PAGER="grep --color=always -E 'table|chain|set|counter|$'";
-  fi
+  export COLUMNS=$(tput cols);
+  export ROWS=$(tput lines);
+  export HOME_CHR=$(tput cup 0 0);
+  [ -n "$ROWS" ] && lines="$(($ROWS - 3))"; # make room for header and footer
 
-  tput civis;    # hide cursor
-  tput -x clear; # clear screen, but not the scrollback
+  command -v "bat" >/dev/null \
+    && colorize="bat --force-colorization --wrap character --terminal-width $COLUMNS --line-range :$lines --paging=never --plain --language Perl" \
+    || colorize="grep --color=always -E 'table|chain|set|counter|$'";
+
+  [ -z "$DRY_RUN" ] && [ "$lines" > 10 ] || exec echo "# $cmd | $colorize";
+
+  tput civis; # hide cursor
   while :; do
-    tput cup 0 0;
-    fill "# $(date) " "-";
-    eval "sudo $cmd | $WATCH_PAGER";
-    fill "#" "-";
+    printf '%s' "$HOME_CHR";
+    sudo bash -c "echo -n '# ';date;$cmd" \
+      | eval "$colorize" \
+      | head -n "$(($ROWS - 1))" \
+      | while read -r line; do printf "%s%${COLUMNS}s\n" "$line" " "; done
+    sleep "${WATCH_INTERVAL:-1}";
   done
 }
 
@@ -147,6 +146,7 @@ main() {
     -c) shift; export CHAIN_NAME="$1"; shift ;;
     -f) shift; export FAMILY_NAME="$1"; shift ;;
     -s) shift; export SET_NAME="$1"; shift ;;
+    -t) shift; export TABLE_NAME="$1"; shift ;;
     -e) shift; command="command_edit" ;;
     -ew) shift; command="command_edit_watch" ;;
     -w) shift; command="command_watch" ;;
