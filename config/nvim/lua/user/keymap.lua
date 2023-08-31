@@ -1,5 +1,8 @@
 local bindkey = require('../utils').bindkey
 
+require('leap').add_default_mappings()
+require('which-key').setup();
+
 vim.g.mapleader = ' '
 
 bindkey('n', '<leader>u', require('undotree').toggle, {desc = 'Toggle undotree'})
@@ -77,5 +80,3 @@ bindkey('n', '<leader><s-l>', ':vertical resize +3<cr>', {desc = 'Make window bi
 
 bindkey('n', '<leader>wv', ':sp<CR>', {desc = 'Split window vertically'})
 bindkey('n', '<leader>wh', ':vs<CR>', {desc = 'Split window horizontally'})
-
-require('which-key').setup();

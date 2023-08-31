@@ -103,3 +103,6 @@
 [submodule "share/nvim/site/pack/batpack/start/nvim-tree.lua"]
 	path = share/nvim/site/pack/batpack/start/nvim-tree.lua
 	url = https://github.com/nvim-tree/nvim-tree.lua
+[submodule "share/nvim/site/pack/batpack/start/leap.nvim"]
+	path = share/nvim/site/pack/batpack/start/leap.nvim
+	url = https://github.com/ggandor/leap.nvim
