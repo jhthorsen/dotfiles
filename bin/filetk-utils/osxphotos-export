@@ -9,16 +9,25 @@ sub getopt_post_process_argv { }
 
 run(
   'dry-run  # Dry run',
+  'backup   # Create backup (disables --year-dir)',
   'year-dir # Skip exporting to $year/... with --no-year-dir',
   sub ($self, @options) {
     my $dir = pop @options;
     return print extract_usage unless $dir and -d $dir;
 
     my @cmd = qw(osxphotos export --download-missing --exiftool --jpeg-ext jpg --touch-file --update);
-    push @cmd, '--filename' => '{created.strftime,%Y-%m-%d-%H%M%S}_{uuid}';
-    push @cmd, '--directory' => '{created.year}' if $self->{'year-dir'} // 1;
-    push @cmd, @options, $dir;
+    if ($self->{backup}) {
+      push @cmd, qw(--skip-bursts --skip-live --skip-raw --skip-original-if-edited);
+      push @cmd, qw(--only-new --ramdb --use-photokit);
+      push @cmd, '--directory' => '{created.year}/{created.mm}';
+      push @cmd, '--filename' => '{created.strftime,%Y-%m-%d-%H%M%S}-{uuid}';
+    }
+    else {
+      push @cmd, '--filename' => '{created.strftime,%Y-%m-%d-%H%M%S}_{uuid}';
+      push @cmd, '--directory' => '{created.year}' if $self->{'year-dir'} // 1;
+    }
 
+    push @cmd, @options, $dir;
     printf "\# %s\n", join ' ', @cmd;
     system @cmd unless $self->{'dry-run'};
     return $?;
@@ -34,5 +43,6 @@ __END__
   $ filetk osxphotos-export --screenshot ~/Nextcloud/Photos/
   $ filetk osxphotos-export --only-movies --not-in-album --from-date 2010-01-01 --to-date 2019-01-01 ~/Nextcloud/Photos/
   $ filetk osxphotos-export --only-movies --min-size 100MB --dry-run --limit 10 ~/Nextcloud/Photos/
+  $ filetk osxphotos-export --backup --from-date 2023-01-01T00:00:00 /Volumes/external-drive/Photos
 
 =cut
