@@ -33,7 +33,7 @@ return {
   line_height = 1.3,
   window_background_opacity = 0.98,
 
-  adjust_window_size_when_changing_font_size = false,
+  adjust_window_size_when_changing_font_size = true,
   audible_bell = 'Disabled',
   automatically_reload_config = true,
   check_for_updates = false,
