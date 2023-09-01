@@ -53,6 +53,7 @@ install_zsh() {
   lnk config/zsh $XDG_CONFIG_DIR/zsh;
   lnk config/starship.toml $XDG_CONFIG_DIR/starship.toml;
   lnk config/zsh/zshrc $HOME/.zshrc;
+  [ -d ~/.config/zsh/zsh-vi-mode ] || git clone https://github.com/jeffreytse/zsh-vi-mode ~/.config/zsh/zsh-vi-mode;
   [ -d "$HOMEBREW_PREFIX" ] \
     && lnk $HOMEBREW_PREFIX/etc/profile.d/z.sh $XDG_CONFIG_DIR/zsh/15-z.sh;
   [ -d "$HOMEBREW_PREFIX" ] \

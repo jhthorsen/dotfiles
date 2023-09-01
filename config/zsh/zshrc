@@ -9,6 +9,7 @@
 [ -d "$HOMEBREW_PREFIX/share/zsh-completions" ] && fpath=("$HOMEBREW_PREFIX/share/zsh-completions" $fpath);
 [ -d "/usr/share/zsh/site-functions" ] && fpath=("/usr/share/zsh/site-functions" $fpath);
 [ -d "/usr/share/zsh/vendor-completions" ] && fpath=("/usr/share/zsh/vendor-completions" $fpath);
+[ -f "$HOME/.config/zsh/zsh-vi-mode/zsh-vi-mode.plugin.zsh" ] && source "$HOME/.config/zsh/zsh-vi-mode/zsh-vi-mode.plugin.zsh";
 
 # Lines configured by zsh-newuser-install
 # End of lines configured by zsh-newuser-install

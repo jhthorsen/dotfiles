@@ -17,5 +17,6 @@ config/zsh/completion/*.zsh-completion
 config/zsh/jhthorsen.sh
 config/zsh/powerlevel10k/
 config/zsh/zsh_history
+config/zsh/zsh-vi-mode/
 config/wezterm/private_*.lua
 .nvim-external-hook
