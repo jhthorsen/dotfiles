@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 package App::filetk::osxphotos_export;
 use Getopt::App -signatures;
+
 use File::Spec::Functions qw(catfile);
 use Image::ExifTool;
 use Time::Piece;
@@ -9,25 +10,31 @@ sub getopt_post_process_argv { }
 
 run(
   'dry-run  # Dry run',
-  'backup   # Create backup (disables --year-dir)',
-  'year-dir # Skip exporting to $year/... with --no-year-dir',
+  'backup   # Create backup',
+  'export   # Export with some defaults',
   sub ($self, @options) {
-    my $dir = pop @options;
-    return print extract_usage unless $dir and -d $dir;
+    my $export_dir = pop @options;
+    return print extract_usage unless $export_dir and -d $export_dir;
 
-    my @cmd = qw(osxphotos export --download-missing --exiftool --jpeg-ext jpg --touch-file --update);
+    my @cmd = qw(osxphotos export --download-missing --exiftool);
+    my $db_path = "$ENV{HOME}/.osxphotos_export.db";
     if ($self->{backup}) {
       push @cmd, qw(--skip-bursts --skip-live --skip-raw --skip-original-if-edited);
-      push @cmd, qw(--only-new --ramdb --use-photokit);
+      push @cmd, qw(--only-new --update);
+      push @cmd, '--exportdb' => $db_path;
       push @cmd, '--directory' => '{created.year}/{created.mm}';
       push @cmd, '--filename' => '{created.strftime,%Y-%m-%d-%H%M%S}-{uuid}';
+      die "--exportdb $db_path does not exist!\n" unless -r $db_path;
+    }
+    elsif ($self->{export}) {
+      push @cmd, '--directory' => '{created.year}';
+      push @cmd, '--filename' => '{created.strftime,%Y-%m-%d-%H%M%S}_{uuid}';
     }
     else {
-      push @cmd, '--filename' => '{created.strftime,%Y-%m-%d-%H%M%S}_{uuid}';
-      push @cmd, '--directory' => '{created.year}' if $self->{'year-dir'} // 1;
+      die "Usage: filetk osxphotos-export [--backup|--export] ...\n";
     }
 
-    push @cmd, @options, $dir;
+    push @cmd, @options, $export_dir;
     printf "\# %s\n", join ' ', @cmd;
     system @cmd unless $self->{'dry-run'};
     return $?;
@@ -39,10 +46,19 @@ __END__
 =head1 SYNOPSIS
 
   $ filetk osxphotos-export <directory>
-  $ filetk osxphotos-export --no-year-dir --album Temp ~/Nextcloud/Documents/TODO
-  $ filetk osxphotos-export --screenshot ~/Nextcloud/Photos/
-  $ filetk osxphotos-export --only-movies --not-in-album --from-date 2010-01-01 --to-date 2019-01-01 ~/Nextcloud/Photos/
-  $ filetk osxphotos-export --only-movies --min-size 100MB --dry-run --limit 10 ~/Nextcloud/Photos/
-  $ filetk osxphotos-export --backup --from-date 2023-01-01T00:00:00 /Volumes/external-drive/Photos
+  $ filetk osxphotos-export --export --screenshot /Volumes/external/Photos/Screenshots
+  $ filetk osxphotos-export --export --only-movies --min-size 100MB --dry-run --limit 10 /Volumes/external/Videos
+  $ filetk osxphotos-export --backup --only-photos /Volumes/external/Photos
+
+  # Useful osxphotos options:
+  --from-date 2010-01-01
+  --to-date 2019-01-01
+  --album Temp
+  --limit 10
+  --min-size 100MB
+  --not-in-album
+  --only-movies
+  --only-photos
+  --verbose
 
 =cut
