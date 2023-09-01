@@ -11,7 +11,6 @@ end)
 -- emmet
 vim.g.user_emmet_install_global = 0
 vim.g.user_emmet_leader_key = '<c-e>'
-vim.cmd('autocmd FileType css,html,html.epl,scss,svelte,vue EmmetInstall')
 vim.cmd('autocmd FileType css,scss setlocal commentstring=/*%s*/')
 
 -- perl

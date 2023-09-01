@@ -51,6 +51,8 @@ local function on_attach_perl(_, bufnr)
 end
 
 local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())
+capabilities.textDocument.completion.completionItem.snippetSupport = true
+
 local lspconfig = require('lspconfig')
 lspconfig.bashls.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.cssls.setup({capabilities = capabilities, on_attach = on_attach})
@@ -75,3 +77,16 @@ lspconfig.volar.setup({capabilities = capabilities, on_attach = on_attach, init_
     serverPath = '/opt/homebrew/lib/node_modules/typescript/lib/tsserverlibrary.js'
   }
 }})
+
+lspconfig.emmet_ls.setup({
+  capabilities = capabilities,
+  filetypes = {"css", "eruby", "html", "javascript", "javascriptreact", "less", "sass", "scss", "svelte", "pug", "typescriptreact", "vue"},
+  init_options = {
+    html = {
+      options = {
+        -- For possible options, see: https://github.com/emmetio/emmet/blob/master/src/config.ts#L79-L267
+        ["bem.enabled"] = true,
+      },
+    },
+  }
+})
