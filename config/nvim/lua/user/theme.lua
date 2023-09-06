@@ -1,16 +1,11 @@
 local use = require('utils').use;
 
-vim.g.spell_under = 'fluoromachine'
+vim.g.spell_under = 'kanagawa'
 
-use('fluoromachine', function(fm)
-  fm.setup({
-    glow = false,
-    theme = 'retrowave',
-    brightness = 0.9,
-    transparent = true,
-    overrides = {
-      ['@comment'] = {fg = '#5869d2'},
-    },
+use('kanagawa', function(kanagawa)
+  kanagawa.setup({
+    transparent = false,
+    dimInactive = true,
   })
 end)
 

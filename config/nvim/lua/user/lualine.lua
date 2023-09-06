@@ -20,7 +20,6 @@ use('lualine', function(lualine)
       icons_enabled = true,
       component_separators = { left = '', right = ''},
       section_separators = { left = '', right = ''},
-      theme = 'fluoromachine',
     },
     -- inactive_sections = {},
     statusline = {},
