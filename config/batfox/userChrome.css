@@ -1,7 +1,30 @@
-@import "config.css";
-@import "colors.css";
-@import "layout.css";
-@import "nav-bar.css";
-@import "titlebar.css";
-@import "hide_tabs_scrollbuttons.css";
-@import "overlay_sidebar_header.css";
+#back-button { display: none !important; } /* back button */
+#forward-button { display: none !important; } /* forward button */
+#new-tab-button { display: none !important; } /* new tab */
+#reader-mode-button { display: none !important; } /* reader button inside urlbar */
+#star-button-box { display: none !important; } /* bookmark button inside urlbar */
+#scrollbutton-down { display: none !important; } /* scroll tabs right */
+#scrollbutton-up { display: none !important; } /* scroll tabs left */
+#TabsToolbar .toolbarbutton-1 { display: none !important; } /* arrow down show all tabs */
+#TabsToolbar-customization-target { background-color: var(--toolbar-bgcolor); } /* tabs */
+#titlebar { flex: 1 1 auto; }
+#urlbar-background { --toolbar-field-background-color: var(--toolbar-bgcolor); } /* urlbar */
+.titlebar-spacer { display: none !important; } /* misc spacer */
+.titlebar-buttonbox { display: none !important; } /* close, min, fullscreen */
+
+#urlbar-container {
+  --urlbar-container-width: 30vw;
+  min-width: var(--urlbar-container-width) !important;
+  max-width: var(--urlbar-container-width) !important;
+}
+
+#urlbar-container:focus-within {
+  --urlbar-container-width: 100vw;
+  z-index: 1000;
+}
+
+#navigator-toolbox {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row-reverse;
+}
