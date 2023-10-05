@@ -45,9 +45,9 @@ end
 
 local function on_attach_perl(_, bufnr)
   on_attach(_, bufnr)
-  use('lsp_signature', function(sig)
-    sig.on_attach({bind = true, hint_enable = false}, bufnr)
-  end)
+  --- use('lsp_signature', function(sig)
+  ---   sig.on_attach({bind = true, hint_enable = false}, bufnr)
+  --- end)
 end
 
 local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())
