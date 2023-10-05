@@ -1,6 +1,7 @@
 # Generic
 export ANSIBLE_NOCOWS="1";
 export AUTO_REMOVE_SLASH="0";
+export SSLMAKER_HOME="/opt/homebrew/etc/sslmaker";
 export EDITOR="vi";
 export FZF_DEFAULT_OPTS="--height 10 --reverse";
 export LANG="en_US.UTF-8";
