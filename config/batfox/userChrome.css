@@ -7,24 +7,72 @@
 #scrollbutton-up { display: none !important; } /* scroll tabs left */
 #TabsToolbar .toolbarbutton-1 { display: none !important; } /* arrow down show all tabs */
 #TabsToolbar-customization-target { background-color: var(--toolbar-bgcolor); } /* tabs */
-#titlebar { flex: 1 1 auto; }
 #urlbar-background { --toolbar-field-background-color: var(--toolbar-bgcolor); } /* urlbar */
 .titlebar-spacer { display: none !important; } /* misc spacer */
 .titlebar-buttonbox { display: none !important; } /* close, min, fullscreen */
 
-#urlbar-container {
-  --urlbar-container-width: 30vw;
-  min-width: var(--urlbar-container-width) !important;
-  max-width: var(--urlbar-container-width) !important;
+/***************************************
+  - #navigator-toolbox
+    - #titlebar
+      - #toolbar-menubar
+      - #TabsToolbar
+    - #nav-bar
+      - #nav-bar-customization-target
+        - #back-button
+        - #forward-button
+        - #urlbar-container
+          - #urlbar
+            - #urlbar-background
+            - #urlbar-input-container
+            - .urlbarView
+        - #unified-extensions-button
+    - #PersonalToolbar
+***************************************/
+
+:root {
+  --userchrome-navbar-width: max(25vw, 400px);
 }
 
-#urlbar-container:focus-within {
-  --urlbar-container-width: 100vw;
-  z-index: 1000;
+/*
+ * Placing tabs on the right side of #nav-bar using absolute instead of
+ * flexbox, to make it easier for the urlbar to hide the tabs, with a
+ * higher z-index.
+ */
+#titlebar {
+  position: absolute;
+  left: var(--userchrome-navbar-width);
+  width: calc(100vw - var(--userchrome-navbar-width));
+  max-width: calc(100vw - var(--userchrome-navbar-width));
+  min-width: calc(100vw - var(--userchrome-navbar-width));
+  z-index: 1;
 }
 
-#navigator-toolbox {
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row-reverse;
+/*
+ * #nav-bar should take up (100-75)vw, but also allow #urlbar-container to
+ * overflow.
+ */
+#nav-bar:not([urlbar-exceeds-toolbar-bounds]),
+toolbar[overflowable][customizing] > .customization-target {
+  min-width: var(--userchrome-navbar-width) !important;
+  max-width: var(--userchrome-navbar-width) !important;
+  overflow: visible !important;
 }
+
+/*
+ * This selector makes the urlbar 310px (or something) by default. Need to
+ * override that.
+ */
+#nav-bar:is([downloadsbuttonshown],
+[unifiedextensionsbuttonshown]) #urlbar-container {
+  width: auto !important;
+}
+
+/*
+ * Only show these controls when the urlbar dropdown is visible.
+ */
+#tracking-protection-icon-container { display: none !important; }
+#identity-box { display: none !important; }
+#urlbar-search-button { display: none !important; }
+#urlbar[breakout-extend="true"] #tracking-protection-icon-container { display: flex !important; }
+#urlbar[breakout-extend="true"] #identity-box { display: flex !important; }
+#urlbar[breakout-extend="true"] #urlbar-search-button { display: flex !important; }
