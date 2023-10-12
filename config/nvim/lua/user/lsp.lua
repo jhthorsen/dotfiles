@@ -61,7 +61,18 @@ lspconfig.html.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.perlpls.setup({capabilities = capabilities, on_attach = on_attach_perl});
 lspconfig.svelte.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.tsserver.setup({capabilities = capabilities, on_attach = on_attach})
-lspconfig.yamlls.setup({capabilities = capabilities, on_attach = on_attach})
+
+lspconfig.emmet_ls.setup({capabilities = capabilities, on_attach = on_attach,
+  filetypes = {"css", "eruby", "html", "javascript", "javascriptreact", "less", "sass", "scss", "svelte", "pug", "typescriptreact", "vue"},
+  init_options = {
+    html = {
+      options = {
+        -- For possible options, see: https://github.com/emmetio/emmet/blob/master/src/config.ts#L79-L267
+        ["bem.enabled"] = true,
+      },
+    },
+  }
+})
 
 lspconfig.lua_ls.setup({capabilities = capabilities, on_attach = on_attach, settings = {
   Lua = {
@@ -78,15 +89,8 @@ lspconfig.volar.setup({capabilities = capabilities, on_attach = on_attach, init_
   }
 }})
 
-lspconfig.emmet_ls.setup({
-  capabilities = capabilities,
-  filetypes = {"css", "eruby", "html", "javascript", "javascriptreact", "less", "sass", "scss", "svelte", "pug", "typescriptreact", "vue"},
-  init_options = {
-    html = {
-      options = {
-        -- For possible options, see: https://github.com/emmetio/emmet/blob/master/src/config.ts#L79-L267
-        ["bem.enabled"] = true,
-      },
-    },
-  }
-})
+lspconfig.yamlls.setup({capabilities = capabilities, on_attach = on_attach, settings = {
+  yaml = {
+    keyOrdering = false,
+  },
+}})
