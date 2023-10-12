@@ -1,3 +1,4 @@
+local luasnip = require('luasnip')
 local cmp = require('cmp')
 
 local has_words_before = function()
@@ -8,6 +9,8 @@ end
 local next_item = function(fallback)
   if cmp.visible() then
     cmp.select_next_item()
+  elseif luasnip.expand_or_jumpable() then
+    luasnip.expand_or_jump()
   elseif has_words_before() then
     cmp.complete()
   else
@@ -18,6 +21,8 @@ end
 local previous_item = function(_)
   if cmp.visible() then
     cmp.select_prev_item()
+  elseif luasnip.jumpable(-1) then
+    luasnip.jump(-1)
   end
 end
 
@@ -25,7 +30,7 @@ cmp.setup({
   preselect = cmp.PreselectMode.None,
   snippet = {
     expand = function(args)
-      require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
+      luasnip.lsp_expand(args.body)
     end,
   },
   mapping = {
@@ -39,6 +44,7 @@ cmp.setup({
   sources = cmp.config.sources({
     {name = 'nvim_lsp', keyword_length = 2},
     {name = 'buffer', keyword_length = 1},
+    {name = "luasnip"},
     {name = 'path', keyword_length = 2, trigger_characters = {'.', '/'}},
   }),
   window = {

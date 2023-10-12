@@ -7,7 +7,7 @@ if [ "$1" = "remove" ]; then
   exit;
 
 elif [ "$1" = "update" ]; then
-  git submodule update --remote share/nvim/site/pack/batpack || exit "$?";
+  git submodule update --init --remote share/nvim/site/pack/batpack || exit "$?";
   exit;
 
 elif [ -n "$1" ]; then
