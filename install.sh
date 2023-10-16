@@ -19,6 +19,7 @@ install_nvim() {
   lnk "config/nvim" "$XDG_CONFIG_DIR/nvim";
   [ ! -d "$XDG_DATA_HOME/nvim/site/pack" ]; and mkdir -p "$XDG_DATA_HOME/nvim/site/pack"
   lnk "share/nvim/site/pack/batpack" "$XDG_DATA_HOME/nvim/site/pack/batpack";
+  ./config/nvim/submodule.sh update;
 }
 
 install_wezterm() {
