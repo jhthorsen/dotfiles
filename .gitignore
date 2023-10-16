@@ -1,5 +1,6 @@
 *swp
 .pls_cache
+bin/fzf
 bin/starship
 local/
 config/nvim/lua/.luarc.json
@@ -8,6 +9,7 @@ config/nvim/plugin/
 config/vim/autoload/plug.vim
 config/vim/plugged
 config/zsh/02-env-perl.sh
+config/zsh/02-fzf-key-bindings.zsh
 config/zsh/15-z.sh
 config/zsh/20-theme-powerlevel10k.sh
 config/zsh/25-zsh-syntax-highlighting.zsh
