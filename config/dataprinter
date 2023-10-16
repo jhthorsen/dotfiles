@@ -1,0 +1,5 @@
+use_prototypes = 0
+show_refcount  = 1
+caller_info    = 1
+colored        = 1
+theme          = Material

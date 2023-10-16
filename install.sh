@@ -5,8 +5,10 @@ XDG_DATA_HOME="$HOME/.local/share";
 
 install_misc() {
   lnk "config/ackrc" "$HOME/.ackrc";
+  lnk "config/dataprinter" "$HOME/.dataprinter";
   lnk "config/git" "$XDG_CONFIG_DIR/git";
   lnk "config/lf" "$XDG_CONFIG_DIR/lf";
+  lnk "config/perltidyrc" "$HOME/.perltidyrc";
 }
 
 install_tmux() {
