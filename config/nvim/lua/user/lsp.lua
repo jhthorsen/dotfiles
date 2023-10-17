@@ -56,11 +56,12 @@ lspconfig.bashls.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.cssls.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.eslint.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.html.setup({capabilities = capabilities, on_attach = on_attach})
-lspconfig.perlpls.setup({capabilities = capabilities, on_attach = on_attach});
 lspconfig.svelte.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.tsserver.setup({capabilities = capabilities, on_attach = on_attach})
 
-lspconfig.emmet_ls.setup({capabilities = capabilities, on_attach = on_attach,
+lspconfig.emmet_ls.setup({
+  capabilities = capabilities,
+  on_attach = on_attach,
   filetypes = {"css", "eruby", "html", "javascript", "javascriptreact", "less", "sass", "scss", "svelte", "pug", "typescriptreact", "vue"},
   init_options = {
     html = {
@@ -72,23 +73,50 @@ lspconfig.emmet_ls.setup({capabilities = capabilities, on_attach = on_attach,
   }
 })
 
-lspconfig.lua_ls.setup({capabilities = capabilities, on_attach = on_attach, settings = {
-  Lua = {
-    diagnostics = {globals = {'vim'}},
-    runtime = {version = 'LuaJIT'},
-    workspace = {library = vim.api.nvim_get_runtime_file("", true)},
-    telemetry = {enable = false},
+lspconfig.lua_ls.setup({
+  capabilities = capabilities,
+  on_attach = on_attach,
+  settings = {
+    Lua = {
+      diagnostics = {globals = {'vim'}},
+      runtime = {version = 'LuaJIT'},
+      workspace = {library = vim.api.nvim_get_runtime_file("", true)},
+      telemetry = {enable = false},
+    },
   },
-}})
+})
 
-lspconfig.volar.setup({capabilities = capabilities, on_attach = on_attach, init_options = {
-  typescript = {
-    serverPath = '/opt/homebrew/lib/node_modules/typescript/lib/tsserverlibrary.js'
-  }
-}})
-
-lspconfig.yamlls.setup({capabilities = capabilities, on_attach = on_attach, settings = {
-  yaml = {
-    keyOrdering = false,
+lspconfig.perlnavigator.setup({
+  capabilities = capabilities,
+  on_attach = on_attach,
+  cmd = {'node', '/opt/homebrew/bin/perlnavigator', '--stdio'},
+  settings = {
+    perlnavigator = {
+      perlPath = 'perl',
+      enableWarnings = true,
+      perltidyProfile = '',
+      perlcriticProfile = '',
+      perlcriticEnabled = true,
+    },
   },
-}})
+});
+
+lspconfig.volar.setup({
+  capabilities = capabilities,
+  on_attach = on_attach,
+  init_options = {
+    typescript = {
+      serverPath = '/opt/homebrew/lib/node_modules/typescript/lib/tsserverlibrary.js'
+    }
+  },
+})
+
+lspconfig.yamlls.setup({
+  capabilities = capabilities,
+  on_attach = on_attach,
+  settings = {
+    yaml = {
+      keyOrdering = false,
+    },
+  },
+})
