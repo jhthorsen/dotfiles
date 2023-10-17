@@ -11,10 +11,6 @@ function M.bindkey(mode, key, action, opts)
   vim.keymap.set(mode, key, action, options)
 end
 
-function M.dump(table)
-  print(vim.inspect(table))
-end
-
 function M.close_buffer_or_nvim(cmd)
   local saved = not api.nvim_buf_get_option(api.nvim_get_current_buf(), 'modified')
 
@@ -36,9 +32,13 @@ function M.find_and_edit_file()
   api.nvim_input('<TAB>')
 end
 
+function M.pretty(table)
+  print(vim.inspect(table))
+end
+
 function M.use(name, setup)
   local ok, mod = pcall(require, name)
-  if ok == false then return print('Unable to load plugin ' .. name) end
+  if ok == false then return print('Unable to load ' .. name .. ': ' .. mod) end
   if setup then setup(mod) end
 end
 
