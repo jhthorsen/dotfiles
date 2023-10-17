@@ -1,10 +1,16 @@
-local use = require('../utils').use;
 local cmd = vim.cmd
 
 cmd('autocmd BufRead,BufNewFile *.css set filetype=scss')
 cmd('autocmd BufRead,BufNewFile *.pcss set filetype=scss')
 
-vim.diagnostic.config({virtual_text = false})
+vim.diagnostic.config({
+  float = {border = {"▔", "▔", "▔", " ", "▁", "▁", "▁", " "}},
+  severity_sort = false,
+  signs = true,
+  underline = true,
+  update_in_insert = false,
+  virtual_text = false,
+})
 
 local function bindkeys(bufnr)
   local bindkey = require('../utils').bindkey
@@ -30,7 +36,6 @@ local function on_cursor_hold()
     close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
     focus = false,
     focusable = false,
-    prefix = ' ',
     scope = 'cursor',
     source = 'always',
   })
@@ -38,16 +43,9 @@ end
 
 local function on_attach(_, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-  vim.api.nvim_create_autocmd('CursorHold,CursorHoldI', {buffer = bufnr, callback = on_cursor_hold})
+  vim.api.nvim_create_autocmd({'CursorHold', 'CursorHoldI'}, {buffer = bufnr, callback = on_cursor_hold})
   cmd('autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focusable=false,source="always",prefix=" ",scope="cursor"})')
   bindkeys(bufnr)
-end
-
-local function on_attach_perl(_, bufnr)
-  on_attach(_, bufnr)
-  --- use('lsp_signature', function(sig)
-  ---   sig.on_attach({bind = true, hint_enable = false}, bufnr)
-  --- end)
 end
 
 local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())
@@ -58,7 +56,7 @@ lspconfig.bashls.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.cssls.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.eslint.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.html.setup({capabilities = capabilities, on_attach = on_attach})
-lspconfig.perlpls.setup({capabilities = capabilities, on_attach = on_attach_perl});
+lspconfig.perlpls.setup({capabilities = capabilities, on_attach = on_attach});
 lspconfig.svelte.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.tsserver.setup({capabilities = capabilities, on_attach = on_attach})
 

@@ -41,5 +41,5 @@ local hook = function(params)
 end
 
 vim.api.nvim_create_autocmd({'BufNewFile', 'BufReadPre', 'BufReadPost', 'BufWritePost'}, {callback = hook})
-vim.api.nvim_create_autocmd('VimLeave', {callback = function() vim_leave = true end})
+vim.api.nvim_create_autocmd({'VimLeave'}, {callback = function() vim_leave = true end})
 vim.api.nvim_create_user_command('ExternalHook', hook, {nargs = 1})
