@@ -8,6 +8,7 @@ install_misc() {
   lnk "config/dataprinter" "$HOME/.dataprinter";
   lnk "config/git" "$XDG_CONFIG_DIR/git";
   lnk "config/lf" "$XDG_CONFIG_DIR/lf";
+  lnk "config/perlcriticrc" "$HOME/.perlcriticrc";
   lnk "config/perltidyrc" "$HOME/.perltidyrc";
 }
 

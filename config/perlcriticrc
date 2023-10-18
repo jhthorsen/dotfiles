@@ -1,0 +1,19 @@
+severity = 4
+
+[InputOutput::RequireBriefOpen]
+severity = 1
+
+[Subroutines::ProhibitExplicitReturnUndef]
+severity = 1
+
+[Subroutines::RequireFinalReturn]
+severity = 1
+
+[Subroutines::RequireArgUnpacking]
+severity = 1
+
+[TestingAndDebugging::ProhibitNoStrict]
+severity = 1
+
+[ValuesAndExpressions::ProhibitConstantPragma]
+severity = 1
