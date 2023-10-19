@@ -1,9 +1,9 @@
 return {
-  foreground = "#dcd7ba",
   background = "#1f1f28",
-  cursor_bg = "#c8c093",
-  cursor_fg = "#c8c093",
-  cursor_border = "#c8c093",
+  foreground = "#dcd7ba",
+  cursor_bg = "#aaaaaa",
+  cursor_fg = "#000000",
+  cursor_border = "transparent",
   selection_fg = "#c8c093",
   selection_bg = "#2d4f67",
   scrollbar_thumb = "#16161d",
