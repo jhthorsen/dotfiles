@@ -6,11 +6,11 @@ CURRENT_DIR="$1"
 [ -z "$CURRENT_DIR" ] && CURRENT_DIR="..";
 
 # Clean up old cache files
-[ -z "$TMPDIR" ] && TMPDIR="$(tmpdir)";
-find "$TMPDIR"/find-parent-directory-*.files -mmin +1 -exec rm {} \; 2>/dev/null;
+[ -z "$TMPDIR" ] && TMPDIR="/tmp";
+find "$TMPDIR/$USER-find-files-cached-"*.files -mmin +1 -exec rm {} \; 2>/dev/null;
 
-CURRENT_DIR_ID="$(realpath "$CURRENT_DIR" | md5)";
-CACHE_FILE="$TMPDIR/find-parent-directory-$RECURSIVE-$CURRENT_DIR_ID.files";
+CURRENT_DIR_ID="$(realpath "$CURRENT_DIR" | md5sum | cut -d' ' -f1)";
+CACHE_FILE="$TMPDIR/$USER-find-files-cached-$RECURSIVE-$CURRENT_DIR_ID.files";
 if [ -f "$CACHE_FILE" ]; then
   cat "$CACHE_FILE";
 elif [ "$RECURSIVE" = "recursive" ]; then
