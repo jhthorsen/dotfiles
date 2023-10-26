@@ -6,7 +6,6 @@
 #scrollbutton-down { display: none !important; } /* scroll tabs right */
 #scrollbutton-up { display: none !important; } /* scroll tabs left */
 #TabsToolbar .toolbarbutton-1 { display: none !important; } /* arrow down show all tabs */
-#TabsToolbar-customization-target { background-color: var(--toolbar-bgcolor); } /* tabs */
 #urlbar-background { --toolbar-field-background-color: var(--toolbar-bgcolor); } /* urlbar */
 .titlebar-spacer { display: none !important; } /* misc spacer */
 .titlebar-buttonbox { display: none !important; } /* close, min, fullscreen */
@@ -31,6 +30,10 @@
 
 :root {
   --userchrome-navbar-width: max(25vw, 400px);
+}
+
+toolbar {
+  min-height: 42px !important;
 }
 
 /*
