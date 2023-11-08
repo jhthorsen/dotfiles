@@ -1,3 +1,4 @@
+PATH="$HOME/.cargo/bin";
 PATH="/bin:$PATH";
 PATH="/sbin:$PATH";
 PATH="/usr/bin:$PATH";
