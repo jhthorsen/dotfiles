@@ -5,7 +5,7 @@ local use = require('../utils').use;
 use('colorizer', function (mod)
   local css = {css = true}
   local html = {RGB = true, RRGGBB = true}
-  mod.setup({css = css, html = html, scss = css, svelte = html, vue = html})
+  mod.setup({'*', css = css, html = html, scss = css, svelte = html, vue = html})
 end)
 
 -- emmet
