@@ -36,3 +36,10 @@ for ZSH_SOURCE in $(find $ZSH_CONFIG_HOME -maxdepth 1 | grep 'zsh/[0-9]\+-' | so
 done
 
 command -v starship >/dev/null && eval "$(starship init zsh)";
+
+# bun completions
+[ -s "/Users/jhthorsen/.bun/_bun" ] && source "/Users/jhthorsen/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
