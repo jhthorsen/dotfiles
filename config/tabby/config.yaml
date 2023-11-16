@@ -130,8 +130,7 @@ hotkeys:
     - ⌘-Shift-L
   profile-selector:
     - ⌘-E
-  switch-profile:
-    - ⌘-Shift-E
+  switch-profile: []
   focus-all-tabs: []
   reconnect-tab: []
   disconnect-tab: []
@@ -172,16 +171,15 @@ terminal:
       - '#7aa89f'
       - '#dcd7ba'
   frontend: xterm-webgl
-  copyOnSelect: true
   copyAsHTML: false
   customColorSchemes: []
-  font: DroidSansM Nerd Font
+  font: DejaVuSansM Nerd Font Mono
   cursorBlink: false
   bell: visual
   linePadding: 2
   fontWeight: 100
   fontWeightBold: 600
-  fontSize: 13
+  fontSize: 12
   scrollbackLines: 10000
   autoOpen: false
   hideTabOptionsButton: true
@@ -204,23 +202,23 @@ accessibility:
 appearance:
   spaciness: 0.9
   css: |-
-    :root {
-      --bs-body-line-height: 1.5;
-    }
-
-    ::-webkit-scrollbar {
-      width: 1px;
+    ::-webkit-scrollbar,
+    ::-webkit-scrollbar-button,
+    ::-webkit-scrollbar-thumb,
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-track-piece {
+      width: 0 !important;
     }
 
     terminaltab > .content {
-      margin: 4px 0 !important;
+      margin: 6px 8px !important;
     }
 
     terminaltab.maximized {
-      height: 98% !important;
-      width: 98% !important;
-      box-shadow: none !important;
-      inset: 1% !important;
+      backdrop-filter: blur(50px) !important;
+      height: 100% !important;
+      width: 100% !important;
+      inset: 0 !important;
     }
 
     split-tab > .child {
@@ -229,8 +227,17 @@ appearance:
     split-tab > .child.focused {
       opacity: 1 !important;
     }
-  opacity: 0.98
+
+    search-panel a.btn > svg,
+    search-panel button.btn > svg {
+      height: 20px !important;
+    }
+
+    split-tab-spanner {
+      background: rgba(var(--bs-dark-rgb), 0.3);
+    }
   flexTabs: true
+  opacity: 0.97
 hacks: {}
 enableAnalytics: false
 profileDefaults: {}
