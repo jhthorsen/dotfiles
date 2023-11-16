@@ -1,0 +1,246 @@
+version: 6
+profiles: []
+hotkeys:
+  toggle-window:
+    - Ctrl-Space
+  copy-current-path: []
+  ctrl-c: []
+  copy:
+    - ⌘-C
+  paste:
+    - ⌘-V
+  clear:
+    - ⌘-⌥-L
+  select-all:
+    - ⌘-A
+  zoom-in:
+    - ⌘-=
+  zoom-out:
+    - ⌘--
+  reset-zoom:
+    - ⌘-Shift--
+  home:
+    - ⌘-Left
+    - Home
+  end:
+    - ⌘-Right
+    - End
+  previous-word:
+    - ⌥-Left
+  next-word:
+    - ⌥-Right
+  delete-previous-word:
+    - ⌥-Backspace
+  delete-line:
+    - ⌘-Backspace
+  delete-next-word:
+    - ⌥-Delete
+  pane-focus-all:
+    - ⌘-Shift-I
+  scroll-to-top: []
+  scroll-up: []
+  scroll-down: []
+  scroll-to-bottom: []
+  restart-telnet-session: []
+  restart-ssh-session: []
+  launch-winscp: []
+  settings-tab: {}
+  settings:
+    - ⌘-,
+  serial: []
+  restart-serial-session: []
+  new-window:
+    - ⌘-N
+  new-tab:
+    - ⌘-T
+  profile: {}
+  profile-selectors: {}
+  toggle-fullscreen: []
+  close-tab:
+    - ⌘-W
+  reopen-tab:
+    - ⌘-Shift-T
+  toggle-last-tab: []
+  rename-tab:
+    - ⌘-R
+  next-tab: []
+  previous-tab: []
+  move-tab-left: []
+  move-tab-right: []
+  rearrange-panes: []
+  tab-1:
+    - ⌘-1
+  tab-2:
+    - ⌘-2
+  tab-3:
+    - ⌘-3
+  tab-4:
+    - ⌘-4
+  tab-8: []
+  tab-9: []
+  duplicate-tab: []
+  restart-tab: []
+  explode-tab: []
+  combine-tabs: []
+  tab-11: []
+  tab-12: []
+  tab-13: []
+  tab-14: []
+  tab-15: []
+  tab-16: []
+  tab-17: []
+  tab-18: []
+  tab-19: []
+  tab-20: []
+  split-right:
+    - ⌘-Shift-D
+  split-bottom:
+    - ⌘-D
+  split-top: []
+  pane-nav-right:
+    - ⌘-L
+  pane-nav-down:
+    - ⌘-J
+  pane-nav-up:
+    - ⌘-K
+  pane-nav-left:
+    - ⌘-H
+  pane-nav-previous: []
+  pane-nav-next: []
+  pane-nav-1: []
+  pane-nav-2: []
+  pane-nav-3: []
+  pane-nav-4: []
+  pane-nav-5: []
+  pane-nav-6: []
+  pane-nav-7: []
+  pane-nav-8: []
+  pane-nav-9: []
+  pane-maximize:
+    - ⌘-Z
+  close-pane:
+    - ⌘-Shift-W
+  pane-increase-vertical:
+    - ⌘-Shift-K
+  pane-decrease-vertical:
+    - ⌘-Shift-J
+  pane-increase-horizontal:
+    - ⌘-Shift-H
+  pane-decrease-horizontal:
+    - ⌘-Shift-L
+  profile-selector:
+    - ⌘-E
+  switch-profile:
+    - ⌘-Shift-E
+  focus-all-tabs: []
+  reconnect-tab: []
+  disconnect-tab: []
+  command-selector:
+    - ⌘-Shift-P
+  tab-10: []
+  search:
+    - ⌘-F
+  split-left: []
+  tab-5:
+    - ⌘-5
+  tab-6:
+    - ⌘-6
+  tab-7:
+    - ⌘-7
+terminal:
+  searchOptions: {}
+  colorScheme:
+    name: Kanagawa
+    foreground: '#dcd7ba'
+    background: '#1f1f28'
+    cursor: '#d9e6f2'
+    colors:
+      - '#060310'
+      - '#c34043'
+      - '#76946a'
+      - '#c0a36e'
+      - '#7e9cd8'
+      - '#957fb8'
+      - '#6a9589'
+      - '#c8c093'
+      - '#727169'
+      - '#e82424'
+      - '#98bb6c'
+      - '#e6c384'
+      - '#7fb4ca'
+      - '#938aa9'
+      - '#7aa89f'
+      - '#dcd7ba'
+  frontend: xterm-webgl
+  copyOnSelect: true
+  copyAsHTML: false
+  customColorSchemes: []
+  font: DroidSansM Nerd Font
+  cursorBlink: false
+  bell: visual
+  linePadding: 2
+  fontWeight: 100
+  fontWeightBold: 600
+  fontSize: 13
+  scrollbackLines: 10000
+  autoOpen: false
+  hideTabOptionsButton: true
+  hideCloseButton: true
+  pasteOnMiddleClick: false
+  hideTabIndex: true
+  minimumContrastRatio: 3
+ssh:
+  knownHosts: []
+  warnOnClose: true
+configSync:
+  parts:
+    hotkeys: false
+    appearance: false
+    vault: false
+clickableLinks:
+  modifier: metaKey
+accessibility:
+  animations: false
+appearance:
+  spaciness: 0.9
+  css: |-
+    :root {
+      --bs-body-line-height: 1.5;
+    }
+
+    ::-webkit-scrollbar {
+      width: 1px;
+    }
+
+    terminaltab > .content {
+      margin: 4px 0 !important;
+    }
+
+    terminaltab.maximized {
+      height: 98% !important;
+      width: 98% !important;
+      box-shadow: none !important;
+      inset: 1% !important;
+    }
+
+    split-tab > .child {
+      opacity: 0.88 !important;
+    }
+    split-tab > .child.focused {
+      opacity: 1 !important;
+    }
+  opacity: 0.98
+  flexTabs: true
+hacks: {}
+enableAnalytics: false
+profileDefaults: {}
+enableWelcomeTab: false
+pluginBlacklist: []
+groups: []
+providerBlacklist: []
+commandBlacklist: []
+profileBlacklist:
+  - local:bincsh
+  - local:bindash
+  - local:binksh
+titleControl: {}
