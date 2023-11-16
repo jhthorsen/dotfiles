@@ -1,9 +1,11 @@
 local cmd = vim.cmd
 
-cmd('autocmd BufRead,BufNewFile *.css set filetype=scss')
+cmd('autocmd BufRead,BufNewFile *.jinja call jinja#AdjustFiletype()')
 cmd('autocmd BufRead,BufNewFile *.tera call jinja#AdjustFiletype()')
-cmd('autocmd BufRead,BufNewFile *.css.tera set filetype=scss')
 cmd('autocmd BufRead,BufNewFile *.pcss set filetype=scss')
+cmd('autocmd BufRead,BufNewFile *.css set filetype=scss')
+cmd('autocmd BufRead,BufNewFile *.css.tera set filetype=scss')
+cmd('autocmd BufRead,BufNewFile *.css.jinja set filetype=scss')
 
 vim.diagnostic.config({
   float = {border = {"▔", "▔", "▔", " ", "▁", "▁", "▁", " "}},
