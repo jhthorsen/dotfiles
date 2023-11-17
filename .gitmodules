@@ -88,6 +88,3 @@
 [submodule "share/nvim/site/pack/batpack/start/LuaSnip.git"]
 	path = share/nvim/site/pack/batpack/start/LuaSnip.git
 	url = https://github.com/L3MON4D3/LuaSnip.git
-[submodule "share/nvim/site/pack/batpack/start/jinja.vim"]
-	path = share/nvim/site/pack/batpack/start/jinja.vim
-	url = https://github.com/HiPhish/jinja.vim
