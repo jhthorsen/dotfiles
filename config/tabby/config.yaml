@@ -1,5 +1,4 @@
-version: 6
-profiles: []
+version: 7
 hotkeys:
   toggle-window:
     - Ctrl-Space
@@ -170,7 +169,6 @@ terminal:
       - '#938aa9'
       - '#7aa89f'
       - '#dcd7ba'
-  frontend: xterm-webgl
   copyAsHTML: false
   customColorSchemes: []
   font: DejaVuSansM Nerd Font Mono
@@ -187,6 +185,7 @@ terminal:
   pasteOnMiddleClick: false
   hideTabIndex: true
   minimumContrastRatio: 3
+  sixel: false
 ssh:
   knownHosts: []
   warnOnClose: true
@@ -200,7 +199,7 @@ clickableLinks:
 accessibility:
   animations: false
 appearance:
-  spaciness: 0.9
+  spaciness: 0.8
   css: |-
     ::-webkit-scrollbar,
     ::-webkit-scrollbar-button,
@@ -211,7 +210,7 @@ appearance:
     }
 
     terminaltab > .content {
-      margin: 6px 8px !important;
+      margin: 6px -10px 8px 6px !important
     }
 
     terminaltab.maximized {
@@ -251,3 +250,4 @@ profileBlacklist:
   - local:bindash
   - local:binksh
 titleControl: {}
+profiles: []
