@@ -1,14 +1,33 @@
 local use = require('utils').use;
 
-vim.g.spell_under = 'kanagawa'
+vim.g.spell_under = 'kanagawa-wave'
 
 -- This comment exists to make overrides() below easier to test
+-- To check the word under the cursor: ":Inspect"
 
 use('kanagawa', function(kanagawa)
+  -- local palette = require('kanagawa.colors').setup({theme = 'wave'}).palette
   kanagawa.setup({
     compile = false,
-    transparent = true,
     dimInactive = true,
+    commentStyle = { bold = false, italic = true },
+    keywordStyle = { bold = false, italic = false },
+    statementStyle = { bold = false, italic = false },
+    transparent = false,
+    theme = 'wave',
+    colors = {
+      theme = {
+        wave = {
+          ui = {
+            float = {
+              bg = 'none',
+            },
+          },
+          syn = {
+          },
+        },
+      },
+    },
     overrides = function(colors)
       local theme = colors.theme
       return {
