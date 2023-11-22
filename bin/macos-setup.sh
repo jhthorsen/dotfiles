@@ -141,5 +141,6 @@ run defaults write NSGlobalDomain KeyRepeat -int 2
 run defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool TRUE
 run defaults write com.apple.screencapture location $HOME/Downloads
 run defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
+run defaults write -g ApplePressAndHoldEnabled -bool false
 # sudo killall SystemUIServer
 # sudo killall -HUP mDNSResponder
