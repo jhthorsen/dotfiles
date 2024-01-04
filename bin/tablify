@@ -1,35 +1,25 @@
 #!/usr/bin/env perl
-use Applify;
+use Getopt::App -signatures;
 
-option int    => columns => 'Number of columns', 3, alias => 'n';
-option string => after   => 'String after each row';
-option string => before  => 'String before each row';
-option string => spacer  => 'String between columns', '  ';
-
-sub input_to_rows {
-  my ($self, $FH) = @_;
-  my @before = defined $self->before ? ($self->before) : ();
-  my @after  = defined $self->after  ? ($self->after)  : ();
-  my $nc     = $self->columns;
+sub input_to_rows ($self, $FH) {
+  my @before = defined $self->{B} ? ($self->{B}) : ();
+  my @after  = defined $self->{A} ? ($self->{A})  : ();
 
   my ($sep, @rows, @curr);
   while (<$FH>) {
     $sep ||= /\t/ ? qr{\t} : qr{\s+};
     push @curr, grep length, split $sep;
-    push @rows, [@before, splice(@curr, 0, $nc), @after] while @curr >= $nc;
+    push @rows, [@before, splice(@curr, 0, $self->{n}), @after] while @curr >= $self->{n};
   }
 
-  push @curr, '' while @curr and @curr < $nc;
+  push @curr, '' while @curr and @curr < $self->{n};
   push @rows, [@before, @curr, @after] if @curr;
 
   return \@rows;
 }
 
 # From Mojo::Util::tablify()
-sub tablify {
-  my ($self, $rows) = @_;
-  my $spacer = $self->spacer;
-
+sub tablify ($self, $rows) {
   my @spec;
   for my $row (@$rows) {
     for my $i (0 .. $#$row) {
@@ -40,13 +30,23 @@ sub tablify {
   }
 
   my @fm = (map({"\%-${_}s"} @spec[0 .. $#spec - 1]), '%s');
-  return join '', map { sprintf join($spacer, @fm[0 .. $#$_]) . "\n", @$_ } @$rows;
+  return join '', map { sprintf join($self->{S}, @fm[0 .. $#$_]) . "\n", @$_ } @$rows;
 }
 
-app {
-  my ($self, $file) = @_;
-  my $FH = \*STDIN;
-  open $FH, '<', $file if $file;
-  print $self->tablify($self->input_to_rows($FH));
-  return 0;
-};
+run(
+  'n|columns=s # Number of columns',
+  'A|after=s   # String after each row',
+  'B|before=s  # String before each row',
+  'S|spacer=s  # String between columns',
+  'h|help      # This help text',
+  sub ($self, $file = undef, @) {
+    return print extract_usage if $self->{h};
+    $self->{n} ||= 3;
+    $self->{S} //= ' ';
+
+    my $FH = \*STDIN;
+    open $FH, '<', $file if $file;
+    print $self->tablify($self->input_to_rows($FH));
+    return 0;
+  },
+);
