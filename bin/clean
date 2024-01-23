@@ -4,8 +4,9 @@ if [ -z "$1" ]; then
   echo -e "\n  --- screen cleared at $(date) ---                                             \n";
   for _x in $(seq 2 "$lines"); do echo; done
   tput cup 0 0;
+  reset;
 elif [ "$1" = "-a" ]; then
   clear;
-  reset;
   printf '\e[3J';
+  reset;
 fi
