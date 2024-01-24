@@ -22,8 +22,8 @@ install_tmux() {
 install_nvim() {
   lnk "$DOTFILES/config/nvim" "$XDG_CONFIG_DIR/nvim";
   [ ! -d "$XDG_DATA_HOME/nvim/site/pack" ]; and mkdir -p "$XDG_DATA_HOME/nvim/site/pack"
-  lnk "share/nvim/site/pack/batpack" "$XDG_DATA_HOME/nvim/site/pack/batpack";
-  ./config/nvim/submodule.sh update;
+  lnk "$DOTFILES/share/nvim/site/pack/batpack" "$XDG_DATA_HOME/nvim/site/pack/batpack";
+  run ./config/nvim/submodule.sh update;
 }
 
 install_wezterm() {
@@ -33,9 +33,6 @@ install_wezterm() {
 }
 
 install_zsh() {
-  local arch="$(uname -p)";
-  local os="$(uname -s | grep -qi linux && echo 'unknown-linux' || echo 'apple')";
-  local flavor="$(uname -o | grep -qi gnu && echo gnu || echo darwin)";
   lnk "$DOTFILES/config/zsh" "$XDG_CONFIG_DIR/zsh";
   lnk "$DOTFILES/config/starship.toml" "$XDG_CONFIG_DIR/starship.toml";
   lnk "$DOTFILES/config/zsh/zshrc" "$HOME/.zshrc";
@@ -45,6 +42,11 @@ install_zsh() {
   [ -d "$HOMEBREW_PREFIX" ] \
     && lnk "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" "$XDG_CONFIG_DIR/zsh/25-zsh-syntax-highlighting.zsh";
   run curl -sL https://github.com/junegunn/fzf/raw/master/shell/key-bindings.zsh > ./config/zsh/02-fzf-key-bindings.zsh;
+
+  local platform="unknown-linux-musl";
+  [ "$(uname -o)" = "Darwin" ] platform="apple-darwin";
+  command -v starship > /dev/null || run curl -sL "https://github.com/starship/starship/releases/latest/download/starship-$(arch)-$platform.tar.gz" | tar xz -C "$PWD/bin/";
+  command -v fzf > /dev/null || run curl -sL "https://github.com/junegunn/fzf/releases/download/0.46.0/fzf-0.46.0-linux_amd64.tar.gz" | tar xz -C "$PWD/bin/";
 }
 
 and() {
@@ -72,5 +74,3 @@ true; and install_nvim;
 command -v wezterm > /dev/null; and install_wezterm;
 [ "$(uname -o)" = "Darwin" ]; and ./bin/macos-setup.sh;
 [ "$(uname -o)" = "Darwin" ]; and ./bin/lsp-servers;
-command -v starship > /dev/null || run curl -sL "https://github.com/starship/starship/releases/latest/download/starship-$arch-$os-$flavor.tar.gz" | tar xz -C "$PWD/bin/";
-command -v fzf > /dev/null || run curl -sL "https://github.com/junegunn/fzf/releases/download/0.43.0/fzf-0.43.0-linux_amd64.tar.gz" | tar xz -C "$PWD/bin/";
