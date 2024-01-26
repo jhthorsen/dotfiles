@@ -28,14 +28,12 @@ BREW_BIN="$HOMEBREW_PREFIX/bin/brew";
 
 run $BREW_BIN tap amar1729/formulae;
 run $BREW_BIN tap remko/age-plugin-se https://github.com/remko/age-plugin-se;
-run $BREW_BIN tap wez/wezterm;
 run $BREW_BIN update && run $BREW_BIN upgrade;
 
 # https://github.com/biox/pa
 pkg age
 pkg age-plugin-se
 pkg age-plugin-yubikey
-pkg wez/wezterm/wezterm /opt/homebrew/bin/wezterm --cask
 pkg age
 pkg age-plugin-se
 pkg age-plugin-yubikey

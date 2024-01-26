@@ -7,7 +7,6 @@ alias grep='grep --color=auto --line-buffered';
 alias gti='git'
 alias h="history -i -D"
 alias hwinfo='dmidecode'
-alias imgcat='wezterm imgcat';
 alias l='ls --color=auto --group-directories-first -F -h'
 alias ll='l -l'
 alias limited='ulimit -d 600000 -m 600000 -v 600000 -t 2 -u 5000; ulimit -a'

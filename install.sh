@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 XDG_CONFIG_DIR="$HOME/.config";
 XDG_DATA_HOME="$HOME/.local/share";
@@ -24,12 +24,6 @@ install_nvim() {
   [ ! -d "$XDG_DATA_HOME/nvim/site/pack" ]; and mkdir -p "$XDG_DATA_HOME/nvim/site/pack"
   lnk "$DOTFILES/share/nvim/site/pack/batpack" "$XDG_DATA_HOME/nvim/site/pack/batpack";
   run ./config/nvim/submodule.sh update;
-}
-
-install_wezterm() {
-  lnk "$DOTFILES/config/wezterm" "$HOME/.config/wezterm";
-  true; and wezterm shell-completion --shell zsh > ~/.config/zsh/completion/wezterm.zsh-completion;
-  true; and curl -sL https://raw.githubusercontent.com/wez/wezterm/main/assets/shell-integration/wezterm.sh > "$XDG_CONFIG_DIR/zsh/30-wezterm.sh";
 }
 
 install_zsh() {
@@ -71,6 +65,5 @@ true; and install_zsh;
 true; and install_misc;
 true; and install_tmux;
 true; and install_nvim;
-command -v wezterm > /dev/null; and install_wezterm;
 [ "$(uname -o)" = "Darwin" ]; and ./bin/macos-setup.sh;
 [ "$(uname -o)" = "Darwin" ]; and ./bin/lsp-servers;
