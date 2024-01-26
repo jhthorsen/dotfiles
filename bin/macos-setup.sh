@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 function abort() {
   echo "! $*" >&2
@@ -38,6 +38,7 @@ pkg age
 pkg age-plugin-se
 pkg age-plugin-yubikey
 pkg alt-tab /Applications/AltTab.app
+pkg bash-completion
 pkg bat
 pkg browserpass
 pkg cloc
@@ -48,6 +49,7 @@ pkg csvprintf
 pkg ctags
 pkg doctl
 pkg exiftool
+pkg eza
 pkg fd
 pkg ffmpeg
 pkg figlet
@@ -109,11 +111,6 @@ pkg wget
 pkg ykman
 pkg yubikey-personalization /opt/homebrew/Cellar/ykpers
 pkg z
-pkg zsh
-pkg zsh-completions
-pkg zsh-git-prompt
-pkg zsh-lovers
-pkg zsh-syntax-highlighting
 
 run cpanm -n App::errno
 run cpanm -n App::githook_perltidy

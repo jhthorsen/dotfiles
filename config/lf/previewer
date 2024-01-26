@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 FILE="$1";
 WIDTH="${2:-$COLUMNS}";

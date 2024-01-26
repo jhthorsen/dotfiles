@@ -1,7 +1,0 @@
-#!/bin/bash
-[ -z "$GIT_BIN" ] && GIT_BIN="/usr/bin/git";
-[ -t 0 ] || exec "$GIT_BIN" "$@";
-
-export PAGER="diffu";
-[ -z "$*" ] && exec "$GIT_BIN" status -bs;
-exec "$GIT_BIN" "$@";

@@ -1,0 +1,4 @@
+#!/bin/bash
+source "$HOME/.bashrc";
+source "$HOME/.bash_profile";
+echo "Reloaded bash v$BASH_VERSION";

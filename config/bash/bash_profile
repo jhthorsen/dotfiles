@@ -1,0 +1,71 @@
+#!/bin/bash
+[ -n "$BASH_VERSION" ] && [ "$(echo "$BASH_VERSION" | cut -d. -f1)" -lt 5 ] \
+  && [ -x "/opt/homebrew/bin/bash" ] && exec /opt/homebrew/bin/bash --login;
+
+[ -z "$DOTFILES_BASHRC_WAS_LOADED" ] && source "$HOME/.bashrc";
+[ -e "$HOME/.bash_profile_local" ] && source "$HOME/.bash_profile_local";
+[ "$(type -t __local_hook_begin)" = "function" ] && __local_hook_begin;
+unset DOTFILES_BASHRC_WAS_LOADED;
+
+git() {
+  if [ -z "$*" ]; then command git status -bs; return "$?"; fi
+  if [ ! -t 0 ]; then command git "$@"; return "$?"; fi
+  if ! command -v diffu >/dev/null; then command git "$@"; return "$?"; fi
+  PAGER="diffu" command git "$@";
+}
+
+__bash_profile_autocomplete() {
+  local ext="$1";
+  [ -d "$HOME/.config/shell" ] || mkdir -p "$HOME/.config/shell";
+  [ -r "$HOME/.config/shell/fzf-key-bindings.$ext" ] \
+    || curl -Ls "https://github.com/junegunn/fzf/raw/master/shell/key-bindings.$ext" > "$HOME/.config/shell/fzf-key-bindings.$ext";
+  [ -r "$HOME/.config/shell/fzf-completion.$ext" ] \
+    || curl -Ls "https://github.com/junegunn/fzf/raw/master/shell/completion.$ext" > "$HOME/.config/shell/fzf-completion.$ext";
+
+  source "$HOME/.config/shell/fzf-completion.$ext";
+  source "$HOME/.config/shell/fzf-key-bindings.$ext";
+  [ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ] && source "/opt/homebrew/etc/profile.d/bash_completion.sh";
+  unset -f __bash_profile_autocomplete;
+}
+
+command -v rg >/dev/null && alias ack='rg';
+command -v starship >/dev/null && eval "$(starship init "$SHELL_NAME")";
+__bash_profile_autocomplete "$SHELL_NAME";
+__user_starship_precmd() { history -a; }
+starship_precmd_user_func="__user_starship_precmd";
+
+if command -v gpgconf >/dev/null; then
+  GPG_TTY="$(tty)";
+  SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)";
+  export GPG_TTY SSH_AUTH_SOCK;
+  gpgconf --launch gpg-agent;
+  [ "$(type -t __local_hook_gpg)" = "function" ] && __local_hook_gpg;
+fi
+
+alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
+alias cpanm='cpanm -M https://cpan.metacpan.org'
+alias grep='grep --color=auto --line-buffered';
+alias gti='git';
+alias ll='eza --color=auto --time-style=long-iso --group-directories-first -F';
+alias la='eza --color=auto --time-style=long-iso --group-directories-first -la';
+alias l='eza --icons=auto --time-style=long-iso -l';
+alias pass='stty sane && PASSWORD_STORE_ENABLE_EXTENSIONS=true pass'
+alias pcover='perl Makefile.PL; cover -ignore_re="t/.*" -prefer_lib -test; make clean'
+alias psme="ps axfu | grep "$USER"";
+alias sort='LC_ALL=C sort';
+alias weather='curl https://wttr.in/'
+[ "$(type -t __local_hook_alias)" = "function" ] && __local_hook_alias;
+
+if [ "$SHELL_NAME" = "bash" ]; then
+  alias reload="exec "$SHELL_NAME" --rcfile $HOME/.bash_reload";
+  bind -m vi-command '"\C-l": clear-screen'
+  bind -m vi-insert '"\C-l": clear-screen'
+  bind -m vi-insert '"\C-a": beginning-of-line'
+  bind -m vi-insert '"\C-e": end-of-line'
+  shopt -s histappend;
+  [ "$(type -t __local_hook_bash)" = "function" ] && __local_hook_bash;
+fi
+
+set -o vi;
+stty -echoctl;
+[ "$(type -t __local_hook_end)" = "function" ] && __local_hook_end;

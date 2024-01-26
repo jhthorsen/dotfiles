@@ -26,17 +26,11 @@ install_nvim() {
   run ./config/nvim/submodule.sh update;
 }
 
-install_zsh() {
-  lnk "$DOTFILES/config/zsh" "$XDG_CONFIG_DIR/zsh";
+install_shell() {
+  lnk "$DOTFILES/config/bash/bashrc" "$HOME/.bashrc";
+  lnk "$DOTFILES/config/bash/bash_profile" "$HOME/.bash_profile";
+  lnk "$DOTFILES/config/bash/bash_reload" "$HOME/.bash_reload";
   lnk "$DOTFILES/config/starship.toml" "$XDG_CONFIG_DIR/starship.toml";
-  lnk "$DOTFILES/config/zsh/zshrc" "$HOME/.zshrc";
-  [ ! -d ~/.config/zsh/zsh-vi-mode ]; and git clone https://github.com/jeffreytse/zsh-vi-mode ~/.config/zsh/zsh-vi-mode;
-  [ -d "$HOMEBREW_PREFIX" ] \
-    && lnk "$HOMEBREW_PREFIX/etc/profile.d/z.sh" "$XDG_CONFIG_DIR/zsh/15-z.sh";
-  [ -d "$HOMEBREW_PREFIX" ] \
-    && lnk "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" "$XDG_CONFIG_DIR/zsh/25-zsh-syntax-highlighting.zsh";
-  run curl -sL https://github.com/junegunn/fzf/raw/master/shell/key-bindings.zsh > ./config/zsh/02-fzf-key-bindings.zsh;
-
   local platform="unknown-linux-musl";
   [ "$(uname -o)" = "Darwin" ] platform="apple-darwin";
   command -v starship > /dev/null || run curl -sL "https://github.com/starship/starship/releases/latest/download/starship-$(arch)-$platform.tar.gz" | tar xz -C "$PWD/bin/";
@@ -61,7 +55,7 @@ lnk() {
   [ ! -L "$to" ]; and ln -s "$from" "$to";
 }
 
-true; and install_zsh;
+true; and install_shell;
 true; and install_misc;
 true; and install_tmux;
 true; and install_nvim;
