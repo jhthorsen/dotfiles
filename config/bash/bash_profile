@@ -57,6 +57,7 @@ alias weather='curl https://wttr.in/'
 [ "$(type -t __local_hook_alias)" = "function" ] && __local_hook_alias;
 
 if [ "$SHELL_NAME" = "bash" ]; then
+  complete -F __git_wrap__git_main gti;
   alias reload="exec "$SHELL_NAME" --rcfile $HOME/.bash_reload";
   bind -m vi-command '"\C-l": clear-screen'
   bind -m vi-insert '"\C-l": clear-screen'
