@@ -27,7 +27,7 @@ show_milliseconds = false
 style = "bg:236 fg:215"
 
 [directory]
-format = "[  ](bold bg:236 fg:31)[$path](bold bg:236 fg:38)[$read_only]($read_only_style)"
+format = "(bold bg:236 fg:31)[$path](bold bg:236 fg:38)[$read_only]($read_only_style)"
 home_symbol = "~"
 read_only = ""
 truncate_to_repo = false

@@ -27,6 +27,7 @@ install_nvim() {
 }
 
 install_shell() {
+  lnk "$DOTFILES/config/bash/inputrc" "$HOME/.inputrc";
   lnk "$DOTFILES/config/bash/bashrc" "$HOME/.bashrc";
   lnk "$DOTFILES/config/bash/bash_profile" "$HOME/.bash_profile";
   lnk "$DOTFILES/config/bash/bash_reload" "$HOME/.bash_reload";

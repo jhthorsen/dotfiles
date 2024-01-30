@@ -1,0 +1,4 @@
+set keyseq-timeout 100
+set show-mode-in-prompt on
+set vi-ins-mode-string \e[48;5;236m\e[38;5;38m⟫ \2
+set vi-cmd-mode-string \e[48;5;236m\e[38;5;137m⟪ \2
