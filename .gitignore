@@ -21,4 +21,5 @@ config/zsh/powerlevel10k/
 config/zsh/zsh_history
 config/zsh/zsh-vi-mode/
 config/wezterm/private_*.lua
+share/nvim/site/pack/batpack/start/
 .nvim-external-hook
