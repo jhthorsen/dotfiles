@@ -1,2 +1,0 @@
-#!/bin/sh
-sudo docker ps --format '{{.Names}}\t{{.ID}}\t{{.Status}}\t{{.Image}}' | tablify -n 4 | sort
