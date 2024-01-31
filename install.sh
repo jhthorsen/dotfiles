@@ -89,11 +89,15 @@ function install_dotfiles() {
 }
 
 function install_misc() {
-  # starship and fzf
+  # starship
+  local arch; arch="$(arch)";
   local platform="unknown-linux-musl";
   [ "$(uname -o)" = "Darwin" ] && platform="apple-darwin";
-  ! command -v starship > /dev/null; and curl -sL "https://github.com/starship/starship/releases/latest/download/starship-$(arch)-$platform.tar.gz" | tar xz -C "$PWD/bin/";
-  ! command -v fzf > /dev/null; and curl -sL "https://github.com/junegunn/fzf/releases/download/0.46.0/fzf-0.46.0-linux_amd64.tar.gz" | tar xz -C "$PWD/bin/";
+  ! command -v starship > /dev/null; and curl -sL "https://github.com/starship/starship/releases/latest/download/starship-$arch-$platform.tar.gz" | tar xz -C "$PWD/bin/";
+
+  # fzf
+  [ "$arch" = "aarch64" ] && arch="arm64";
+  ! command -v fzf > /dev/null; and curl -sL "https://github.com/junegunn/fzf/releases/download/0.46.0/fzf-0.46.0-linux_$arch.tar.gz" | tar xz -C "$PWD/bin/";
 
   # browserpass
   [ -d "/opt/homebrew/opt/browserpass" ];
