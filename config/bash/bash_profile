@@ -1,6 +1,6 @@
 #!/bin/bash
 
-is() { [ "$(bc -e "$1")" = "1" ]; }
+is() { [ "$(echo "$1" | bc)" = "1" ]; }
 
 BASH_VERSION_NUMERIC="$(echo "${BASH_VERSION:-"0.0"}" | cut -d. -f1,2)";
 is "$BASH_VERSION_NUMERIC != 0 && $BASH_VERSION_NUMERIC < 5" \
