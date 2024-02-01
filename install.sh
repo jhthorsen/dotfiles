@@ -15,6 +15,10 @@ function and() {
   [ "$x" = "0" ] && "$@";
 }
 
+function download_binary() {
+  curl -sL "$1" | tar xz -C "$PWD/bin/";
+}
+
 function lnk() {
   local from="$1";
   local to="$2";
@@ -89,19 +93,22 @@ function install_dotfiles() {
 }
 
 function install_misc() {
-  # starship
   local arch; arch="$(arch)";
   local platform="unknown-linux-musl";
+
+  # starship
   [ "$(uname -o)" = "Darwin" ] && platform="apple-darwin";
-  ! command -v starship > /dev/null; and curl -sL "https://github.com/starship/starship/releases/latest/download/starship-$arch-$platform.tar.gz" | tar xz -C "$PWD/bin/";
+  ! command -v starship > /dev/null; and download_binary "https://github.com/starship/starship/releases/latest/download/starship-$arch-$platform.tar.gz";
+
+  # eza
+  ! command -v eza > /dev/null; and download_binary "https://github.com/eza-community/eza/releases/download/v0.17.3/eza_$arch-unknown-linux-gnu.tar.gz";
 
   # fzf
   [ "$arch" = "aarch64" ] && arch="arm64";
-  ! command -v fzf > /dev/null; and curl -sL "https://github.com/junegunn/fzf/releases/download/0.46.0/fzf-0.46.0-linux_$arch.tar.gz" | tar xz -C "$PWD/bin/";
+  ! command -v fzf > /dev/null; and download_binary "https://github.com/junegunn/fzf/releases/download/0.46.0/fzf-0.46.0-linux_$arch.tar.gz";
 
   # browserpass
-  [ -d "/opt/homebrew/opt/browserpass" ];
-    and PREFIX='/opt/homebrew/opt/browserpass' \
+  [ -d "/opt/homebrew/opt/browserpass" ]; PREFIX='/opt/homebrew/opt/browserpass' and \
     make hosts-firefox-user -f '/opt/homebrew/opt/browserpass/lib/browserpass/Makefile';
 }
 

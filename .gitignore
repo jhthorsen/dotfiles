@@ -1,5 +1,6 @@
 *swp
 .pls_cache
+bin/eza
 bin/fzf
 bin/starship
 local/
