@@ -42,7 +42,7 @@ if command -v gpgconf >/dev/null; then
   GPG_TTY="$(tty)";
   SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)";
   export GPG_TTY SSH_AUTH_SOCK;
-  gpgconf --launch gpg-agent;
+  gpgconf --launch gpg-agent 2>/dev/null;
   [ "$(type -t __local_hook_gpg)" = "function" ] && __local_hook_gpg;
 fi
 
@@ -61,6 +61,7 @@ alias weather='curl https://wttr.in/'
 [ "$(type -t __local_hook_alias)" = "function" ] && __local_hook_alias;
 
 if [ "$SHELL_NAME" = "bash" ]; then
+  [ -e "/etc/profile.d/bash_completion.sh" ] && source /etc/profile.d/bash_completion.sh;
   complete -F __git_wrap__git_main gti;
   alias reload="exec "$SHELL_NAME" --rcfile $HOME/.bash_reload";
   bind -m vi-command '"\C-l": clear-screen'
