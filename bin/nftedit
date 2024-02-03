@@ -28,6 +28,21 @@ l() {
   [ "$level" = "fatal" ] && exit 1;
 }
 
+make_list_commands() {
+  local type="$1";
+  local family="";
+  local table="";
+  while read -r line; do
+    if echo "$line" | grep -q "table "; then
+      family="$(echo "$line" | awk '{print $2}')";
+      table="$(echo "$line" | awk '{print $3}')";
+    elif echo "$line" | grep -q "$type "; then
+      local set; set="$(echo "$line" | awk '{print $2}')";
+      echo "sudo nft list $type $family $table $set";
+    fi
+  done <<< "$(run sudo nft list "${type}s")";
+}
+
 make_rule_file_content() {
   echo "flush table $FAMILY_NAME $TABLE_NAME";
   run sudo cat "$realfile";
@@ -81,11 +96,16 @@ command_edit_watch() {
 
 command_list() {
   run sudo find /etc/nftables -type f;
-  run sudo nft list ruleset | grep "table ";
+  make_list_commands "chain" | sort;
+  make_list_commands "map" | sort;
+  make_list_commands "limit" | sort;
+  make_list_commands "quota" | sort;
+  make_list_commands "set" | sort;
 }
 
 command_usage() {
   echo "Usage:
+  \$ nftedit;
   \$ nftedit -e /etc/nftables/main.nft;
   \$ nftedit -w /etc/nftables/main.nft;
   \$ nftedit -w /etc/nftables/main.nft -c my_chain
