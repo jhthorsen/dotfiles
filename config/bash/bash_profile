@@ -50,9 +50,10 @@ alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/C
 alias cpanm='cpanm -M https://cpan.metacpan.org'
 alias grep='grep --color=auto --line-buffered';
 alias gti='git';
-alias ll='eza --color=auto --time-style=long-iso --group-directories-first -F';
-alias la='eza --color=auto --time-style=long-iso --group-directories-first -la';
-alias l='eza --icons=auto --time-style=long-iso -l';
+alias ll='eza --color=auto --time-style=long-iso --group-directories-first --classify';
+alias la='eza --color=auto --time-style=long-iso --group-directories-first --long --all';
+alias lt='eza --icons=auto --color=always --time-style=long-iso --long --no-quotes --sort time';
+alias l='eza --icons=auto --color=always --time-style=long-iso --long --no-quotes';
 alias pass='stty sane && PASSWORD_STORE_ENABLE_EXTENSIONS=true pass'
 alias pcover='perl Makefile.PL; cover -ignore_re="t/.*" -prefer_lib -test; make clean'
 alias psme="ps axfu | grep "$USER"";
