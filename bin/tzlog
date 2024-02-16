@@ -1,32 +1,44 @@
 #!/usr/bin/env perl
 use Mojo::Base -strict;
 use POSIX qw(mktime);
+use Term::ANSIColor qw(colored);
 use Time::Piece;
+use Getopt::Long;
 
 exit usage() if -t STDIN;
 
-my $tz_offset = shift @ARGV // $ENV{TZ_OFFSET} // 0;
+Getopt::Long::Configure(qw(bundling permute pass_through));
+Getopt::Long::GetOptions(
+  'c|colors' => \(my $colors = -t STDOUT),
+  'd|debug'  => \(my $debug = 0),
+);
+
+my $now = localtime;
+my $tz_offset = shift // exit usage();
 $tz_offset *= 3600 if $tz_offset <= 12;
+$tz_offset -= $now->tzoffset;
 
 my $i = 0;
 my %mon_lookup = map { (lc($_) => $i++) } Time::Piece::mon_list;
-my $now = localtime;
-
-my $hms_re = qr/(?<hour>\d{2}):(?<min>\d{2}):(?<sec>\d{2})/;
+my $hms_re = qr/(?<hour>\d{2}):(?<min>\d{2}):?(?<sec>\d{2}|\b)/;
 my $mon_re = join '|', keys %mon_lookup;
 my $tz_re = qr/\+(?<tz>\d{4})\b/;
 
 while (<STDIN>) {
+  my $m;
 
   # 2022-02-02T10:26:02
   # 2022/01/28 01:06:32
-  s!(?<year>\d{4}) \W (?<mon>\d+)\w* \W (?<mday>\d+) (T|\s+) $hms_re!tztime()!eix;
+  $m ||= s!(?<all>(?<year>\d{4}) \W (?<mon>\d+)\w* \W (?<mday>\d+) (T|\s+) $hms_re)!tztime(%+)!eix;
 
   # 02/Feb/2022:02:26:02 +0100
-  s!(?<mday>\d+) \W+ (?<mon>$mon_re)\w* \W+ (?<year>\d{4}) \W+ $hms_re \s+ $tz_re!tztime()!eix;
+  $m ||= s!(?<all>(?<mday>\d+) \W+ (?<mon>$mon_re)\w* \W+ (?<year>\d{4}) \W+ $hms_re \s+ $tz_re)!tztime(%+)!eix;
+
+  # Fri Jan 27 11:44
+  $m ||= s!(?<all>(?:\b[MTWFS]\w{2}\s+)(?<mon>$mon_re)\w* \s+ (?<mday>\d+) \s+ $hms_re)!tztime(%+)!eix;
 
   # Jan 27 11:44:04
-  s!(?<mon>$mon_re)\w* \s+ (?<mday>\d+) \s+ $hms_re!tztime()!eix;
+  $m ||= s!(?<all>(?<mon>$mon_re)\w* \s+ (?<mday>\d+) \s+ $hms_re)!tztime(%+)!eix;
 
   local $| = 1;
   print;
@@ -41,9 +53,14 @@ Usage:
   cat /var/log/syslog | tzlog +9
   cat /var/log/syslog | tzlog +32400
 
-  # Convert from localtime in input stream to New Year ISO 8601 timestamp
+  # Convert from localtime in input stream to New York ISO 8601 timestamp
   cat /var/log/syslog | tzlog -5
   cat /var/log/syslog | tzlog -18000
+
+Options:
+
+  -c, --colors  Add color to the timestamp
+  -d, --debug   Also show he original timestamp
 
 Supported timestamps
 
@@ -61,10 +78,20 @@ sub tzoffset {
 }
 
 sub tztime {
-  my $year = $+{year} // $now->_year;
-  $year -= 1900 if $year > 1900;
-  my $mon = $mon_lookup{lc($+{mon})} // $+{mon} // $now->_mon;
-  my $time = mktime(@+{qw(sec min hour)}, $+{mday} || $now->mday, $mon, $year);
-  $time -= tzoffset($+{tz}) if defined $+{tz};
-  return localtime($time + $tz_offset)->datetime;
+  my %t = @_;
+  $t{year} //= $now->_year;
+  $t{year} -= 1900 if $t{year} > 1900;
+
+  $t{mon} = $now->_mon unless length $t{mon};
+  $t{mon} = $mon_lookup{lc($t{mon})} // $t{mon};
+  $t{mday} = $now->mday unless length $t{mday};
+  $t{hour} = $now->hour unless length $t{hour};
+  $t{min} = $now->min unless length $t{min};
+  $t{sec} = $now->sec unless length $t{sec};
+
+  my $time = mktime(@t{qw(sec min hour mday mon year)});
+  $time -= tzoffset($t{tz}) if defined $t{tz};
+  my $str = localtime($time + $tz_offset)->datetime;
+  $str = sprintf '(%s) %s', $t{all}, $str if $debug;
+  return $colors ? colored($str, 'bold green') : $str;
 }
