@@ -22,6 +22,8 @@ function download_binary() {
 function lnk() {
   local from="$1";
   local to="$2";
+  local parent; parent="$(dirname "$to")";
+  [ -d "$parent" ] || mkdir -p "$parent" || exit;
   [ -L "$to" ] && [ ! -r "$to" ]; and rm "$to"; # Remove broken links
   [ ! -L "$to" ]; and ln -s "$from" "$to";
 }
@@ -60,7 +62,8 @@ function install_brew() {
     rmlint         rsync         ruby               rust               \
     smartmontools  sqlite        ssh-copy-id        sshuttle           \
     telnet         tesseract     trash-cli          tree               \
-    wget           ykman         z;
+    wget           ykman         wezterm            kitty              \
+    alacritty      z;
 }
 
 function install_cpanm() {
@@ -80,8 +83,12 @@ function install_dotfiles() {
 
   # nvim
   lnk "$DOTFILES/config/nvim" "$XDG_CONFIG_DIR/nvim";
-  [ ! -d "$XDG_DATA_HOME/nvim/site/pack" ]; and mkdir -p "$XDG_DATA_HOME/nvim/site/pack"
   lnk "$DOTFILES/share/nvim/site/pack/batpack" "$XDG_DATA_HOME/nvim/site/pack/batpack";
+
+  # terminals
+  lnk "$DOTFILES/config/alacritty" "$XDG_CONFIG_DIR/alacritty";
+  lnk "$DOTFILES/config/kitty" "$XDG_CONFIG_DIR/kitty";
+  lnk "$DOTFILES/config/wezterm" "$XDG_CONFIG_DIR/wezterm";
 
   # misc
   lnk "$DOTFILES/config/ackrc" "$HOME/.ackrc";
