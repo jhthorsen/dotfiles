@@ -25,7 +25,7 @@ return {
   colors = theme_kanagawa,
   -- force_reverse_video_cursor = true,
   font = wezterm.font_with_fallback {
-    {family = 'Hack'},
+    {family = 'Hack Nerd Font'},
     {family = 'JetBrains Mono'},
   },
   -- harfbuzz_features = {'calt=0', 'clig=1', 'liga=1'},

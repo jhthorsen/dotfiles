@@ -15,6 +15,11 @@ function and() {
   [ "$x" = "0" ] && "$@";
 }
 
+function skip() {
+  echo "# $*" >&2;
+  echo 0; # return value
+}
+
 function download_binary() {
   curl -sL "$1" | tar xz -C "$PWD/bin/";
 }
@@ -28,52 +33,160 @@ function lnk() {
   [ ! -L "$to" ]; and ln -s "$from" "$to";
 }
 
-function install_brew() {
+function install_all() {
+  install_cpanm;
+  install_apps;
+  install_lsp_servers;
+  setup_dotfiles;
+  setup_macos;
+}
+
+function install_apps() {
   [ -z "$HOMEBREW_PREFIX" ] && return 1;
   local brew="$HOMEBREW_PREFIX/bin/brew";
   [ ! -x "$brew" ] && abort "ruby -e \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\"";
 
+  local arch; arch="$(arch)";
+  local platform="unknown-linux-musl";
+
+  # starship
+  [ "$(uname -o)" = "Darwin" ] && platform="apple-darwin";
+  [ "$(uname -o)" = "Darwin" ] && arch="aarch64";
+  ! command -v starship > /dev/null; and download_binary "https://github.com/starship/starship/releases/latest/download/starship-$arch-$platform.tar.gz";
+
+  # eza
+  local arch; arch="$(arch)";
+  ! command -v eza > /dev/null; and download_binary "https://github.com/eza-community/eza/releases/download/v0.17.3/eza_$arch-unknown-linux-gnu.tar.gz";
+
+  # fzf
+  [ "$arch" = "aarch64" ] && arch="arm64";
+  ! command -v fzf > /dev/null; and download_binary "https://github.com/junegunn/fzf/releases/download/0.46.0/fzf-0.46.0-linux_$arch.tar.gz";
+
+  # yubiswitch
+  [ ! -e "/Applications/yubiswitch.app" ]
+    and curl -Lq "https://github.com/pallotron/yubiswitch/releases/download/v0.16/yubiswitch_0.16.dmg" > "$HOME/Downloads/yubiswitch.dmg";
+
   true; and "$brew" tap amar1729/formulae;
-  true; and "$brew" tap remko/age-plugin-se https://github.com/remko/age-plugin-se;
   [ -z "$SKIP_UPDATE" ]; and "$brew" update; and "$brew" upgrade;
 
-  [ -e "/Applications/AltTab.app" ]; and "$brew" install alt-tab;
-  [ -e "/opt/homebrew/Cellar/ykpers" ]; and "$brew" install yubikey-personalization;
-  [ -e "/usr/local/bin/pa" ];
-    and curl -Ls https://github.com/biox/pa/raw/main/pa > /usr/local/bin/pa;
-    and chmod +x /usr/local/bin/pa;
+  install_brew_package "age";
+  install_brew_package "alacritty";
+  install_brew_package "alt-tab" "/Applications/AltTab.app";
+  install_brew_package "balenaetcher" "/Applications/balenaEtcher.app";
+  install_brew_package "bash-completion@2"
+  install_brew_package "bat";
+  install_brew_package "blender";
+  install_brew_package "btop";
+  install_brew_package "cloc";
+  install_brew_package "coreutils";
+  install_brew_package "cpanm";
+  install_brew_package "csvprintf";
+  install_brew_package "ctags";
+  install_brew_package "doctl";
+  install_brew_package "exiftool";
+  install_brew_package "eza";
+  install_brew_package "fd";
+  install_brew_package "ffmpeg";
+  install_brew_package "figlet";
+  install_brew_package "fontconfig";
+  install_brew_package "freetype";
+  install_brew_package "fsevents-tools";
+  install_brew_package "fx";
+  install_brew_package "fzf";
+  install_brew_package "gh";
+  install_brew_package "git";
+  install_brew_package "glances";
+  install_brew_package "gnupg";
+  install_brew_package "gnutls";
+  install_brew_package "go";
+  install_brew_package "groff";
+  install_brew_package "hopenpgp-tools";
+  install_brew_package "imagemagick";
+  install_brew_package "jpeg";
+  install_brew_package "jpegoptim";
+  install_brew_package "kitty";
+  install_brew_package "less";
+  install_brew_package "lf";
+  install_brew_package "lynx";
+  install_brew_package "macdown";
+  install_brew_package "mkcert";
+  install_brew_package "mysql";
+  install_brew_package "mysql-client";
+  install_brew_package "neovim";
+  install_brew_package "nextcloud" "/Applications/Nextcloud.app";
+  install_brew_package "nginx";
+  install_brew_package "nmap";
+  install_brew_package "node";
+  install_brew_package "openssh";
+  install_brew_package "openssl";
+  install_brew_package "perl";
+  install_brew_package "pinentry";
+  install_brew_package "pinentry-mac";
+  install_brew_package "pngcrush";
+  install_brew_package "postgresql@14";
+  install_brew_package "procs";
+  install_brew_package "psgrep";
+  install_brew_package "python";
+  install_brew_package "qrencode";
+  install_brew_package "redis";
+  install_brew_package "rename";
+  install_brew_package "rg";
+  install_brew_package "rmlint";
+  install_brew_package "rsync";
+  install_brew_package "ruby";
+  install_brew_package "rust";
+  install_brew_package "smartmontools";
+  install_brew_package "sqlite";
+  install_brew_package "ssh-copy-id";
+  install_brew_package "sshuttle";
+  install_brew_package "telnet";
+  install_brew_package "tesseract";
+  install_brew_package "trash-cli";
+  install_brew_package "tree";
+  install_brew_package "ukelele" "/Applications/Ukelele.app";
+  install_brew_package "wezterm";
+  install_brew_package "wget";
+  install_brew_package "ykman";
+  install_brew_package "yubico-authenticator" "/Applications/Yubico Authenticator.app";
+  install_brew_package "yubico-piv-tool";
+  install_brew_package "yubico-yubikey-manager" "/Applications/YubiKey Manager.app";
+  install_brew_package "yubikey-personalization" "/opt/homebrew/Cellar/ykpers";
+  install_brew_package "z";
+}
 
-  true; and "$brew" install \
-    age            age-plugin-se age-plugin-yubikey bash-completion@2  \
-    bat            browserpass   cloc               coreutils          \
-    cowsay         cpanm         csvprintf          ctags              \
-    doctl          exiftool      eza                fd                 \
-    ffmpeg         figlet        fontconfig         freetype           \
-    fsevents-tools fx            fzf                geoip              \
-    gh             git           glances            gnupg              \
-    gnutls         go            groff              hopenpgp-tools     \
-    imagemagick    jpeg          jpegoptim          less               \
-    lf             lynx          mkcert             mysql              \
-    mysql-client   neovim        nginx              nmap               \
-    node           openssh       openssl            pass               \
-    perl           pinentry      pinentry-mac       pngcrush           \
-    postgresql     procs         psgrep             python             \
-    qrencode       redis         rename             rg                 \
-    rmlint         rsync         ruby               rust               \
-    smartmontools  sqlite        ssh-copy-id        sshuttle           \
-    telnet         tesseract     trash-cli          tree               \
-    wget           ykman         wezterm            kitty              \
-    alacritty      z;
+function install_brew_package() {
+  local name="$1";
+  local file="${2:-"$1"}";
+  [ -d "/opt/homebrew/Cellar"] || return 0;
+  [ -e "/opt/homebrew/Cellar/$name" ] && return "$(skip brew install "$name")";
+  [ -e "$file" ] && return "$(skip brew install "$name")";
+  command -v "$name" >/dev/null && return "$(skip brew install "$name")";
+  brew install "$name";
 }
 
 function install_cpanm() {
-  true; and "$MAYBE_SUDO" cpanm -n \
-    App::errno  App::githook_perltidy App::httpstatus App::pause    \
-    App::podify App::tt               CPAN::Uploader  Devel::Cover  \
-    Mojolicious Pod::Markdown         Term::ReadKey;
+  true; and $MAYBE_SUDO cpanm -n \
+    App::errno     App::githook_perltidy App::httpstatus  \
+    App::pause     App::podify           App::tt          \
+    CPAN::Uploader Devel::Cover          Getopt::App      \
+    Mojolicious    Pod::Markdown         Term::ReadKey;   \
 }
 
-function install_dotfiles() {
+function install_lsp_servers() {
+  # sudo xcodebuild -license accept
+  true; and install_brew_package lua-language-server;
+  true; and install_brew_package yaml-language-server;
+
+  true; and $MAYBE_SUDO cpanm -n PLS::Server Neovim::Ext;
+  true; and $MAYBE_SUDO npm -g install \
+    emmet-ls                   neovim                        \
+    bash-language-server       svelte-language-server        \
+    typescript                 typescript-language-server    \
+    @volar/vue-language-server vscode-langservers-extracted  \
+    yaml-language-server;
+}
+
+function setup_dotfiles() {
   # bash
   lnk "$DOTFILES/config/bash/inputrc" "$HOME/.inputrc";
   lnk "$DOTFILES/config/bash/bashrc" "$HOME/.bashrc";
@@ -99,76 +212,62 @@ function install_dotfiles() {
   lnk "$DOTFILES/config/perltidyrc" "$HOME/.perltidyrc";
 }
 
-function install_misc() {
-  local arch; arch="$(arch)";
-  local platform="unknown-linux-musl";
-
-  # starship
-  [ "$(uname -o)" = "Darwin" ] && platform="apple-darwin";
-  ! command -v starship > /dev/null; and download_binary "https://github.com/starship/starship/releases/latest/download/starship-$arch-$platform.tar.gz";
-
-  # eza
-  ! command -v eza > /dev/null; and download_binary "https://github.com/eza-community/eza/releases/download/v0.17.3/eza_$arch-unknown-linux-gnu.tar.gz";
-
-  # fzf
-  [ "$arch" = "aarch64" ] && arch="arm64";
-  ! command -v fzf > /dev/null; and download_binary "https://github.com/junegunn/fzf/releases/download/0.46.0/fzf-0.46.0-linux_$arch.tar.gz";
-
-  # browserpass
-  [ -d "/opt/homebrew/opt/browserpass" ]; PREFIX='/opt/homebrew/opt/browserpass' and \
-    make hosts-firefox-user -f '/opt/homebrew/opt/browserpass/lib/browserpass/Makefile';
-}
-
-function install_lsp_servers() {
-  true; and "$MAYBE_SUDO" cpanm -n PLS::Server Neovim::Ext;
-  true; and "$MAYBE_SUDO" npm -g install \
-    emmet-ls                   neovim                        \
-    bash-language-server       svelte-language-server        \
-    typescript                 typescript-language-server    \
-    @volar/vue-language-server vscode-langservers-extracted  \
-    yaml-language-server;
-}
-
 function setup_macos() {
   [ "$(uname -o)" = "Darwin" ] || return 0;
-  true; and defaults write NSGlobalDomain InitialKeyRepeat -int 15;
-  true; and defaults write NSGlobalDomain KeyRepeat -int 2;
-  true; and defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool TRUE;
-  true; and defaults write com.apple.screencapture location $HOME/Downloads;
-  true; and defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false;
-  true; and defaults write -g ApplePressAndHoldEnabled -bool false;
+  defaults_write -globalDomain InitialKeyRepeat 15;
+  defaults_write -globalDomain KeyRepeat 2;
+  defaults_write -globalDomain NSAutomaticCapitalizationEnabled false;
+  defaults_write -globalDomain NSAutomaticPeriodSubstitutionEnabled false;
+  defaults_write -globalDomain NSAutomaticSpellingCorrectionEnabled false;
+  defaults_write -globalDomain com.apple.trackpad.scaling 2;
+  defaults_write NSGlobalDomain AppleShowAllExtensions true;
+  defaults_write com.apple.Accessibility KeyRepeatDelay 0.25;
+  defaults_write com.apple.Accessibility KeyRepeatInterval-string  0.03;
+  defaults_write com.apple.desktopservices DSDontWriteNetworkStores true;
+  defaults_write com.apple.dock autohide 1;
+  defaults_write com.apple.dock autohide-delay 1;
+  defaults_write com.apple.dock autohide-time-modifier 0.4
+  defaults_write com.apple.dock largesize 70;
+  defaults_write com.apple.dock magnification 1;
+  defaults_write com.apple.dock show-recents 0;
+  defaults_write com.apple.dock tilesize 41;
+  defaults_write com.apple.finder FXPreferredGroupBy Kind;
+  defaults_write com.apple.finder FXPreferredViewStyle Nlsv;
+  defaults_write com.apple.finder FXRemoveOldTrashItems 1;
+  defaults_write com.apple.finder NewWindowTargetPath "file://$HOME/";
+  defaults_write com.apple.finder ShowExternalHardDrivesOnDesktop 0;
+  defaults_write com.apple.finder ShowHardDrivesOnDesktop 0;
+  defaults_write com.apple.finder ShowPathbar true;
+  defaults_write com.apple.finder ShowRecentTags 0;
+  defaults_write com.apple.finder ShowRemovableMediaOnDesktop 0;
+  defaults_write com.apple.menuextra.clock ShowDayOfWeek false;
+  defaults_write com.apple.screencapture location "$HOME/Downloads";
+  defaults_write com.microsoft.VSCode ApplePressAndHoldEnabled false;
+
+  for app in "Dock" "Finder"; do
+    [ "$RESTART_AFFECTED_APPS" = "yes" ]; and killall "${app}";
+  done
 }
 
-function install_all() {
-  install_brew;
-  install_cpanm;
-  install_misc;
-  install_dotfiles;
-  install_lsp_servers;
-  setup_macos;
-}
-
-function install_basic() {
-  install_cpanm;
-  install_dotfiles;
+function defaults_write() {
+  local type; type="$(defaults read-type "$@" | sed 's/.* is //')";
+  true; and defaults write  "$1" "$2" -"$type" "$3";
 }
 
 function command_usage() {
   echo "Usage:
   \$ bash ./install.sh -s macos;
+  \$ bash ./install.sh -s dotfiles;
   \$ bash ./install.sh -i all;
-  \$ bash ./install.sh -i basic;
-  \$ bash ./install.sh -i brew;
+  \$ bash ./install.sh -i apps;
   \$ bash ./install.sh -i cpanm;
-  \$ bash ./install.sh -i misc;
-  \$ bash ./install.sh -i dotfiles;
   \$ bash ./install.sh -i lsp_servers;
 ";
 }
 
 function main() {
   local -a unparsed;
-  local command="install_basic";
+  local command="command_usage";
 
   while [ -n "$*" ]; do case "$1" in
     --help) shift; command="command_usage"; break ;;
