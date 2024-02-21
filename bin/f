@@ -3,13 +3,14 @@ use strict;
 use warnings;
 
 my $ignore = $ENV{IGNORE} || '\.DS_Store|\.nuxt|\.swp|git|node_modules|packed|sass-cache';
-my (%opts, @cmd) = (type => 'f');
+my (%opts, @cmd) = (type => '!d');
 parse(shift @ARGV) while @ARGV;
 
 delete $opts{type} if $opts{type} eq 'a';
-$opts{$_} and unshift @cmd, "-$_" => $opts{$_}
+$opts{$_} and unshift @cmd, ($opts{$_} =~ s/^\!// ? qw(-not) : ()), "-$_" => $opts{$_}
   for reverse qw(iname ipath iregex name path regex type atime ctime mtime size maxdepth);
 
+$opts{dir} =~ s!/+$!! if $opts{dir};
 unshift @cmd, find => $opts{dir} || '.';
 die "@cmd\n" if $ENV{TEST};
 
