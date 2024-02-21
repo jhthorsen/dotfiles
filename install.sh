@@ -157,7 +157,7 @@ function install_apps() {
 function install_brew_package() {
   local name="$1";
   local file="${2:-"$1"}";
-  [ -d "/opt/homebrew/Cellar"] || return 0;
+  [ -d "/opt/homebrew/Cellar" ] || return 0;
   [ -e "/opt/homebrew/Cellar/$name" ] && return "$(skip brew install "$name")";
   [ -e "$file" ] && return "$(skip brew install "$name")";
   command -v "$name" >/dev/null && return "$(skip brew install "$name")";
@@ -174,8 +174,8 @@ function install_cpanm() {
 
 function install_lsp_servers() {
   # sudo xcodebuild -license accept
-  true; and install_brew_package lua-language-server;
-  true; and install_brew_package yaml-language-server;
+  install_brew_package lua-language-server;
+  install_brew_package yaml-language-server;
 
   true; and $MAYBE_SUDO cpanm -n PLS::Server Neovim::Ext;
   true; and $MAYBE_SUDO npm -g install \
