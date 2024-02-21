@@ -207,6 +207,7 @@ function setup_dotfiles() {
   lnk "$DOTFILES/config/ackrc" "$HOME/.ackrc";
   lnk "$DOTFILES/config/dataprinter" "$HOME/.dataprinter";
   lnk "$DOTFILES/config/git" "$XDG_CONFIG_DIR/git";
+  lnk "$DOTFILES/config/git/gitignore" "$HOME/.gitignore";
   lnk "$DOTFILES/config/lf" "$XDG_CONFIG_DIR/lf";
   lnk "$DOTFILES/config/perlcriticrc" "$HOME/.perlcriticrc";
   lnk "$DOTFILES/config/perltidyrc" "$HOME/.perltidyrc";
