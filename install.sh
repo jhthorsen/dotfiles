@@ -70,7 +70,6 @@ function install_apps() {
   [ -z "$SKIP_UPDATE" ]; and "$brew" update; and "$brew" upgrade;
 
   install_brew_package "age";
-  install_brew_package "alacritty";
   install_brew_package "alt-tab" "/Applications/AltTab.app";
   install_brew_package "balenaetcher" "/Applications/balenaEtcher.app";
   install_brew_package "bash-completion@2"
@@ -104,7 +103,6 @@ function install_apps() {
   install_brew_package "imagemagick";
   install_brew_package "jpeg";
   install_brew_package "jpegoptim";
-  install_brew_package "kitty";
   install_brew_package "less";
   install_brew_package "lf";
   install_brew_package "lynx";
@@ -120,7 +118,6 @@ function install_apps() {
   install_brew_package "openssh";
   install_brew_package "openssl";
   install_brew_package "perl";
-  install_brew_package "pinentry";
   install_brew_package "pinentry-mac";
   install_brew_package "pngcrush";
   install_brew_package "postgresql@14";
@@ -140,9 +137,7 @@ function install_apps() {
   install_brew_package "ssh-copy-id";
   install_brew_package "sshuttle";
   install_brew_package "telnet";
-  install_brew_package "tesseract";
   install_brew_package "trash-cli";
-  install_brew_package "tree";
   install_brew_package "ukelele" "/Applications/Ukelele.app";
   install_brew_package "wezterm";
   install_brew_package "wget";
@@ -193,15 +188,11 @@ function setup_dotfiles() {
   lnk "$DOTFILES/config/bash/bash_profile" "$HOME/.bash_profile";
   lnk "$DOTFILES/config/bash/bash_reload" "$HOME/.bash_reload";
   lnk "$DOTFILES/config/starship.toml" "$XDG_CONFIG_DIR/starship.toml";
+  lnk "$DOTFILES/config/wezterm" "$XDG_CONFIG_DIR/wezterm";
 
   # nvim
   lnk "$DOTFILES/config/nvim" "$XDG_CONFIG_DIR/nvim";
   lnk "$DOTFILES/share/nvim/site/pack/batpack" "$XDG_DATA_HOME/nvim/site/pack/batpack";
-
-  # terminals
-  lnk "$DOTFILES/config/alacritty" "$XDG_CONFIG_DIR/alacritty";
-  lnk "$DOTFILES/config/kitty" "$XDG_CONFIG_DIR/kitty";
-  lnk "$DOTFILES/config/wezterm" "$XDG_CONFIG_DIR/wezterm";
 
   # misc
   lnk "$DOTFILES/config/ackrc" "$HOME/.ackrc";
