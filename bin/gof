@@ -36,6 +36,7 @@ elif [ "$1" = "import" ]; then
   done
 else
   passage show _start >/dev/null;
-  found=$(find_password_entries | fzf --no-mouse --preview "passage show {} | perl -ne'print if $. > 1'");
+  FZF_OPTIONS=("--no-mouse" "--no-scrollbar" "--border=none" "--layout=reverse");
+  found=$(find_password_entries | fzf "${FZF_OPTIONS[@]}" --preview "passage show {} | perl -ne'print if $. > 1'");
   [ -n "$found" ] && passage show -c "$found";
 fi
