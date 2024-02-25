@@ -35,8 +35,10 @@ elif [ "$1" = "import" ]; then
     passage edit "$name";
   done
 else
-  passage show _start >/dev/null;
-  FZF_OPTIONS=("--no-mouse" "--no-scrollbar" "--border=none" "--layout=reverse");
-  found=$(find_password_entries | fzf "${FZF_OPTIONS[@]}" --preview "passage show {} | perl -ne'print if $. > 1'");
-  [ -n "$found" ] && passage show -c "$found";
+  found="$(find_password_entries | fzf --no-mouse --no-scrollbar --border=none --layout=reverse --height=-0)";
+  [ -n "$found" ] || exit 2;
+  passage show -c "$found";
+  passage show "$found" \
+    | bat --file-name "$found" --style header-filename -l yaml --line-range 2:;
+  sleep 45;
 fi
