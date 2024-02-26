@@ -12,13 +12,14 @@ export LANG="en_US.UTF-8";
 export LC_ALL="en_US.UTF-8";
 export LESS="XFR";
 export LS_COLORS="";
-export SNIPCLIP_HOSTNAME="127.0.0.1";
-export SNIPCLIP_PORT="38888"
 export SSLMAKER_HOME="/opt/homebrew/etc/sslmaker";
 export TT_HOURS_PER_MONTH="150";
 
 export SHELL_NAME="zsh";
 [ -n "$BASH_VERSION" ] && SHELL_NAME="bash";
+
+[ -n "$SSH_TTY" ] && export SNIPCLIP_HOSTNAME="127.0.0.1";
+export SNIPCLIP_PORT="38888"
 
 command -v xcode-select >/dev/null && PATH="$(xcode-select --print-path)/usr/bin:$PATH";
 [ -n "$HOMEBREW_PREFIX" ] && PATH="$HOMEBREW_PREFIX/opt/gettext/bin:$PATH";
