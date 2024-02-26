@@ -1,16 +1,16 @@
 #!/bin/bash
-[ -z "$PASSAGE_DIR" ] && PASSAGE_DIR="$HOME/.passage/store";
+[ -z "$PASSWORD_STORE_DIR" ] && PASSWORD_STORE_DIR="$HOME/.password-store";
 
 if [ -n "$IMPORT_FILE" ] ; then
-  echo "\$ EDITOR=$0 passage edit < $IMPORT_FILE";
+  echo "\$ EDITOR=$0 pass edit < $IMPORT_FILE";
   [ -z "$1" ] && exit 1;
   cat "$IMPORT_FILE" > "$1";
   exit "$?";
 fi
 
 function find_password_entries() {
-  find -L "$PASSAGE_DIR" -not -name .git -a -name '*.age' 2>/dev/null \
-    | sed -e "s#${PASSAGE_DIR}/\{0,1\}##" -e 's#\.age##' -e 's#\\#\\\\#g' -e 's#:#\\:#g' \
+  find -L "$PASSWORD_STORE_DIR" -not -name .git -a -name '*.gpg' 2>/dev/null \
+    | sed -e "s#${PASSWORD_STORE_DIR}/\{0,1\}##" -e 's#\.gpg##' -e 's#\\#\\\\#g' -e 's#:#\\:#g' \
     | sort;
 }
 
@@ -21,8 +21,8 @@ elif [ "$1" = "export" ]; then
   [ -d "$OUTPUT" ] || exec echo "Output directory does not exists";
   for i in $(find_password_entries); do
     mkdir -p "$OUTPUT/$(dirname "$i")";
-    echo "passage show $i > $OUTPUT/$i.yaml";
-    passage show "$i" > "$OUTPUT/$i.yaml";
+    echo "pass show $i > $OUTPUT/$i.yaml";
+    pass show "$i" > "$OUTPUT/$i.yaml";
   done
 elif [ "$1" = "import" ]; then
   export SOURCE_DIR="$2";
@@ -32,13 +32,12 @@ elif [ "$1" = "import" ]; then
     export IMPORT_FILE="$f";
     name="${IMPORT_FILE%.*}";
     name="$(echo "$name" | sed -e "s#${SOURCE_DIR}/\{0,1\}##")";
-    passage edit "$name";
+    pass edit "$name";
   done
 else
-  found="$(find_password_entries | fzf --no-mouse --no-scrollbar --border=none --layout=reverse --height=-0)";
+  found="$(find_password_entries | fzf --no-mouse --no-scrollbar --border=none --layout=reverse --height=-0  --preview "pass show {} | perl -ne'print if $. > 1'")";
   [ -n "$found" ] || exit 2;
-  passage show -c "$found";
-  passage show "$found" \
-    | bat --file-name "$found" --style header-filename -l yaml --line-range 2:;
+  pass show -c "$found";
+  pass show "$found" | bat --file-name "$found" --style header-filename -l yaml --line-range 2:;
   sleep 45;
 fi

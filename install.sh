@@ -64,7 +64,7 @@ function install_apps() {
 
   # yubiswitch
   [ ! -e "/Applications/yubiswitch.app" ]
-    and curl -Lq "https://github.com/pallotron/yubiswitch/releases/download/v0.16/yubiswitch_0.16.dmg" > "$HOME/Downloads/yubiswitch.dmg";
+    and wget -Lq --output "$HOME/Downloads/yubiswitch.dmg" "https://github.com/pallotron/yubiswitch/releases/download/v0.16/yubiswitch_0.16.dmg";
 
   true; and "$brew" tap amar1729/formulae;
   [ -z "$SKIP_UPDATE" ]; and "$brew" update; and "$brew" upgrade;
@@ -117,6 +117,7 @@ function install_apps() {
   install_brew_package "node";
   install_brew_package "openssh";
   install_brew_package "openssl";
+  install_brew_package "pass";
   install_brew_package "perl";
   install_brew_package "pinentry-mac";
   install_brew_package "pngcrush";
@@ -202,6 +203,58 @@ function setup_dotfiles() {
   lnk "$DOTFILES/config/lf" "$XDG_CONFIG_DIR/lf";
   lnk "$DOTFILES/config/perlcriticrc" "$HOME/.perlcriticrc";
   lnk "$DOTFILES/config/perltidyrc" "$HOME/.perltidyrc";
+  lnk "$HOME/Nextcloud/.password-store" "$HOME/.password-store";
+}
+
+function setup_gnupg() {
+  export GNUPGHOME="$HOME/.gnupg";
+  export BACKUP_GNUPGHOME="${BACKUP_GNUPGHOME:-/BACKUP_GNUPGHOME}";
+
+  local email; email="$(git config --get user.email)";
+  [ -z "$email" ] && abort "git config user.email is not set";
+
+  [ ! -d "$GNUPGHOME" ]; and mkdir "$GNUPGHOME";
+  true; and chmod 700 "$GNUPGHOME";
+
+  [ ! -e "$GNUPGHOME/gpg.conf" ];
+    and curl -Lq --output "$GNUPGHOME/gpg.conf" "https://raw.githubusercontent.com/drduh/config/master/gpg.conf";
+
+  [ ! -e "$GNUPGHOME/gpg-agent.conf" ];
+    and curl -Lq --output "$GNUPGHOME/gpg-agent.conf" "https://raw.githubusercontent.com/drduh/config/master/gpg-agent.conf";
+
+  cat << HERE
+
+# Might want to adjust these config values:
+# $GNUPGHOME/gpg-agent.conf
+# - pinentry-program
+# - max-cache-ttl
+
+HERE
+
+  [ -e "$BACKUP_GNUPGHOME/private-keys-v1.d" ] && [ ! -e "$GNUPGHOME/private-keys-v1.d" ];
+    and rsync -va "$BACKUP_GNUPGHOME/private-keys-v1.d/" "$GNUPGHOME/private-keys-v1.d/";
+
+  [ -e "$BACKUP_GNUPGHOME/pubring.kbx" ] && [ ! -e "$GNUPGHOME/pubring.kbx" ];
+    and rsync -va "$BACKUP_GNUPGHOME/pubring.kbx" "$GNUPGHOME/pubring.kbx";
+
+  [ -e "$BACKUP_GNUPGHOME/revoke.asc" ] && [ ! -e "$GNUPGHOME/revoke.asc" ];
+    and rsync -va "$BACKUP_GNUPGHOME/revoke.asc" "$GNUPGHOME/revoke.asc";
+
+  [ -e "$BACKUP_GNUPGHOME/trustdb.gpg" ] && [ ! -e "$GNUPGHOME/trustdb.gpg" ];
+    and rsync -va "$BACKUP_GNUPGHOME/trustdb.gpg" "$GNUPGHOME/trustdb.gpg";
+
+  if [ -n "$GPG_TEST" ]; then
+    true; and echo "test encrypting and decrypting with gpg" \
+      | gpg --encrypt --armor --recipient "$email" \
+      | gpg --decrypt --armor - && echo "# gpg works!";
+  fi
+
+  if [ -n "$GPG_EXPIRE_TIME" ]; then
+    local n_keys; n_keys="$(gpg --list-keys "$email" | grep "^sub " | wc -l | sed -E 's/[^0-9]+//g')";
+    for idx in $(seq 1 "$n_keys"); do
+      echo "${GPG_EXPIRE_TIME:-6m}" | runx gpg --command-fd 0 --edit-key "$email" "key $idx" "expire" "save";
+    done
+  fi
 }
 
 function setup_macos() {
@@ -248,6 +301,7 @@ function command_usage() {
   echo "Usage:
   \$ bash ./install.sh -s macos;
   \$ bash ./install.sh -s dotfiles;
+  \$ bash ./install.sh -s gnupg;
   \$ bash ./install.sh -i all;
   \$ bash ./install.sh -i apps;
   \$ bash ./install.sh -i cpanm;
