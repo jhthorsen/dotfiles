@@ -82,8 +82,9 @@ sub tztime {
   $t{year} //= $now->_year;
   $t{year} -= 1900 if $t{year} > 1900;
 
-  $t{mon} = $now->_mon unless length $t{mon};
+  $t{mon} = $now->mon unless length $t{mon};
   $t{mon} = $mon_lookup{lc($t{mon})} // $t{mon};
+  $t{mon}--;
   $t{mday} = $now->mday unless length $t{mday};
   $t{hour} = $now->hour unless length $t{hour};
   $t{min} = $now->min unless length $t{min};
