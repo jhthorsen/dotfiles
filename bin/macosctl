@@ -1,36 +1,74 @@
 #!/bin/bash
 
 runx() {
-  echo "\$ $*";
-  "$@";
-  exit "$?";
+  echo "\$ $*" 1>&2;
+  "$@" || exit "$?";
 }
 
-run_pfctl() {
+command_exec() {
+  echo "\$ $*" 1>&2;
+  exec "$@";
+}
+
+command_pfctl() {
   if [ "$4" = "" ]; then
     echo "Usage: macosctl fwd <source-port> <dest-port> [dest-ip]";
     exit;
   fi
 
   echo "rdr pass inet proto tcp from any to any port $2 -> $4 port $3" | sudo pfctl -;
+  exit;
 }
 
-run_dns_flush() {
-  sudo dscacheutil -flushcache;
-  sudo killall -HUP mDNSResponder;
+command_dns_flush() {
+  runx sudo dscacheutil -flushcache;
+  runx sudo killall -HUP mDNSResponder;
+  exit "$?";
+}
+
+command_tmpfs() {
+  local size_mb="${TMPFS_SIZE:-128}";
+  local sectors; sectors="$(($size_mb*1024*1024/512))";
+
+  local ramdisk; ramdisk="$(runx sudo hdik -nomount "ram://$sectors" | sed -E 's/[^0-9a-z/]+//g')";
+  [ -e "$ramdisk" ] || exit 1;
+
+  local volname="ramdisk$(echo "$ramdisk" | sed -E 's/[^0-9]+//g')-$size_mb.noindex";
+  local mountpoint="$HOME/.cache/$volname";
+  [ -d "$mountpoint" ] && exec echo "Mountpoint $mountpoint already exists";
+  runx sudo newfs_hfs -v "$volname" -U "$UID" -G "admin" -M 700 -P "$ramdisk";
+  runx mkdir -p "$mountpoint";
+  runx chown "$UID":admin "$mountpoint";
+  runx chmod 700 "$mountpoint";
+  runx sudo mount_hfs -u "$UID" -m 700 -o "noatime,nobrowse,nosuid" "$ramdisk" "$mountpoint";
+  exit "$?";
+}
+
+command_utmpfs() {
+  local mountpoint="$1";
+  mountpoint="$(echo "$mountpoint" | sed -E 's!/*$!!')";
+  [ -d "$mountpoint" ] || mountpoint="$HOME/.cache/$1";
+  local ramdisk; ramdisk="$(mount | grep "$mountpoint" | cut -d' ' -f1)";
+  [ -z "$ramdisk" ] && exec echo "Err: Could not find ramdisk for mountpoint \"$mountpoint\".";
+
+  runx sudo umount "$mountpoint";
+  runx hdiutil detach "$ramdisk";
+  runx rmdir "$mountpoint";
+  exit "$?";
 }
 
 seed_random() {
   sudo echo "# Seeding /dev/random - https://github.com/drduh/YubiKey-Guide#entropy";
   echo "SCD RANDOM 512" | gpg-connect-agent | sudo tee /dev/random | hexdump -C;
-  exit "$?";
 }
 
-[ "$1" = "app-id" ] && runx osascript -e 'id of app "Finder"';
-[ "$1" = "dns-flush" ] && runx run_dns_flush;
-[ "$1" = "fwd" ] && runx run_pfctl "$2" "$3" "$4";
-[ "$1" = "leases" ] && runx sudo cat /private/var/db/dhcpd_leases;
-[ "$1" = "seed" ] && seed_random;
-[ "$1" = "ssh-add" ] && runx ssh-add --apple-use-keychain "$2";
+[ "$1" = "app-id" ] && command_exec osascript -e 'id of app "Finder"';
+[ "$1" = "dns-flush" ] && command_dns_flush;
+[ "$1" = "fwd" ] && command_pfctl "$2" "$3" "$4";
+[ "$1" = "leases" ] && command_exec sudo cat /private/var/db/dhcpd_leases;
+[ "$1" = "seed" ] && command_exec seed_random;
+[ "$1" = "ssh-add" ] && command_exec ssh-add --apple-use-keychain "$2";
+[ "$1" = "tmpfs" ] && command_tmpfs "$2";
+[ "$1" = "utmpfs" ] && command_utmpfs "$2";
 
-echo "$0 [app-id|fwd|dns-flush|leases|seed|ssh-add]";
+echo "$0 [app-id|fwd|dns-flush|leases|seed|ssh-add|tmpfs|utmpfs]";
