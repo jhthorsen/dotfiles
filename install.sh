@@ -216,12 +216,10 @@ function setup_macos() {
   defaults_write com.apple.Accessibility KeyRepeatDelay 0.25;
   defaults_write com.apple.Accessibility KeyRepeatInterval-string  0.03;
   defaults_write com.apple.desktopservices DSDontWriteNetworkStores true;
-  defaults_write com.apple.dock autohide 1;
   defaults_write com.apple.dock autohide-delay 1;
   defaults_write com.apple.dock autohide-time-modifier 0.4
   defaults_write com.apple.dock largesize 70;
   defaults_write com.apple.dock magnification 1;
-  defaults_write com.apple.dock show-recents 0;
   defaults_write com.apple.dock tilesize 41;
   defaults_write com.apple.finder FXPreferredGroupBy Kind;
   defaults_write com.apple.finder FXPreferredViewStyle Nlsv;
