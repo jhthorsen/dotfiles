@@ -1,0 +1,8 @@
+table .listBreaker,
+table tr.odd {
+  background-color: transparent;
+}
+
+table tr.borderTopMarker td {
+  border: 0;
+}

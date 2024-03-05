@@ -1,0 +1,14 @@
+:root {
+  font-family: system-ui,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,Helvetica,Arial,"Helvetica Neue",sans-serif;
+  font-size: 16px;
+  line-height: 1.6rem;
+}
+
+body {
+  margin-inline: 2rem;
+  margin-block: 2rem 4rem;
+}
+
+body > div {
+  max-width: 48rem;
+}
