@@ -7,4 +7,9 @@ return {
     mods = 'NONE',
     action = act.CompleteSelection 'PrimarySelection',
   },
+  {
+    event = {Up = {streak = 1, button = 'Left'}},
+    mods = 'SUPER',
+    action = act.OpenLinkAtMouseCursor,
+  },
 }

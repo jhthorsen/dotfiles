@@ -20,6 +20,7 @@ local keymap = {
   {key = 'z',     mods = 'SUPER',       action = 'TogglePaneZoomState'},
   {key = 'f',     mods = 'SUPER',       action = act.Search({CaseInSensitiveString = ''})},
   {key = 'c',     mods = 'SUPER',       action = act.CopyTo('Clipboard')},
+  {key = 'p',     mods = 'SUPER|SHIFT', action = wezterm.action.ActivateCommandPalette},
   {key = 'v',     mods = 'SUPER',       action = act.PasteFrom('Clipboard')},
   {key = 'l',     mods = 'CTRL|SHIFT',  action = clearScrollbackAndSendClearKey},
   {key = 'u',     mods = 'CTRL|SUPER',  action = act.AttachDomain('unix')},
