@@ -2,36 +2,50 @@
 use strict;
 use warnings;
 
-my ($curr, $next) = (current_layout());
-my @lang = qw(
-  com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese.Katakana
+my @available_layouts = qw(
   com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese
-  org.unknown.keylayout.ABCProgramming
+  com.apple.keylayout.ABC
+  org.sil.ukelele.keyboardlayout.unsavedukeleledocument.keylayout.ABCProgramming
 );
 
-@lang = grep { index("@ARGV", $_) >= 0 } @lang if @ARGV;
+my $next = shift @ARGV;
+exit($next && $next eq 'daemon' ? daemon() : change_layout($next));
 
-for my $i (0..(@lang - 1)) {
-  ($next = $lang[$i + 1]) && last if index($curr, $lang[$i]) == 0;
+sub change_layout {
+  my $next = shift;
+  my $curr = current_layout();
+
+  # find the next layout unless given as input
+  for my $i (0..(@available_layouts - 1)) {
+    last if $next;
+    $next = $available_layouts[$i + 1] if index($curr, $available_layouts[$i]) == 0;
+  }
+
+  # change to the next or last, depending on the current select layout
+  $next = $available_layouts[0] if !$next or $next eq $curr;
+  $next = $available_layouts[-1] if $next and $next eq $curr;
+
+  system '/opt/homebrew/bin/im-select' => $next unless $next eq $curr;
+  return $?;
 }
-$next ||= $lang[0];
 
-die "Usage: $0 [name]\n" unless $next;
-print STDERR qq(Changing from "$curr" to "$next"\n) if -t STDERR;
-exit 0 if $next eq $curr;
-system '/usr/bin/osascript', -e => qq(display notification "$next" with title "im-select-next");
-system '/opt/homebrew/bin/im-select' => $next;
+sub daemon {
+  # Kill any running daemons
+  open my $PS, '-|', '/bin/ps', 'x', '-opid,command' or die $!;
+  while (<$PS>) {
+    kill(TERM => $1) && exit if /(\d+)\s.*im-select-next.pl daemon/ and $1 ne $$;
+  }
+
+  my $curr = current_layout();
+  while (sleep 1) {
+    my $next = current_layout();
+    system '/opt/homebrew/bin/im-select' => $available_layouts[-1]
+      if $next ne $available_layouts[-1] && $next =~ /ABC/;
+  }
+}
 
 sub current_layout {
-  system 'brew install im-select' unless my $im_select = which('im-select');
-  die 'Unable to install im-select' unless $im_select ||= which('im-select');
-  my $curr = qx{$im_select};
+  my $curr = qx{/opt/homebrew/bin/im-select};
   chomp $curr;
   return $curr;
-}
-
-sub which {
-  my $name = shift;
-  my @path = grep { -x "$_/$name" } (split(/:/, $ENV{PATH}), '/opt/homebrew/bin');
-  return @path ? "$path[0]/$name" : undef;
 }

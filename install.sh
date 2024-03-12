@@ -66,7 +66,7 @@ function install_apps() {
   [ ! -e "/Applications/yubiswitch.app" ]
     and wget -Lq --output "$HOME/Downloads/yubiswitch.dmg" "https://github.com/pallotron/yubiswitch/releases/download/v0.16/yubiswitch_0.16.dmg";
 
-  true; and "$brew" tap amar1729/formulae;
+  ! command -v im-select > /dev/null; and "$brew" tap daipeihust/tap;
   [ -z "$SKIP_UPDATE" ]; and "$brew" update; and "$brew" upgrade;
 
   install_brew_package "age";
@@ -101,6 +101,7 @@ function install_apps() {
   install_brew_package "groff";
   install_brew_package "hopenpgp-tools";
   install_brew_package "imagemagick";
+  install_brew_package "im-select";
   install_brew_package "jpeg";
   install_brew_package "jpegoptim";
   install_brew_package "less";
