@@ -39,4 +39,6 @@ https://github.com/ray-x/lsp_signature.nvim
 https://github.com/rebelot/kanagawa.nvim
 https://github.com/theprimeagen/harpoon
 https://github.com/yko/mojo.vim
+https://github.com/zbirenbaum/copilot-cmp.git
+https://github.com/zbirenbaum/copilot.lua.git
 HERE

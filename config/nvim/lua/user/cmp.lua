@@ -1,5 +1,6 @@
 local luasnip = require('luasnip')
 local cmp = require('cmp')
+local use = require('utils').use;
 
 local has_words_before = function()
   local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -26,6 +27,27 @@ local previous_item = function(_)
   end
 end
 
+use('copilot', function(copilot)
+  copilot.setup({
+    panel = {enabled = false},
+    suggestion = {enabled = false},
+    filetypes = {
+      yaml = false,
+      markdown = false,
+      help = false,
+      gitcommit = false,
+      gitrebase = false,
+      hgcommit = false,
+      svn = false,
+      cvs = false,
+      ["."] = false,
+    },
+    copilot_node_command = 'node', -- Node.js version must be > 18.x
+    server_opts_overrides = {},
+  })
+  require('copilot_cmp').setup()
+end)
+
 cmp.setup({
   preselect = cmp.PreselectMode.None,
   snippet = {
@@ -42,6 +64,7 @@ cmp.setup({
     ['<CR>'] = cmp.mapping.confirm({select = true}),
   },
   sources = cmp.config.sources({
+    {name = 'copilot'},
     {name = 'nvim_lsp', keyword_length = 2},
     {name = 'buffer', keyword_length = 1},
     {name = "luasnip"},
