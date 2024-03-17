@@ -5,11 +5,29 @@ require('which-key').setup();
 
 vim.g.mapleader = ' '
 
+-- Copilot
+vim.g.copilot_no_tab_map = true
+bindkey('n', '<leader>ap', ':Copilot panel<CR>', {desc = 'Open a window with Copilot completions'});
+bindkey('n', '<leader>ad', ':Copilot disable<CR>', {desc = 'Disable Copilot'});
+bindkey('n', '<leader>ae', ':Copilot enable<CR>', {desc = 'Enable Copilot'});
+bindkey('i', '<C-J>', 'copilot#Accept("\\<CR>")', {
+  expr = true,
+  replace_keycodes = false
+});
+
 bindkey('n', '<leader>u', require('undotree').toggle, {desc = 'Toggle undotree'})
 
 --- NTBBloodbath/color-converter.nvim
 bindkey('n', '<leader>hsl', require('color-converter').to_hsl, {desc = 'Convert color to HSL'})
 bindkey('n', '<leader>rgb', require('color-converter').to_rgb, {desc = 'Convert color to RGB'})
+
+-- greatest remap ever
+bindkey("x", "<leader>p", [["_dP]])
+
+-- next greatest remap ever : asbjornHaland
+bindkey({"n", "v"}, "<leader>y", [["+y]])
+bindkey("n", "<leader>Y", [["+Y]])
+bindkey({"n", "v"}, "<leader>d", [["_d]])
 
 -- buffers and files
 bindkey('n', '<leader>q', require('../utils').close_buffer_or_nvim, {desc = 'Save and close buffer'})
@@ -29,6 +47,8 @@ bindkey('n', '<c-j>', '10j', {desc = 'Jump ten lines down'})
 bindkey('n', '<c-k>', '10k', {desc = 'Jump ten lines up'})
 bindkey('n', '<c-b>', '<c-u>zz', {desc = 'Jump half a page up and center'})
 bindkey('n', '<c-f>', '<c-d>zz', {desc = 'Jump half a page down and center'})
+bindkey("v", "J", ":m '>+1<CR>gv=gv")
+bindkey("v", "K", ":m '<-2<CR>gv=gv")
 
 -- search
 bindkey('n', '<a-7>', '/', {silent = false, desc = 'Search'})  -- option+7 is mapped to "/" in BTT
