@@ -63,8 +63,11 @@ function install_apps() {
   ! command -v fzf > /dev/null; and download_binary "https://github.com/junegunn/fzf/releases/download/0.46.0/fzf-0.46.0-linux_$arch.tar.gz";
 
   # yubiswitch
-  [ ! -e "/Applications/yubiswitch.app" ]
+  [ ! -e "/Applications/yubiswitch.app" ];
     and wget -Lq --output "$HOME/Downloads/yubiswitch.dmg" "https://github.com/pallotron/yubiswitch/releases/download/v0.16/yubiswitch_0.16.dmg";
+
+  [ ! -e "/Applications/Easy Move+Resize.app" ];
+    and brew install --cask easy-move-plus-resize;
 
   ! command -v im-select > /dev/null; and "$brew" tap daipeihust/tap;
   [ -z "$SKIP_UPDATE" ]; and "$brew" update; and "$brew" upgrade;
