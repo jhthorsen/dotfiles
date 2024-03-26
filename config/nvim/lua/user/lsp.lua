@@ -1,7 +1,7 @@
 local cmd = vim.cmd
 
-cmd('autocmd BufRead,BufNewFile *.jinja set filetype=htmldjango')
-cmd('autocmd BufRead,BufNewFile *.tera set filetype=htmldjango')
+cmd('autocmd BufRead,BufNewFile *.jinja set filetype=html')
+cmd('autocmd BufRead,BufNewFile *.tera set filetype=html')
 cmd('autocmd BufRead,BufNewFile *.pcss set filetype=scss')
 cmd('autocmd BufRead,BufNewFile *.css set filetype=scss')
 cmd('autocmd BufRead,BufNewFile *.css.tera set filetype=scss')
@@ -66,7 +66,8 @@ lspconfig.tsserver.setup({capabilities = capabilities, on_attach = on_attach})
 lspconfig.emmet_ls.setup({
   capabilities = capabilities,
   on_attach = on_attach,
-  filetypes = {"css", "eruby", "html", "javascript", "javascriptreact", "less", "sass", "scss", "svelte", "pug", "typescriptreact", "vue"},
+  filetypes = {"css", "eruby", "html", "htmldjango", "javascript", "javascriptreact",
+    "less", "sass", "scss", "svelte", "pug", "typescriptreact", "vue"},
   init_options = {
     html = {
       options = {
