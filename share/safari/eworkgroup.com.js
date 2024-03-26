@@ -10,13 +10,10 @@
   ROW:
   for (const $row of $rows) {
     const dayMatch = $row.textContent.match(/\d{4}-\d{2}-\d{2}\s+(\w+)/);
-    if (dayMatch) {
+    if (dayMatch && currentDay !== 'DISABLED') {
       for (const $td of $row.querySelectorAll('td')) $td.style.paddingTop = '1rem';
       currentDay = dayMatch[1];
     }
-
-    const $activity = $row.querySelector('input[name^=ACTIVITY_]');
-    const $hours = $row.querySelector('input[name^=HOURS_]');
     if ($row.textContent.indexOf('Extra comment') !== -1) {
       $row.style.display = 'none';
       continue ROW;
@@ -30,11 +27,13 @@
       continue ROW;
     }
 
+    const $activity = $row.querySelector('input[name^=ACTIVITY_]');
+    const $hours = $row.querySelector('input[name^=HOURS_]');
     const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-    if (weekDays.some(wd => currentDay === wd)) {
+    if (weekDays.some(wd => currentDay === wd) && $activity && $hours) {
+      currentDay = $hours.value.length ? 'DISABLED' : ''; // Make sure we don't fill "Add hours"
       if ($hours && $hours.value.length === 0) $hours.value = '7.5';
       if ($activity && $activity.value.length === 0) $activity.value = primaryTask || '';
-      currentDay = ''; // Make sure we don't fill "Add hours"
     }
   }
 })();
