@@ -14,7 +14,6 @@ return {
   native_macos_fullscreen_mode = false,
   scroll_to_bottom_on_input = true,
   scrollback_lines = 10000,
-  window_background_opacity = 0.96,
   window_padding = {top = 3, right = 3, bottom = 3, left = 3},
 
   colors = theme_kanagawa,
