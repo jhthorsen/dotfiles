@@ -32,15 +32,23 @@ use('copilot', function(copilot)
     panel = {enabled = false},
     suggestion = {enabled = false},
     filetypes = {
-      yaml = false,
-      markdown = false,
-      help = false,
+      javascript = true,
+      perl = true,
+      typescript = true,
+      rust = true,
+      cvs = false,
       gitcommit = false,
       gitrebase = false,
+      help = false,
       hgcommit = false,
+      markdown = false,
       svn = false,
-      cvs = false,
+      yaml = false,
+      sh = function ()
+        if string.match(vim.api.nvim_buf_get_name(0), 'env') then return false else return true end
+      end,
       ["."] = false,
+      ["*"] = false, -- Do not want to enable copilot for "pass edit", yaml config, and other sensitive files
     },
     copilot_node_command = 'node', -- Node.js version must be > 18.x
     server_opts_overrides = {},

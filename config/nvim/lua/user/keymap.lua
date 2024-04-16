@@ -5,17 +5,15 @@ require('which-key').setup();
 
 vim.g.mapleader = ' '
 
+bindkey('n', '<leader>u', require('undotree').toggle, {desc = 'Toggle undotree'})
+
 -- Copilot
 vim.g.copilot_no_tab_map = true
 bindkey('n', '<leader>ap', ':Copilot panel<CR>', {desc = 'Open a window with Copilot completions'});
-bindkey('n', '<leader>ad', ':Copilot disable<CR>', {desc = 'Disable Copilot'});
-bindkey('n', '<leader>ae', ':Copilot enable<CR>', {desc = 'Enable Copilot'});
-bindkey('i', '<C-J>', 'copilot#Accept("\\<CR>")', {
-  expr = true,
-  replace_keycodes = false
-});
-
-bindkey('n', '<leader>u', require('undotree').toggle, {desc = 'Toggle undotree'})
+bindkey('n', '<leader>ad', ':Copilot disable<CR>', {desc = 'Disable Copilot', silent = false});
+bindkey('n', '<leader>as', ':Copilot status<CR>', {desc = 'Check Copilot status', silent = false});
+bindkey('n', '<leader>ae', ':Copilot! attach<CR>:Copilot enable<CR>', {desc = 'Enable Copilot', silent = false});
+bindkey('i', '<C-J>', 'copilot#Accept("\\<CR>")', {expr = true, replace_keycodes = false});
 
 --- NTBBloodbath/color-converter.nvim
 bindkey('n', '<leader>hsl', require('color-converter').to_hsl, {desc = 'Convert color to HSL'})
