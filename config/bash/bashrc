@@ -36,6 +36,11 @@ command -v cargo >/dev/null && PATH="$HOME/.cargo/bin:$PATH";
 PATH="$(perl -e'print join ":",grep{!$u{$_}++&&-e&&length}split ":",$ENV{PATH}')";
 export PATH;
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && mkdir "$NVM_DIR" 2>/dev/null;
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && source "/opt/homebrew/opt/nvm/nvm.sh";
+[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && source "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm";
+
 [ -z "$VIM_BIN" ] && VIM_BIN="$(command -v nvim)";
 [ -z "$VIM_BIN" ] && VIM_BIN="$(command -v vim)";
 [ -z "$VIM_BIN" ] && VIM_BIN="$(command -v vi)";

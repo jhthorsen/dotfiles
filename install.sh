@@ -112,6 +112,7 @@ function install_apps() {
   install_brew_package "lynx";
   install_brew_package "macdown";
   install_brew_package "mkcert";
+  install_brew_package "nvm";
   install_brew_package "mysql";
   install_brew_package "mysql-client";
   install_brew_package "neovim";
