@@ -4,8 +4,8 @@ local mouse_bindings = require 'user_mouse_bindings'
 local theme_kanagawa = require 'user_theme_kanagawa'
 
 return {
-  default_gui_startup_args = {'connect', 'unix'},
-  unix_domains = {{name = 'unix'}},
+  -- default_gui_startup_args = {'connect', 'unix'},
+  -- unix_domains = {{name = 'unix'}},
 
   audible_bell = 'Disabled',
   enable_scroll_bar = false,
