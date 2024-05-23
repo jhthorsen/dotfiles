@@ -32,7 +32,7 @@ M.normal_mode = {
   {key = '|',     mods = 'SUPER|SHIFT', action = 'ActivateCopyMode'},
   {key = 'Enter', mods = 'SUPER',       action = 'QuickSelect'},
   {key = '-',     mods = 'SUPER',       action = 'DecreaseFontSize'},
-  {key = '^',     mods = 'SUPER',       action = 'IncreaseFontSize'},
+  {key = '-',     mods = 'SUPER|SHIFT', action = 'IncreaseFontSize'},
   {key = '0',     mods = 'SUPER',       action = 'ResetFontSize'},
   {key = ']',     mods = 'SUPER|SHIFT', action = 'ShowDebugOverlay'},
   {key = 'm',     mods = 'SUPER|SHIFT', action = 'ShowLauncher'},
@@ -45,7 +45,6 @@ M.normal_mode = {
   {key = 'u',     mods = 'CTRL|SUPER',  action = act.AttachDomain('unix')},
 
   {key = 't', mods = 'SUPER',       action = act.SpawnTab('CurrentPaneDomain')},
-  {key = 't', mods = 'SUPER|SHIFT', action = act.SpawnTab('DefaultDomain')},
   {key = 'd', mods = 'SUPER',       action = act.SplitHorizontal({domain = 'CurrentPaneDomain'})},
   {key = 'd', mods = 'SUPER|SHIFT', action = act.SplitVertical({domain = 'CurrentPaneDomain'})},
   {key = 'w', mods = 'SUPER',       action = act.CloseCurrentTab({confirm = true})},
