@@ -2,7 +2,9 @@
 use strict;
 use warnings;
 
-my $ignore = $ENV{IGNORE} || '\.DS_Store|\.nuxt|\.swp|git|node_modules|packed|sass-cache';
+my %ignore = map { $_ => 1 } split /,/,
+  $ENV{IGNORE} // '.DS_Store,.nuxt,.swp,.git,node_modules,packed,sass-cache';
+
 my (%opts, @cmd) = (type => '!d');
 parse(shift @ARGV) while @ARGV;
 
@@ -10,13 +12,21 @@ delete $opts{type} if $opts{type} eq 'a';
 $opts{$_} and unshift @cmd, ($opts{$_} =~ s/^\!// ? qw(-not) : ()), "-$_" => $opts{$_}
   for reverse qw(iname ipath iregex name path regex type atime ctime mtime size maxdepth);
 
-$opts{dir} =~ s!/+$!! if $opts{dir};
-unshift @cmd, find => $opts{dir} || '.';
+$opts{dir} //= '.';
+$opts{dir} =~ s!/+$!!;
+unshift @cmd, find => $opts{dir};
 die "@cmd\n" if $ENV{TEST};
 
-open my $FIND, '-|', @cmd or die "Could not execute @cmd: $!";
-my @output = <$FIND>;
-print sort grep { !/$ignore/ } @output;
+$ignore{$_} = 2 for qw(. ..);
+delete $opts{dir} if $ignore{$opts{dir}};
+
+opendir my($dh), $opts{dir} || '.' or die "opendir: $!";
+for my $name (sort readdir $dh) {
+  next if $ignore{$name};
+  $cmd[1] = join '/', grep { length } $opts{dir}, $name;
+  open my $FIND, '-|', @cmd or die "Could not execute @cmd: $!";
+  print sort { $a cmp $b } <$FIND>;
+}
 
 sub add {
   my ($key, $val) = @_;
