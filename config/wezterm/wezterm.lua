@@ -20,7 +20,7 @@ return {
   native_macos_fullscreen_mode = false,
   scroll_to_bottom_on_input = true,
   scrollback_lines = 10000,
-  window_padding = {top = 8, right = 6, bottom = 2, left = 6},
+  window_padding = {top = 6, right = 6, bottom = 0, left = 6},
 
   colors = theme_kanagawa,
   font_size = 12,
@@ -39,5 +39,5 @@ return {
   keys = key_tables.normal_mode,
   mouse_bindings = mouse_bindings,
   skip_close_confirmation_for_processes_named = {},
-  window_decorations = 'RESIZE',
+  window_decorations = 'NONE',
 }
