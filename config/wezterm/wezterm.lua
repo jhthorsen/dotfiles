@@ -39,5 +39,4 @@ return {
   keys = key_tables.normal_mode,
   mouse_bindings = mouse_bindings,
   skip_close_confirmation_for_processes_named = {},
-  window_decorations = 'NONE',
 }
