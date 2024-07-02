@@ -13,6 +13,7 @@ return {
   -- unix_domains = {{name = 'unix'}},
 
   audible_bell = 'Disabled',
+  debug_key_events = true,
   enable_scroll_bar = false,
   enable_tab_bar = false,
   hide_tab_bar_if_only_one_tab = true,

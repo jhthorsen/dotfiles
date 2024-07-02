@@ -47,6 +47,8 @@ M.normal_mode = {
   {key = 't', mods = 'SUPER',       action = act.SpawnTab('CurrentPaneDomain')},
   {key = 'd', mods = 'SUPER',       action = act.SplitHorizontal({domain = 'CurrentPaneDomain'})},
   {key = 'd', mods = 'SUPER|SHIFT', action = act.SplitVertical({domain = 'CurrentPaneDomain'})},
+  {key = 's', mods = 'SUPER|SHIFT', action = act.SplitHorizontal({domain = 'CurrentPaneDomain'})},
+  {key = 's', mods = 'SUPER',       action = act.SplitVertical({domain = 'CurrentPaneDomain'})},
   {key = 'w', mods = 'SUPER',       action = act.CloseCurrentTab({confirm = true})},
 
   {key = 'h', mods = 'SUPER',       action = act.ActivatePaneDirection('Left')},
