@@ -28,6 +28,7 @@ command -v xcode-select >/dev/null && PATH="$(xcode-select --print-path)/usr/bin
 [ -n "$HOMEBREW_PREFIX" ] && PATH="$HOMEBREW_PREFIX/opt/go/libexec/bin:$PATH";
 [ -n "$HOMEBREW_PREFIX" ] && PATH="$HOMEBREW_PREFIX/opt/python/libexec/bin:$PATH";
 [ -n "$HOMEBREW_PREFIX" ] && PATH="$HOMEBREW_PREFIX/opt/ruby/bin:$PATH";
+[ -n "$HOMEBREW_PREFIX" ] && PATH="$HOMEBREW_PREFIX/lib/ruby/gems/3.3.0/bin:$PATH";
 [ -n "$HOMEBREW_PREFIX" ] && PATH="$HOMEBREW_PREFIX/opt/perl/bin:$PATH";
 [ -n "$HOMEBREW_PREFIX" ] && PATH="$HOMEBREW_PREFIX/bin:$PATH";
 [ -n "$HOMEBREW_PREFIX" ] && PATH="$HOMEBREW_PREFIX/sbin:$PATH";
