@@ -1,4 +1,4 @@
-(function() {
+window.addEventListener('load', async function() {
   const columns = ['ordered_at', 'id', 'cost', 'content', 'img_url', 'order_url', 'product_url'];
   const $form = document.querySelector('form[action*="/your-orders/orders"]');
   if (!$form) return console.log('Skip order parser safari/amazon.co.jp.js');
@@ -20,6 +20,15 @@
       const order = storageOrders.filter(o => o.id === id && o.product_url === $product.href)[0] || {};
       const $img = $product.closest('.a-fixed-left-grid').querySelector('img[src*="/images/"]');
 
+      while ($img.src.indexOf("pixel") > 0) {
+        if (!$img.parentNode) break;
+        $img.scrollIntoView();
+        console.log("Waiting for image to load", $img);
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+
+      if (order.img_url && order.img_url !== $img.src) found++;
+
       order.content = $product.textContent.trim();
       order.cost = $orderCard.querySelector('.yohtmlc-order-total').textContent.trim().replace(/\D+/g, '');
       order.ordered_at = parseDate($orderCard.querySelector('.a-size-base .a-color-secondary').textContent.trim());
@@ -28,8 +37,8 @@
       order.order_url = $orderLink.href;
       order.product_url = $product.href;
 
-      if (storageOrders.filter(o => o.id === id).length > 0) order.cost = '';
-      if (!order.id) found = storageOrders.push(order);
+      if (!order.id && storageOrders.filter(o => o.id === id).length > 0) order.cost = '';
+      if (!order.id) found += storageOrders.push(order);
       order.id = id;
     }
   }
@@ -66,4 +75,4 @@
   function toRow(order) {
     return '"' + columns.map(k => String(order[k]).replace(/["']/g, '')).join('","') + '"\n';
   }
-})();
+});
