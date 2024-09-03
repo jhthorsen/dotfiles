@@ -34,10 +34,16 @@ elif [ "$1" = "import" ]; then
     name="$(echo "$name" | sed -e "s#${SOURCE_DIR}/\{0,1\}##")";
     pass edit "$name";
   done
-else
-  found="$(find_password_entries | fzf --no-mouse --no-scrollbar --border=none --layout=reverse --height=-0  --preview "pass show {} | perl -ne'print if $. > 1'")";
+elif [ "$1" = "pw" ]; then
+  found="$(find_password_entries | fzf --no-mouse --no-scrollbar --border=none --layout=reverse --height=-0)";
   [ -n "$found" ] || exit 2;
   pass show -c "$found";
-  pass show "$found" | bat --file-name "$found" --style header-filename -l yaml --line-range 2:;
-  sleep 45;
+else
+  [ -z "$FZF_PREVIEW_COMMAND" ] && export FZF_PREVIEW_COMMAND="bat --color always -l yaml --line-range 2: --style plain";
+  found="$(find_password_entries | fzf \
+    --no-mouse --layout=reverse --height=-0 \
+    --bind=ctrl-j:preview-down,ctrl-k:preview-up \
+    --preview-window=down,70% --preview "pass show {} | $FZF_PREVIEW_COMMAND")";
+  [ -n "$found" ] || exit 2;
+  pass show -c "$found";
 fi
