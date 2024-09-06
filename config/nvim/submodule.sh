@@ -11,6 +11,7 @@ while read -r url; do
 done <<HERE
 https://github.com/folke/tokyonight.nvim
 https://github.com/folke/which-key.nvim
+https://github.com/folke/zen-mode.nvim
 https://github.com/ggandor/leap.nvim
 https://github.com/hrsh7th/cmp-buffer
 https://github.com/hrsh7th/cmp-nvim-lsp

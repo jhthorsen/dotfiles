@@ -40,11 +40,14 @@ bindkey('v', '<', '<gv', {desc = 'Indent and stay in indent mode'})
 bindkey('v', '>', '>gv', {desc = 'Indent and stay in indent mode'})
 
 -- movement
+bindkey('n', 'j', 'gj', {desc = 'Moving the cursor through long soft-wrapped lines'})
+bindkey('n', 'k', 'gk', {desc = 'Moving the cursor through long soft-wrapped lines'})
 bindkey('n', 'G', 'Gzz', {desc = 'Move to end and stay in center'})
 bindkey('n', '<c-j>', '10j', {desc = 'Jump ten lines down'})
 bindkey('n', '<c-k>', '10k', {desc = 'Jump ten lines up'})
 bindkey('n', '<c-b>', '<c-u>zz', {desc = 'Jump half a page up and center'})
 bindkey('n', '<c-f>', '<c-d>zz', {desc = 'Jump half a page down and center'})
+
 bindkey("v", "J", ":m '>+1<CR>gv=gv")
 bindkey("v", "K", ":m '<-2<CR>gv=gv")
 

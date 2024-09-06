@@ -19,6 +19,7 @@ use('user/cmp')
 use('user/syntax')
 use('user/treesitter')
 use('user/telescope')
+use('user/zen-mode')
 
 use('Comment', function (mod) mod.setup() end)
 use('undotree', function (mod) mod.setup({float_diff = true, window = {winblend = 10}}) end)
