@@ -32,7 +32,8 @@ command -v xcode-select >/dev/null && PATH="$(xcode-select --print-path)/usr/bin
 [ -n "$HOMEBREW_PREFIX" ] && PATH="$HOMEBREW_PREFIX/opt/perl/bin:$PATH";
 [ -n "$HOMEBREW_PREFIX" ] && PATH="$HOMEBREW_PREFIX/bin:$PATH";
 [ -n "$HOMEBREW_PREFIX" ] && PATH="$HOMEBREW_PREFIX/sbin:$PATH";
-command -v cargo >/dev/null && PATH="$HOME/.cargo/bin:$PATH";
+[ -d "$HOME/.cargo/bin" ] && PATH="$HOME/.cargo/bin:$PATH";
+[ -d "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH";
 [ -n "$DOTFILES_HOME" ] && PATH="$DOTFILES_HOME/bin:$PATH";
 PATH="$(perl -e'print join ":",grep{!$u{$_}++&&-e&&length}split ":",$ENV{PATH}')";
 export PATH;
