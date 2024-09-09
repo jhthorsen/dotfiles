@@ -9,6 +9,7 @@ while read -r url; do
 	name="$(basename "$url")";
 	if [ -d "$name" ]; then cd "$name" && git pull; else git clone "$url" "$name"; fi
 done <<HERE
+https://github.com/f3fora/cmp-spell
 https://github.com/folke/tokyonight.nvim
 https://github.com/folke/which-key.nvim
 https://github.com/folke/zen-mode.nvim

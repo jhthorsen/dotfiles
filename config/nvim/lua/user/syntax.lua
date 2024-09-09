@@ -1,3 +1,4 @@
+local telescope_builtin = require('telescope.builtin')
 local bindkey = require('../utils').bindkey
 local use = require('../utils').use;
 
@@ -22,4 +23,8 @@ vim.g.perl_no_scope_in_variables = 1
 vim.g.perl_sync_dist = 1
 
 -- spelling
-bindkey('n', '<leader>ss', ':set spell!<CR>', {desc = 'Toggle spelling'})
+bindkey('n', '<leader>se', ':set spell spelllang=en<CR>', {desc = 'Set language to en'})
+bindkey('n', '<leader>sn', ':set spell spelllang=nb<CR>', {desc = 'Set language to nb'})
+bindkey('n', '<leader>sx', ':set nospell<CR>', {desc = 'Turn off spelling'})
+bindkey('n', '<leader>sl', telescope_builtin.spell_suggest, {desc = 'Spell suggestions'});
+bindkey('i', '<c-s>', telescope_builtin.spell_suggest, {desc = 'Spell suggestions'});

@@ -67,6 +67,13 @@ cmp.setup({
     ['<CR>'] = cmp.mapping.confirm({select = true}),
   },
   sources = cmp.config.sources({
+    {
+      name = "spell",
+      option = {
+        keep_all_entries = false,
+        preselect_correct_word = true,
+      },
+    },
     {name = 'copilot'},
     {name = 'nvim_lsp', keyword_length = 2},
     {name = 'vsnip'},
