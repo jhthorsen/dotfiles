@@ -1,0 +1,15 @@
+#!/bin/bash
+file="$1";
+words_per_minute="${2:-100}";
+offset="${3:-0}";
+
+[ "$words_per_minute" = "spoken" ] && words_per_minute="150"; # 100-150
+[ "$words_per_minute" = "normal" ] && words_per_minute="200"; # 150-200
+[ "$words_per_minute" = "silent" ] && words_per_minute="250"; # 190-260
+[ "$words_per_minute" = "fast" ]   && words_per_minute="300"; # 260-320
+
+[ -r "$file" ] || exec echo "Usage: $0 <file> [spoken|normal|silent|fast|100]";
+
+words="$(wc -w "$file" | awk '{print $1}')";
+echo "# ( $words - $offset ) / $words_per_minute" > /dev/stderr;
+echo "$(( $(( $words - $offset )) / $words_per_minute ))";
