@@ -76,7 +76,6 @@ use('mason', function (mod)
         'pylyzer',
         'rust_analyzer',
         'sqlls',
-        'tsserver',
         'volar',
         'yamlls',
       },
