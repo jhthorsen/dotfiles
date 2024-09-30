@@ -42,6 +42,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && mkdir "$NVM_DIR" 2>/dev/null;
 [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && source "/opt/homebrew/opt/nvm/nvm.sh";
 [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && source "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm";
+[ -f "/opt/homebrew/etc/profile.d/bash-preexec.sh" ] && source "/opt/homebrew/etc/profile.d/bash-preexec.sh";
 
 [ -z "$VIM_BIN" ] && VIM_BIN="$(command -v nvim)";
 [ -z "$VIM_BIN" ] && VIM_BIN="$(command -v vim)";

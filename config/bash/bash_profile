@@ -26,13 +26,18 @@ __bash_profile_autocomplete() {
 
   local ext="$1";
   [ -d "$HOME/.config/shell" ] || mkdir -p "$HOME/.config/shell";
-  [ -r "$HOME/.config/shell/fzf-key-bindings.$ext" ] \
-    || curl -Ls "https://github.com/junegunn/fzf/raw/master/shell/key-bindings.$ext" > "$HOME/.config/shell/fzf-key-bindings.$ext";
-  [ -r "$HOME/.config/shell/fzf-completion.$ext" ] \
-    || curl -Ls "https://github.com/junegunn/fzf/raw/master/shell/completion.$ext" > "$HOME/.config/shell/fzf-completion.$ext";
 
-  source "$HOME/.config/shell/fzf-completion.$ext";
-  source "$HOME/.config/shell/fzf-key-bindings.$ext";
+  if command -v atuin >/dev/null; then
+    eval "$(atuin init bash --disable-up-arrow)";
+  else
+    [ -r "$HOME/.config/shell/fzf-key-bindings.$ext" ] \
+      || curl -Ls "https://github.com/junegunn/fzf/raw/master/shell/key-bindings.$ext" > "$HOME/.config/shell/fzf-key-bindings.$ext";
+    [ -r "$HOME/.config/shell/fzf-completion.$ext" ] \
+      || curl -Ls "https://github.com/junegunn/fzf/raw/master/shell/completion.$ext" > "$HOME/.config/shell/fzf-completion.$ext";
+    source "$HOME/.config/shell/fzf-completion.$ext";
+    source "$HOME/.config/shell/fzf-key-bindings.$ext";
+  fi
+
   unset -f __bash_profile_autocomplete;
 }
 

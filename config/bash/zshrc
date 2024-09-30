@@ -1,0 +1,2 @@
+export SHELL="/opt/homebrew/bin/bash";
+exec /opt/homebrew/bin/bash --login
