@@ -74,6 +74,7 @@ function install_apps() {
 
   install_brew_package "age";
   install_brew_package "alt-tab" "/Applications/AltTab.app";
+  install_brew_package "atuin";
   install_brew_package "balenaetcher" "/Applications/balenaEtcher.app";
   install_brew_package "bash-completion@2"
   install_brew_package "bat";
@@ -120,6 +121,7 @@ function install_apps() {
   install_brew_package "nginx";
   install_brew_package "nmap";
   install_brew_package "node";
+  install_brew_package "oh-my-posh";
   install_brew_package "openssh";
   install_brew_package "openssl";
   install_brew_package "pass";
@@ -143,6 +145,7 @@ function install_apps() {
   install_brew_package "ssh-copy-id";
   install_brew_package "sshuttle";
   install_brew_package "telnet";
+  install_brew_package "termshark";
   install_brew_package "trash-cli";
   install_brew_package "ukelele" "/Applications/Ukelele.app";
   install_brew_package "wezterm";
