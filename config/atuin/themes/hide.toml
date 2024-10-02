@@ -1,0 +1,6 @@
+[theme]
+name = "hide"
+parent = "marine"
+
+[colors]
+Guidance = "dimgrey"
