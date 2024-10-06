@@ -25,6 +25,7 @@ https://github.com/jiaoshijie/undotree.git
 https://github.com/jose-elias-alvarez/null-ls.nvim
 https://github.com/kyazdani42/nvim-web-devicons
 https://github.com/lucas1/vim-perl
+https://github.com/markeganfuller/vim-heredoc
 https://github.com/mg979/vim-visual-multi
 https://github.com/mrjones2014/legendary.nvim
 https://github.com/neovim/nvim-lspconfig
