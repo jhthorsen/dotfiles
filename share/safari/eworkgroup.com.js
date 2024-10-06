@@ -1,19 +1,15 @@
 (function() {
-  const primaryTask = localStorage.getItem('primaryTask');
+  const defaultHours = localStorage.getItem('dotfiles:defaultHours') || '7.5';
   const $rows = document.querySelector('select[name^=TIME_TYPE] option[value="0"]')
     ?.closest('table')
     ?.querySelectorAll('tr');
 
   if (!$rows) return console.info('No time sheet rows found.');
-  let currentDay = '';
+  let lastTask = '';
 
   ROW:
   for (const $row of $rows) {
     const dayMatch = $row.textContent.match(/\d{4}-\d{2}-\d{2}\s+(\w+)/);
-    if (dayMatch && currentDay !== 'DISABLED') {
-      for (const $td of $row.querySelectorAll('td')) $td.style.paddingTop = '1rem';
-      currentDay = dayMatch[1];
-    }
     if ($row.textContent.indexOf('Extra comment') !== -1) {
       $row.style.display = 'none';
       continue ROW;
@@ -29,11 +25,17 @@
 
     const $activity = $row.querySelector('input[name^=ACTIVITY_]');
     const $hours = $row.querySelector('input[name^=HOURS_]');
-    const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-    if (weekDays.some(wd => currentDay === wd) && $activity && $hours) {
-      currentDay = $hours.value.length ? 'DISABLED' : ''; // Make sure we don't fill "Add hours"
-      if ($hours && $hours.value.length === 0) $hours.value = '7.5';
-      if ($activity && $activity.value.length === 0) $activity.value = primaryTask || '';
+    if ($activity && $hours) {
+      for (const $td of $row.querySelectorAll('td')) $td.style.paddingTop = '1rem';
+      $activity.addEventListener('focus', () => {
+        if ($activity.value === '') $activity.value = lastTask;
+        if ($activity.value !== '' && $hours.value === '') $hours.value = defaultHours;
+      });
+      $activity.addEventListener('blur', () => {
+        if ($activity.value === '') $hours.value = '';
+        if ($activity.value !== '') lastTask = $activity.value;
+        if ($activity.value !== '' && $hours.value === '') $hours.value = defaultHours;
+      });
     }
   }
 })();
