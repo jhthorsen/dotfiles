@@ -1,70 +1,55 @@
 window.addEventListener('load', function() {
-  // localStorage.setItem("dotfiles:subscribed:user_real_name", "Your Name");
-  // localStorage.removeItem("dotfiles:subscribed:user_real_name");
+  // localStorage.setItem("dotfiles:subscriptions", "{}");
   // localStorage.removeItem("dotfiles:subscriptions");
 
-  let user_real_name = localStorage.getItem('dotfiles:subscribed:user_real_name');
-  if (!user_real_name) return;
-
-  const trim2k = (s) => s.replace(/\s+/g, ' ').trim();
-  let state = JSON.parse(localStorage.getItem('dotfiles:subscriptions') || '{}');
-  let min_songs = 5;
-  let playlists = null;
-
+  const min_songs = 5;
+  const state = JSON.parse(localStorage.getItem('dotfiles:subscriptions') || 'null');
+  if (!state) return;
   if (!state.channels) state.channels = {};
   if (!state.playlists) state.playlists = {};
 
-  function addChannels() {
+  async function addChannels() {
 
     // Find channels (artists) in a playlist that has more than min_songs
-    if (location.pathname.indexOf('/playlist') !== -1) {
+    if (location.pathname.indexOf('/playlist') === 0) {
       const found = {};
-      for (const $a of document.querySelectorAll('ytmusic-playlist-shelf-renderer [href*="channel"]')) {
-        const href = $a.pathname;
-        if (!found[href]) found[href] = 0;
-        found[href]++;
+      for (const $a of await settle('ytmusic-playlist-shelf-renderer [href*="channel"]')) {
+        if (!found[$a.href]) found[$a.href] = 0;
+        found[$a.href]++;
       }
       for (const href in found) {
         if (found[href] >= min_songs && !state.channels[href]) state.channels[href] = false;
       }
-      localStorage.setItem('dotfiles:subscriptions', JSON.stringify(state));
+      console.info(`[music.youtube.com.js] found=${Object.keys(found).length}`, found);
+      markAsDone('playlists', location.href);
     }
 
     // Click the subscribe button on a channel (artist) page
-    if (location.pathname.indexOf('/channel') !== -1 && !state.channels[location.pathname]) {
+    if (location.pathname.indexOf('/channel') === 0) {
+      await new Promise(resolve => setTimeout(resolve, 500));
       const $button = document.querySelector("#button-shape-subscribe button");
-      console.log(`Found ${$button?.textContent} on channel page ${location.pathname}`);
-      markAsDone('channels', location.pathname);
-      if ($button && $button.textContent.indexOf('Subscribed') === -1) $button.click();
+      console.info(`[music.youtube.com.js] location=${location.href} button="${$button?.textContent}" state=${state.channels[location.href]}`);
+      if (state.channels[location.href] === false && $button && $button.textContent.indexOf('Subscribed') === -1) $button.click();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      markAsDone('channels', location.href);
     }
 
-    // Go to the next channel that has not yet been processed
-    for (const href in state.channels) {
-      if (state.channels[href]) continue;
-      return location.href = href;
-    }
-
-    // Find available playlists
-    if (!playlists) {
-      playlists = {};
-      for (const $link of document.querySelectorAll('.ytmusic-guide-section-renderer [role=link]')) {
-        const playlist_name = trim2k($link.textContent);
-        if (!state.playlists[playlist_name] && playlist_name.indexOf(user_real_name) !== -1) {
-          state.playlists[playlist_name] = false;
-          playlists[playlist_name] = $link;
-        }
+    // Find playlists
+    if (location.pathname.indexOf('/library/playlists') === 0) {
+      for (const $playlist of await settle('a[href*="playlist?list"]')) {
+        if (!state.playlists[$playlist.href]) state.playlists[$playlist.href] = false;
       }
       localStorage.setItem('dotfiles:subscriptions', JSON.stringify(state));
     }
 
-    // Go to the next playlist that has not yet been processed
-    for (const playlist_name in state.playlists) {
-      if (state.playlists[playlist_name] || !playlists[playlist_name]) continue;
-      markAsDone('playlists', playlist_name);
-      return playlists[playlist_name].click();
+    // Go to the next channel or playlist that has not yet been processed
+    for (const namespace of ['channels', 'playlists']) {
+      for (const href in state[namespace]) {
+        console.debug(`[music.youtube.com.js] ${state[namespace][href] ? 'done' : 'next'}=${href}`);
+        if (state[namespace][href]) continue;
+        location.href = href;
+      }
     }
-
-    clearTimeout(tid);
   }
 
   function markAsDone(namespace, key) {
@@ -72,5 +57,18 @@ window.addEventListener('load', function() {
     localStorage.setItem('dotfiles:subscriptions', JSON.stringify(state));
   };
 
-  const tid = setInterval(addChannels, 1000);
+  async function settle(sel) {
+    console.info(`[music.youtube.com.js] settle="${sel}"`);
+    let found = [];
+    for (let i = 0; i < 4; i++) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const els = document.querySelectorAll(sel);
+      if (els.length && els.length === found.length) return found;
+      found = els;
+      window.scrollTo({behavior: 'smooth', top: 10000, left: 0});
+    }
+    return found;
+  }
+
+  addChannels();
 })
