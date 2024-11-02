@@ -1,8 +1,11 @@
-// window.addEventListener('load', async function() {
-window.addEventListener('dotfiles:add_channels', async function() {
+window.addEventListener('load', async function() {
   // localStorage.setItem("dotfiles:subscriptions", "{}");
   // localStorage.removeItem("dotfiles:subscriptions");
+  // window.dispatchEvent(new CustomEvent('dotfiles:add_channels'));
+  // window.dispatchEvent(new CustomEvent('dotfiles:like_selected'));
+});
 
+window.addEventListener('dotfiles:add_channels', async function() {
   const min_songs = 5;
   const state = JSON.parse(localStorage.getItem('dotfiles:subscriptions') || 'null');
   if (!state) return;
@@ -69,5 +72,10 @@ window.addEventListener('dotfiles:add_channels', async function() {
   }
 });
 
-  addChannels();
-})
+window.addEventListener('dotfiles:like_selected', async function() {
+  for (const $checked of document.querySelectorAll('ytmusic-responsive-list-item-renderer[is-checked]')) {
+    const $button = $checked.querySelector('[aria-label="Like"][aria-pressed="false"]');
+    if ($button) $button.click();
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+});
