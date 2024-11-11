@@ -3,9 +3,10 @@ use v5.36.0;
 use POSIX ();
 
 die usage() unless @ARGV;
-exit(shift @ARGV && duration(@ARGV) && 0) if $ARGV[0] eq 'duration';
-exit(font_size() && 0) if $ARGV[0] eq 'font-size';
-exit(mathlib(@ARGV) && 0);
+exit(shift @ARGV && command_duration(@ARGV) && 0) if $ARGV[0] eq 'duration';
+exit(shift @ARGV && command_inc_by(@ARGV) && 0) if $ARGV[0] eq 'inc-by';
+exit(command_font_size() && 0) if $ARGV[0] eq 'font-size';
+exit(command_mathlib(@ARGV) && 0);
 
 sub date_to_epoch (@ymd) {
   return(POSIX::mktime(0, 0, 0, $ymd[2], $ymd[1] - 1, $ymd[0] - 1900)
@@ -19,7 +20,7 @@ sub date_to_ymd ($str, @def) {
   return reverse @dmy;
 }
 
-sub duration ($from = '', $to = '') {
+sub command_duration ($from = '', $to = '') {
   die usage() unless $from and $to;
   my @from = date_to_ymd($from, (localtime)[5, 4, 3]);
   my @to = date_to_ymd($to, @from);
@@ -28,7 +29,11 @@ sub duration ($from = '', $to = '') {
   print STDERR "\n" if -t STDOUT;
 }
 
-sub font_size (@) {
+sub command_inc_by ($from = 0, $to = 0) {
+  printf "%.2f\n", 100 * ($from - $to) / $from;
+}
+
+sub command_font_size (@) {
   my $base = $ENV{BASE} || 16;
   while (<<>>) {
     next unless my ($t,$s,$l) = m!^(\s*[0-9a-z.-]+)\D*(\d+)\s+/\s+(\d+)!;
@@ -36,7 +41,7 @@ sub font_size (@) {
   }
 }
 
-sub mathlib (@argv) {
+sub command_mathlib (@argv) {
   my $expr = join ' ', @argv;
   $expr =~ s/\bx\b/*/g;
   open my $MATHLIB, '|-', qw(bc --mathlib);
@@ -49,6 +54,7 @@ sub usage () {
   Usage:
     $ calc "14 x 15"
     $ calc duration 2023-01-23 2023-07-14
+    $ calc inc-by 5042 4750
     $ echo "h1 { 24 / 16 }" | calc font-size
 
   HERE
