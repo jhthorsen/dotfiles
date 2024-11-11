@@ -1,12 +1,16 @@
 #!/bin/bash
-export N_WORDS="${1:-100}";
+N_WORDS="${1:-100}";
+WORDS=()
 
-make_lorem () {
-  perl -MList::Util=shuffle,uniq -nle'push @w, grep {/^[a-z]\w{2,}$/} split /[\t\s\r\n]/}{@w=uniq @w;$n=$ENV{N_WORDS}-1; $n>@w && ($n=@w); print join " ", shuffle @w[0..$n]';
-}
+while true; do
+  [ "$N_WORDS" = 0 ] && break;
+  page="$(find /usr/share/man/man1 -type f | sort -R | head -n1)";
+  page="${page#.*}";
+  while read -r word; do
+    WORDS+=("$word");
+    N_WORDS="$(($N_WORDS - 1))";
+    [ "$N_WORDS" = "0" ] && break;
+  done < <(man "$page" | sed 'y/ /\n/' | grep -E '^[a-z]{4,}$' | sort | uniq | sort -R);
+done
 
-if [ ! -t 0 ] && [ -z "$VIM_BIN" ]; then
-  cat - | make_lorem;
-else
-  man "$(find /usr/bin -type f | shuf -n1)" | make_lorem;
-fi
+echo "${WORDS[@]}";
