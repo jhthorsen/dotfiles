@@ -4,7 +4,26 @@ set keyseq-timeout 100
 set editing-mode vi
 set page-completions off
 set show-all-if-ambiguous on
-set show-mode-in-prompt on
-set visible-stats on
-set vi-ins-mode-string "\1\e[6 q\2"
-set vi-cmd-mode-string "\1\e[2 q\2"
+
+set emacs-editing-mode ""
+set vi-editing-mode ""
+
+$if mode=vi
+  set show-mode-in-prompt on
+  set vi-ins-mode-string "\1\e[6 q\2"
+  set vi-cmd-mode-string "\1\e[2 q\2"
+
+  set keymap vi
+  "\C-a": beginning-of-line
+  "\C-e": end-of-line
+  "\C-l": clear-screen
+  "\C-n": menu-complete
+  "\C-p": menu-complete-backward
+
+  set keymap vi-insert
+  "\C-a": beginning-of-line
+  "\C-e": end-of-line
+  "\C-l": clear-screen
+  "\C-n": menu-complete
+  "\C-p": menu-complete-backward
+$endif
