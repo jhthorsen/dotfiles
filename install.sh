@@ -37,8 +37,8 @@ function install_all() {
   install_cpanm;
   install_apps;
   install_lsp_servers;
-  setup_dotfiles;
-  setup_macos;
+  install_dotfiles;
+  install_macos;
 }
 
 function install_apps() {
@@ -176,21 +176,7 @@ function install_cpanm() {
     Mojolicious    Pod::Markdown         Term::ReadKey;   \
 }
 
-function install_lsp_servers() {
-  # sudo xcodebuild -license accept
-  install_brew_package lua-language-server;
-  install_brew_package yaml-language-server;
-
-  true; and $MAYBE_SUDO cpanm -n PLS::Server Neovim::Ext;
-  true; and $MAYBE_SUDO npm -g install \
-    emmet-ls                   neovim                        \
-    bash-language-server       svelte-language-server        \
-    typescript                 typescript-language-server    \
-    @volar/vue-language-server vscode-langservers-extracted  \
-    yaml-language-server;
-}
-
-function setup_dotfiles() {
+function install_dotfiles() {
   # bash
   lnk "$DOTFILES/config/bash/inputrc" "$HOME/.inputrc";
   lnk "$DOTFILES/config/bash/bashrc" "$HOME/.bashrc";
@@ -214,7 +200,7 @@ function setup_dotfiles() {
   lnk "$HOME/Nextcloud/.password-store" "$HOME/.password-store";
 }
 
-function setup_gnupg() {
+function install_gnupg() {
   export GNUPGHOME="$HOME/.gnupg";
   export BACKUP_GNUPGHOME="${BACKUP_GNUPGHOME:-/BACKUP_GNUPGHOME}";
 
@@ -265,7 +251,21 @@ HERE
   fi
 }
 
-function setup_macos() {
+function install_lsp_servers() {
+  # sudo xcodebuild -license accept
+  install_brew_package lua-language-server;
+  install_brew_package yaml-language-server;
+
+  true; and $MAYBE_SUDO cpanm -n PLS::Server Neovim::Ext;
+  true; and $MAYBE_SUDO npm -g install \
+    emmet-ls                   neovim                        \
+    bash-language-server       svelte-language-server        \
+    typescript                 typescript-language-server    \
+    @volar/vue-language-server vscode-langservers-extracted  \
+    yaml-language-server;
+}
+
+function install_macos() {
   [ "$(uname -o)" = "Darwin" ] || return 0;
   defaults_write -globalDomain InitialKeyRepeat 15;
   defaults_write -globalDomain KeyRepeat 2;
@@ -307,13 +307,13 @@ function defaults_write() {
 
 function command_usage() {
   echo "Usage:
-  \$ bash ./install.sh -s macos;
-  \$ bash ./install.sh -s dotfiles;
-  \$ bash ./install.sh -s gnupg;
-  \$ bash ./install.sh -i all;
-  \$ bash ./install.sh -i apps;
-  \$ bash ./install.sh -i cpanm;
-  \$ bash ./install.sh -i lsp_servers;
+  \$ bash ./install.sh macos;
+  \$ bash ./install.sh dotfiles;
+  \$ bash ./install.sh gnupg;
+  \$ bash ./install.sh all;
+  \$ bash ./install.sh apps;
+  \$ bash ./install.sh cpanm;
+  \$ bash ./install.sh lsp_servers;
 ";
 }
 
@@ -324,9 +324,7 @@ function main() {
   while [ -n "$*" ]; do case "$1" in
     --help) shift; command="command_usage"; break ;;
     --no-update) shift; export SKIP_UPDATE="1" ;;
-    -i) shift; command="install_$1"; shift ;;
-    -s) shift; command="setup_$1"; shift ;;
-    *) unparsed+=("$1"); shift ;;
+    *) command="install_$1"; shift ;;
   esac done
 
   "$command" "${unparsed[@]}";
