@@ -9,8 +9,8 @@ wezterm.on('gui-startup', function()
 end)
 
 return {
-  -- default_gui_startup_args = {'connect', 'unix'},
-  -- unix_domains = {{name = 'unix'}},
+  default_gui_startup_args = {'connect', 'unix'},
+  unix_domains = {{name = 'unix'}},
 
   audible_bell = 'Disabled',
   debug_key_events = true,
