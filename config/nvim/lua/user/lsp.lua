@@ -1,24 +1,40 @@
 local use = require('utils').use;
 local cmd = vim.cmd
+local cursor_did_not_move = require('utils').cursor_did_not_move;
+local severity = vim.diagnostic.severity
+local telescope = require('telescope.builtin');
 
-local function on_cursor_hold()
-  vim.diagnostic.open_float(nil, {
-    border = 'rounded',
-    close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
-    focus = false,
-    focusable = false,
-    scope = 'cursor',
-    source = 'always',
-  })
+local function show_diagnostics(jump_to)
+  return function()
+    local prev_cursor_pos = vim.api.nvim_win_get_cursor(0)
+
+    if jump_to == "prev" then
+      vim.diagnostic.goto_prev({severity=severity.ERROR, wrap = true})
+      if cursor_did_not_move(prev_cursor_pos) then
+        vim.diagnostic.goto_prev({wrap = true})
+      end
+    elseif jump_to == "next" then
+      vim.diagnostic.goto_next({severity=severity.ERROR, wrap = true})
+      if cursor_did_not_move(prev_cursor_pos) then
+        vim.diagnostic.goto_next({wrap = true})
+      end
+    end
+
+    vim.diagnostic.open_float(nil, {
+      border = 'rounded',
+      close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+      focus = false,
+      focusable = false,
+      scope = 'cursor',
+      source = 'always',
+    })
+  end
 end
 
 local function on_attach(_, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-  vim.api.nvim_create_autocmd({'CursorHold', 'CursorHoldI'}, {buffer = bufnr, callback = on_cursor_hold})
-  cmd('autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focusable=false,source="always",prefix=" ",scope="cursor"})')
 
   local bindkey = require('../utils').bindkey
-  local telescope = require('telescope.builtin');
   local buf = vim.lsp.buf
 
   bindkey('i', '<c-k>', buf.hover, {buffer = bufnr, desc = 'Displays hover information about the symbol under the cursor in a floating window'})
@@ -29,7 +45,9 @@ local function on_attach(_, bufnr)
   bindkey('n', 'go', buf.type_definition, {buffer = bufnr, desc = 'Jumps to the definition of the type of the symbol under the cursor'})
   bindkey('n', 'gr', buf.references, {buffer = bufnr, desc = 'Lists all the references to the symbol under the cursor in the quickfix window'})
   bindkey('n', 'gs', buf.signature_help, {buffer = bufnr, desc = 'Displays signature information about the symbol under the cursor in a floating window'})
-  bindkey('n', '<leader>d', telescope.diagnostics, {buffer = bufnr, desc = 'Show diagnostics in a floating window'})
+  bindkey('n', '<leader>d', telescope.diagnostics, {buffer = bufnr, desc = 'Show diagnostics list'})
+  bindkey('n', '<leader>dN', show_diagnostics("prev"), {buffer = bufnr, desc = 'Show previous diagnostics'})
+  bindkey('n', '<leader>dn', show_diagnostics("next"), {buffer = bufnr, desc = 'Show next diagnostics'})
   bindkey('n', '<leader>rn', buf.rename, {buffer = bufnr, desc = 'Renames all references to the symbol under the cursor'})
   bindkey('n', '<leader>ga', buf.code_action, {buffer = bufnr, desc = 'Selects a code action available at the current cursor position'})
 end

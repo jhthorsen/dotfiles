@@ -25,6 +25,12 @@ function M.close_buffer_or_nvim(cmd)
   api.nvim_command(cmd)
 end
 
+function M.cursor_did_not_move(prev)
+  local pr, pc = unpack(prev)
+  local cr, cc = unpack(vim.api.nvim_win_get_cursor(0))
+  return pr == cr and pc == cc
+end
+
 function M.find_and_edit_file()
   local dir = M.dirname(vim.fn.bufname());
   print(vim.api.nvim_buf_get_name(0));
