@@ -1,21 +1,17 @@
 #!/usr/bin/env perl
 use strict;
 
-my @bin;
-push @bin, $ENV{VIM_BIN} if $ENV{VIM_BIN};
-@bin = map { chomp; $_ } qx{which -a vim} unless @bin;
-die "Could not find real vim" unless @bin;
+my $bin = $ENV{VIM_BIN} || 'nvim';
+exec $bin => @ARGV if @ARGV;
+exec $bin unless -d '.git' or -e '.shim';
 
-exec $bin[0] => @ARGV if @ARGV;
-exec $bin[0] unless -d '.git' or -e '.shim';
-
-if ($bin[0] =~ /hx/) {
+if ($bin =~ /hx/) {
   open my $FZF, '-|', qw(fzf --no-mouse);
   my ($file) = map { chomp; $_ } <$FZF>;
-  exec $bin[0], $file if $file;
+  exec $bin, $file if $file;
 }
 else {
-  exec $bin[0],
+  exec $bin,
       -d '.git'  ? (-c => ':Telescope git_files')
     : -e '.shim' ? (-c => ':Telescope find_files')
     :              (-c => ':Telescope oldfiles');
