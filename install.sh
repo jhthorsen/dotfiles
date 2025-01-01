@@ -182,6 +182,7 @@ function install_dotfiles() {
   lnk "$DOTFILES/config/bash/bashrc" "$HOME/.bashrc";
   lnk "$DOTFILES/config/bash/bash_profile" "$HOME/.bash_profile";
   lnk "$DOTFILES/config/bash/bash_reload" "$HOME/.bash_reload";
+  lnk "$DOTFILES/config/ghostty" "$XDG_CONFIG_DIR/ghostty";
   lnk "$DOTFILES/config/starship.toml" "$XDG_CONFIG_DIR/starship.toml";
   lnk "$DOTFILES/config/wezterm" "$XDG_CONFIG_DIR/wezterm";
 
