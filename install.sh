@@ -4,27 +4,32 @@ XDG_DATA_HOME="$HOME/.local/share";
 DOTFILES="$(cd -- "$(dirname "$0")" >/dev/null ; pwd -P)";
 [ -n "$HOMEBREW_PREFIX" ] && MAYBE_SUDO="" || MAYBE_SUDO="sudo";
 
-function abort() {
+abort() {
   echo "! $*" >&2
   exit 1;
 }
 
-function and() {
+and() {
   local x="$?";
   [ "$x" = "0" ] && echo "> $*" >&2 || echo "# $*" >&2;
   [ "$x" = "0" ] && "$@";
 }
 
-function skip() {
+run() {
+  echo "> $*" >&2;
+  "$@";
+}
+
+skip() {
   echo "# $*" >&2;
   echo 0; # return value
 }
 
-function download_binary() {
+download_binary() {
   curl -sL "$1" | tar xz -C "$PWD/bin/";
 }
 
-function lnk() {
+lnk() {
   local from="$1";
   local to="$2";
   local parent; parent="$(dirname "$to")";
@@ -33,7 +38,7 @@ function lnk() {
   [ ! -L "$to" ]; and ln -s "$from" "$to";
 }
 
-function install_all() {
+install_all() {
   install_cpanm;
   install_apps;
   install_lsp_servers;
@@ -41,7 +46,7 @@ function install_all() {
   install_macos;
 }
 
-function install_apps() {
+install_apps() {
   [ -z "$HOMEBREW_PREFIX" ] && return 1;
   local brew="$HOMEBREW_PREFIX/bin/brew";
   [ ! -x "$brew" ] && abort "ruby -e \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\"";
@@ -158,7 +163,7 @@ function install_apps() {
   install_brew_package "z";
 }
 
-function install_brew_package() {
+install_brew_package() {
   local name="$1";
   local file="${2:-"$1"}";
   [ -d "/opt/homebrew/Cellar" ] || return 0;
@@ -168,7 +173,7 @@ function install_brew_package() {
   brew install "$name";
 }
 
-function install_cpanm() {
+install_cpanm() {
   true; and $MAYBE_SUDO cpanm -n \
     App::errno     App::githook_perltidy App::httpstatus  \
     App::pause     App::podify           App::tt          \
@@ -176,10 +181,10 @@ function install_cpanm() {
     Mojolicious    Pod::Markdown         Term::ReadKey;   \
 }
 
-function install_dotfiles() {
+install_dotfiles() {
   # bash
-  runx "$DOTFILES_HOME/config/bash/bash_profile.sh" > "$HOME/.bash_profile";
-  runx "$DOTFILES_HOME/config/bash/bashrc.sh" > "$HOME/.bashrc";
+  run "$DOTFILES/config/bash/bash_profile.sh" > "$HOME/.bash_profile";
+  run "$DOTFILES/config/bash/bashrc.sh" > "$HOME/.bashrc";
   lnk "$DOTFILES/config/bash/inputrc" "$HOME/.inputrc";
   lnk "$DOTFILES/config/ghostty" "$XDG_CONFIG_DIR/ghostty";
   lnk "$DOTFILES/config/starship.toml" "$XDG_CONFIG_DIR/starship.toml";
@@ -200,7 +205,7 @@ function install_dotfiles() {
   lnk "$HOME/Nextcloud/.password-store" "$HOME/.password-store";
 }
 
-function install_gnupg() {
+install_gnupg() {
   export GNUPGHOME="$HOME/.gnupg";
   export BACKUP_GNUPGHOME="${BACKUP_GNUPGHOME:-/BACKUP_GNUPGHOME}";
 
@@ -246,12 +251,12 @@ HERE
   if [ -n "$GPG_EXPIRE_TIME" ]; then
     local n_keys; n_keys="$(gpg --list-keys "$email" | grep "^sub " | wc -l | sed -E 's/[^0-9]+//g')";
     for idx in $(seq 1 "$n_keys"); do
-      echo "${GPG_EXPIRE_TIME:-6m}" | runx gpg --command-fd 0 --edit-key "$email" "key $idx" "expire" "save";
+      echo "${GPG_EXPIRE_TIME:-6m}" | run gpg --command-fd 0 --edit-key "$email" "key $idx" "expire" "save";
     done
   fi
 }
 
-function install_lsp_servers() {
+install_lsp_servers() {
   # sudo xcodebuild -license accept
   install_brew_package lua-language-server;
   install_brew_package yaml-language-server;
@@ -265,7 +270,7 @@ function install_lsp_servers() {
     yaml-language-server;
 }
 
-function install_macos() {
+install_macos() {
   [ "$(uname -o)" = "Darwin" ] || return 0;
   defaults_write -globalDomain InitialKeyRepeat 15;
   defaults_write -globalDomain KeyRepeat 2;
@@ -300,12 +305,12 @@ function install_macos() {
   done
 }
 
-function defaults_write() {
+defaults_write() {
   local type; type="$(defaults read-type "$@" | sed 's/.* is //')";
   true; and defaults write  "$1" "$2" -"$type" "$3";
 }
 
-function command_usage() {
+command_usage() {
   echo "Usage:
   \$ bash ./install.sh macos;
   \$ bash ./install.sh dotfiles;
@@ -317,7 +322,7 @@ function command_usage() {
 ";
 }
 
-function main() {
+main() {
   local -a unparsed;
   local command="command_usage";
 
