@@ -77,7 +77,6 @@ install_apps() {
   ! command -v im-select > /dev/null; and "$brew" tap daipeihust/tap;
   [ -z "$SKIP_UPDATE" ]; and "$brew" update; and "$brew" upgrade;
 
-  install_brew_package "age";
   install_brew_package "alt-tab" "/Applications/AltTab.app";
   install_brew_package "atuin";
   install_brew_package "balenaetcher" "/Applications/balenaEtcher.app";
@@ -90,7 +89,6 @@ install_apps() {
   install_brew_package "cpanm";
   install_brew_package "csvprintf";
   install_brew_package "ctags";
-  install_brew_package "doctl";
   install_brew_package "exiftool";
   install_brew_package "eza";
   install_brew_package "fd";
@@ -99,11 +97,8 @@ install_apps() {
   install_brew_package "fontconfig";
   install_brew_package "freetype";
   install_brew_package "fsevents-tools";
-  install_brew_package "fx";
   install_brew_package "fzf";
-  install_brew_package "gh";
   install_brew_package "git";
-  install_brew_package "glances";
   install_brew_package "gnupg";
   install_brew_package "gnutls";
   install_brew_package "go";
@@ -114,11 +109,8 @@ install_apps() {
   install_brew_package "jpeg";
   install_brew_package "jpegoptim";
   install_brew_package "less";
-  install_brew_package "lf";
-  install_brew_package "lynx";
   install_brew_package "macdown";
   install_brew_package "mkcert";
-  install_brew_package "nvm";
   install_brew_package "mysql";
   install_brew_package "mysql-client";
   install_brew_package "neovim";
@@ -126,7 +118,6 @@ install_apps() {
   install_brew_package "nginx";
   install_brew_package "nmap";
   install_brew_package "node";
-  install_brew_package "oh-my-posh";
   install_brew_package "openssh";
   install_brew_package "openssl";
   install_brew_package "pass";
