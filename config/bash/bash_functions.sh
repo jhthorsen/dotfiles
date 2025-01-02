@@ -36,5 +36,5 @@ git() {
 reload() {
   "$DOTFILES_HOME/config/bash/bash_profile.sh" > "$HOME/.bash_profile";
   "$DOTFILES_HOME/config/bash/bashrc.sh" > "$HOME/.bashrc";
-  exec "$0" --rcfile "$DOTFILES_HOME/config/bash/bash_reload";
+  exec bash --rcfile "$DOTFILES_HOME/config/bash/bash_reload";
 }
