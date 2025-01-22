@@ -142,6 +142,7 @@ install_apps() {
   install_brew_package "sshuttle";
   install_brew_package "telnet";
   install_brew_package "termshark";
+  install_brew_package "th-ch/youtube-music/youtube-music" "/Applications/YouTube\ Music.app";
   install_brew_package "trash-cli";
   install_brew_package "ukelele" "/Applications/Ukelele.app";
   install_brew_package "wezterm";
