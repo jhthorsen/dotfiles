@@ -34,6 +34,7 @@ M.normal_mode = {
   {key = '-',     mods = 'SUPER',       action = 'DecreaseFontSize'},
   {key = '-',     mods = 'SUPER|SHIFT', action = 'IncreaseFontSize'},
   {key = '0',     mods = 'SUPER',       action = 'ResetFontSize'},
+  {key = '0',     mods = 'SUPER|SHIFT', action = 'ResetFontSize'},
   {key = ']',     mods = 'SUPER|SHIFT', action = 'ShowDebugOverlay'},
   {key = 'm',     mods = 'SUPER|SHIFT', action = 'ShowLauncher'},
   {key = 'z',     mods = 'SUPER',       action = 'TogglePaneZoomState'},
