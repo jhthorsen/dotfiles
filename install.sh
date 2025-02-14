@@ -183,7 +183,11 @@ install_dotfiles() {
   lnk "$DOTFILES/config/wezterm" "$XDG_CONFIG_DIR/wezterm";
 
   # nvim
-  lnk "$DOTFILES/config/nvim" "$XDG_CONFIG_DIR/nvim";
+  mkdir -p "$XDG_CONFIG_DIR/nvim";
+  [ ! -e "$XDG_CONFIG_DIR/nvim/init.lua" ];
+    and curl -Lq --output "$XDG_CONFIG_DIR/nvim/init.lua" "https://raw.githubusercontent.com/jhthorsen/batphone.nvim/refs/heads/main/init.lazy.lua";
+
+  curl -sL "$1" | tar xz -C "$PWD/bin/";
   lnk "$DOTFILES/share/nvim/site/pack/batpack" "$XDG_DATA_HOME/nvim/site/pack/batpack";
 
   # misc
