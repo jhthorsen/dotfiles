@@ -38,3 +38,10 @@ reload() {
   "$DOTFILES_HOME/config/bash/bashrc.sh" > "$HOME/.bashrc";
   exec bash --rcfile "$DOTFILES_HOME/config/bash/bash_reload";
 }
+
+vi() {
+  if [ -n "$*" ]; then nvim "$@";
+  elif [ -d ".git" ]; then nvim -c ":Telescope git_files";
+  else nvim -c ":Telescope oldfiles";
+  fi
+}
