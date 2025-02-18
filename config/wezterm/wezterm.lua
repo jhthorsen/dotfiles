@@ -16,7 +16,7 @@ return {
   hide_tab_bar_if_only_one_tab = true,
   inactive_pane_hsb = {brightness = 0.75, saturation = 0.85},
   native_macos_fullscreen_mode = false,
-  scrollback_lines = 10000,
+  scrollback_lines = 30000,
   window_close_confirmation = 'AlwaysPrompt',
   window_padding = {top = 6, right = 6, bottom = 0, left = 6},
 
