@@ -1,5 +1,9 @@
 #!/bin/bash
-[ -z "$PASSWORD_STORE_DIR" ] && PASSWORD_STORE_DIR="$HOME/.password-store";
+[ -n "$PASSWORD_STORE_CLIP_TIME" ] || PASSWORD_STORE_CLIP_TIME="60";
+[ -n "$PASSWORD_STORE_DIR" ] || PASSWORD_STORE_DIR="$HOME/.password-store";
+[ -n "$FZF_PREVIEW_COMMAND" ] || export FZF_PREVIEW_COMMAND="bat --color always -l yaml --line-range 2: --style plain";
+
+export FZF_PREVIEW_COMMAND PASSWORD_STORE_DIR PASSWORD_STORE_CLIP_TIME;
 
 if [ -n "$IMPORT_FILE" ] ; then
   echo "\$ EDITOR=$0 pass edit < $IMPORT_FILE";
@@ -8,15 +12,31 @@ if [ -n "$IMPORT_FILE" ] ; then
   exit "$?";
 fi
 
-function find_password_entries() {
+find_password_entries() {
   find -L "$PASSWORD_STORE_DIR" -not -name .git -a -name '*.gpg' 2>/dev/null \
-    | sed -e "s#${PASSWORD_STORE_DIR}/\{0,1\}##" -e 's#\.gpg##' -e 's#\\#\\\\#g' -e 's#:#\\:#g' \
+    | sed -e "s:$PASSWORD_STORE_DIR/\{0,1\}::" -e 's/\.gpg//' -e 's/\\/\\\\/g' -e 's/:/\\:/g' \
     | sort;
 }
 
-if [ "$1" = "ls" ]; then
+find_password_entry() {
+  local opts=("--cycle" "--height=-0" "--highlight-line" "--layout=reverse" "--no-mouse");
+  if [ "$1" = "--no-preview" ]; then
+    find_password_entries | fzf -q "$found" "${opts[@]}" \
+      --border=none --no-scrollbar;
+  else
+    find_password_entries | fzf -q "$found" "${opts[@]}" \
+      --bind=ctrl-j:preview-down,ctrl-k:preview-up \
+      --preview-window=down,70% \
+      --preview "pass show {} | $FZF_PREVIEW_COMMAND";
+  fi
+}
+
+sub_command="$1";
+shift;
+
+if [ "$sub_command" = "ls" ]; then
   find_password_entries;
-elif [ "$1" = "export" ]; then
+elif [ "$sub_command" = "export" ]; then
   OUTPUT="$2";
   [ -d "$OUTPUT" ] || exec echo "Output directory does not exists";
   for i in $(find_password_entries); do
@@ -24,26 +44,27 @@ elif [ "$1" = "export" ]; then
     echo "pass show $i > $OUTPUT/$i.yaml";
     pass show "$i" > "$OUTPUT/$i.yaml";
   done
-elif [ "$1" = "import" ]; then
+elif [ "$sub_command" = "import" ]; then
   export SOURCE_DIR="$2";
   [ -d "$SOURCE_DIR" ] || exec echo "Usage: gof import /path/to/exported/files";
   for f in $(find "$SOURCE_DIR" -type f | grep '\.yaml$'); do
     export EDITOR="$0";
     export IMPORT_FILE="$f";
     name="${IMPORT_FILE%.*}";
-    name="$(echo "$name" | sed -e "s#${SOURCE_DIR}/\{0,1\}##")";
+    name="$(echo "$name" | sed -e "s,${SOURCE_DIR}/\{0,1\},,")";
     pass edit "$name";
   done
-elif [ "$1" = "pw" ]; then
-  found="$(find_password_entries | fzf --no-mouse --no-scrollbar --border=none --layout=reverse --height=-0)";
-  [ -n "$found" ] || exit 2;
-  pass show -c "$found";
+elif [ "$sub_command" = "loop" ]; then
+  trap 'kill $(jobs -p)' SIGINT SIGTERM;
+  while :; do
+    found="$(find_password_entry "$@")";
+    [ -z "$found" ] && exit 0;
+    pass show -c "$found";
+    sleep "$PASSWORD_STORE_CLIP_TIME" &
+    wait;
+  done
 else
-  [ -z "$FZF_PREVIEW_COMMAND" ] && export FZF_PREVIEW_COMMAND="bat --color always -l yaml --line-range 2: --style plain";
-  found="$(find_password_entries | fzf \
-    --no-mouse --layout=reverse --height=-0 \
-    --bind=ctrl-j:preview-down,ctrl-k:preview-up \
-    --preview-window=down,70% --preview "pass show {} | $FZF_PREVIEW_COMMAND")";
+  found="$(find_password_entry "$@")";
   [ -n "$found" ] || exit 2;
   pass show -c "$found";
 fi
