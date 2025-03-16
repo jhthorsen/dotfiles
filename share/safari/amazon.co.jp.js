@@ -1,21 +1,24 @@
 window.addEventListener('load', async function() {
-  try {
-    const columns = ['ordered_at', 'id', 'cost', 'content', 'img_url', 'order_url', 'product_url'];
-    const $form = document.querySelector('form[action*="/your-orders/orders"]');
-    if (!$form) return console.log('Skip order parser safari/amazon.co.jp.js');
+  const columns = ['ordered_at', 'id', 'cost', 'content', 'img_url', 'order_url', 'product_url'];
+  const $form = document.querySelector('form[action*="/your-orders/orders"]');
+  if (!$form) return console.log('Skip order parser safari/amazon.co.jp.js');
 
+  try {
     let storageOrders = JSON.parse(localStorage.getItem('AmazonOrderHistory') || '[]');
     let found = 0;
-    for (const $orderLink of document.querySelectorAll('a[href*="/order-details/"], a[href*="/order-summary"]')) {
+    for (const $orderLink of document.querySelectorAll('a[href*="/order-details"]')) {
       const $orderCard = $orderLink.closest('.js-order-card');
-      const id = $orderCard.querySelector('.yohtmlc-order-id').textContent.replace(/.*#\s*/, '').trim(); // Remove "ORDER #"
+      const text = $orderCard.textContent;
+      const id = text.match(/Order\W+([\d-]+)\s+/)[1];
       if ($orderCard.textContent.match(/Return complete/)) {
         storageOrders = storageOrders.filter(o => o.id !== id);
         continue;
       }
 
-      for (const $product of $orderCard.querySelectorAll('.yohtmlc-item a')) {
-        if ($product.href.indexOf('/product/') == -1) continue;
+      const orderDate = parseDate(text.match(/Order placed\W+(\w+\W+\d+\W+20\d\d)\s+/)[1]);
+      const cost = text.match(/Total\W+([\d.,]+)\s+/)[1];
+      for (const $product of $orderCard.querySelectorAll('a')) {
+        if ($product.href.indexOf('/dp/') === -1) continue;
 
         // Add or update each product within an order
         const order = storageOrders.filter(o => o.id === id && o.product_url === $product.href)[0] || {};
@@ -31,8 +34,8 @@ window.addEventListener('load', async function() {
         if (order.img_url && order.img_url !== $img.src) found++;
 
         order.content = $product.textContent.trim();
-        order.cost = $orderCard.querySelector('.yohtmlc-order-total').textContent.trim().replace(/\D+/g, '');
-        order.ordered_at = parseDate($orderCard.querySelector('.a-size-base .a-color-secondary').textContent.trim());
+        order.cost = cost;
+        order.ordered_at = orderDate;
         order.ts = new Date(order.ordered_at).getTime();
         order.img_url = $img.src;
         order.order_url = $orderLink.href;
