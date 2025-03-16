@@ -3,6 +3,7 @@
 bin/eza
 bin/fzf
 bin/starship
+bin/tar
 local/
 config/nvim/lua/.luarc.json
 config/nvim/spell
