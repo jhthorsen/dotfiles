@@ -98,6 +98,7 @@ install_apps() {
   install_brew_package "freetype";
   install_brew_package "fsevents-tools";
   install_brew_package "fzf";
+  install_brew_package "gh";
   install_brew_package "git";
   install_brew_package "gnupg";
   install_brew_package "gnutls";
