@@ -18,6 +18,7 @@ _export HISTSIZE "10000";
 _export LANG "en_US.UTF-8";
 _export LESS "XFR";
 _export LS_COLORS "";
+_export NVIM_TERMINAL_SHELL "tmac";
 _export SSLMAKER_HOME "/opt/homebrew/etc/sslmaker";
 _export TT_HOURS_PER_MONTH "150";
 
