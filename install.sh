@@ -144,6 +144,7 @@ install_apps() {
   install_brew_package "telnet";
   install_brew_package "termshark";
   install_brew_package "th-ch/youtube-music/youtube-music" "/Applications/YouTube\ Music.app";
+  install_brew_package "tmux";
   install_brew_package "trash-cli";
   install_brew_package "ukelele" "/Applications/Ukelele.app";
   install_brew_package "wezterm";
@@ -171,7 +172,8 @@ install_cpanm() {
     App::errno     App::githook_perltidy App::httpstatus  \
     App::pause     App::podify           App::tt          \
     CPAN::Uploader Devel::Cover          Getopt::App      \
-    Mojolicious    Pod::Markdown         Term::ReadKey;   \
+    Mojolicious    Pod::Markdown         Term::ReadKey    \
+    Regexp::Common;
 }
 
 install_dotfiles() {
@@ -190,6 +192,11 @@ install_dotfiles() {
 
   curl -sL "$1" | tar xz -C "$PWD/bin/";
   lnk "$DOTFILES/share/nvim/site/pack/batpack" "$XDG_DATA_HOME/nvim/site/pack/batpack";
+
+  # tmux
+  lnk "$DOTFILES/config/tmux/tmux.conf" "$HOME/.tmux.conf";
+  [ ! -d ~/.tmux/plugins ]; and mkdir -p ~/.tmux/plugins;
+  [ ! -d ~/.tmux/plugins/tpm ]; and git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
   # misc
   lnk "$DOTFILES/config/ackrc" "$HOME/.ackrc";
