@@ -34,7 +34,15 @@ find_password_entry() {
 sub_command="$1";
 shift;
 
-if [ "$sub_command" = "ls" ]; then
+if [ "$sub_command" = "--help" ]; then
+  cat <<HERE
+  $ gof
+  $ gof ls
+  $ gof export /path/to/exported/files
+  $ gof import /path/to/exported/files
+  $ gof loop
+HERE
+elif [ "$sub_command" = "ls" ]; then
   find_password_entries;
 elif [ "$sub_command" = "export" ]; then
   OUTPUT="$2";
