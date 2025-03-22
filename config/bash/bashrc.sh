@@ -10,6 +10,7 @@ HOMEBREW_PREFIX="$(/opt/homebrew/bin/brew --prefix 2>/dev/null)";
 
 _export ANSIBLE_NOCOWS "1";
 _export AUTO_REMOVE_SLASH "0";
+_export CDPATH ":$HOME/git:$HOME/git/_alien:$HOME/git/_old:$HOME/Nextcloud";
 _export DOTFILES_HOME "$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")";
 _export EDITOR "nvim";
 _export FZF_DEFAULT_COMMAND "fd --type f";
