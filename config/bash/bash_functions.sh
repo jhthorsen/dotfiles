@@ -34,9 +34,9 @@ git() {
 }
 
 reload() {
-  "$DOTFILES_HOME/config/bash/bash_profile.sh" > "$HOME/.bash_profile";
+  echo "Reloading bash v$BASH_VERSION";
   "$DOTFILES_HOME/config/bash/bashrc.sh" > "$HOME/.bashrc";
-  exec bash --rcfile "$DOTFILES_HOME/config/bash/bash_reload";
+  exec bash --rcfile "$DOTFILES_HOME/config/bash/.bashrc";
 }
 
 vi() {

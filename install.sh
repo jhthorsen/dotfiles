@@ -178,7 +178,7 @@ install_cpanm() {
 
 install_dotfiles() {
   # bash
-  run "$DOTFILES/config/bash/bash_profile.sh" > "$HOME/.bash_profile";
+  run echo "source ~/.bashrc" > "$HOME/.bash_profile";
   run "$DOTFILES/config/bash/bashrc.sh" > "$HOME/.bashrc";
   lnk "$DOTFILES/config/bash/inputrc" "$HOME/.inputrc";
   lnk "$DOTFILES/config/ghostty" "$XDG_CONFIG_DIR/ghostty";
