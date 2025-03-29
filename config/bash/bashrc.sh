@@ -41,6 +41,7 @@ _export AUTO_REMOVE_SLASH "0";
 _export CDPATH ":$HOME/git:$HOME/git/_alien:$HOME/git/_old:$HOME/Nextcloud";
 _export DOTFILES_HOME "$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")";
 _export EDITOR "nvim";
+_export ENABLE_COPILOT "yes";
 _export FZF_DEFAULT_COMMAND "fd --type f";
 _export FZF_DEFAULT_OPTS "--height 10 --reverse";
 _export HISTSIZE "10000";
