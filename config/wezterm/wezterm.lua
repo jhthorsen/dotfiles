@@ -21,8 +21,8 @@ return {
   window_padding = {top = 6, right = 6, bottom = 0, left = 6},
 
   colors = theme_kanagawa,
-  font_size = 12,
-  line_height = 1.3,
+  font_size = 12.2,
+  line_height = 1.2,
   font = wezterm.font_with_fallback({
     {family = "Hack Nerd Font"},
     {family = "JetBrains Mono"},
