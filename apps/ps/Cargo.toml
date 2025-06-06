@@ -1,0 +1,11 @@
+[package]
+name = "ps"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+colored = "3.0.0"
+env_logger = "0.11.8"
+log = "0.4.27"
+pager = "0.16.1"
+regex = "1.11.1"

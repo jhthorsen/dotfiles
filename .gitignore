@@ -1,7 +1,9 @@
 *swp
 .pls_cache
+apps/*/target/
 bin/eza
 bin/fzf
+bin/ps
 bin/starship
 bin/tar
 local/
