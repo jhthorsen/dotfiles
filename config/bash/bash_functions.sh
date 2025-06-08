@@ -36,12 +36,12 @@ git() {
 reload() {
   echo "Reloading bash v$BASH_VERSION";
   "$DOTFILES_HOME/config/bash/bashrc.sh" > "$HOME/.bashrc";
-  exec bash --rcfile "$DOTFILES_HOME/config/bash/.bashrc";
+  exec bash --login;
 }
 
 vi() {
   if [ -n "$*" ]; then nvim "$@";
-  elif [ -d ".git" ]; then nvim -c ":Telescope git_files";
-  else nvim -c ":Telescope oldfiles";
+  elif [ -d ".git" ]; then nvim -c ":lua Snacks.picker.smart()";
+  else nvim -c ":lua Snacks.picker.recent()";
   fi
 }
