@@ -8,6 +8,7 @@ pub struct Cli {
     pub flags: Vec<String>,
     pub output_format: String,
     pub special: Vec<char>,
+    pub no_header: bool,
     pub tree: bool,
     pub wide: bool,
 }
@@ -16,12 +17,11 @@ impl Cli {
     pub fn parse_command_line_args() -> Self {
         let mut cli = Cli::default();
         let mut input = env::args();
-
         cli.name = input.next().unwrap();
 
         while input.len() > 0 {
             let arg = input.next().unwrap();
-            log::debug!("arg={}", arg);
+            log::trace!("arg={}", arg);
 
             if arg.starts_with("-o") {
                 cli.output_format = input.next().unwrap_or_else(|| {
@@ -61,6 +61,9 @@ impl Cli {
 
                     if c == 'f' {
                         cli.tree = true;
+                    } else if c == 'h' {
+                        cli.no_header = true;
+                        cli.special.push(c);
                     } else if c == 'w' {
                         cli.wide = true;
                         cli.special.push(c);

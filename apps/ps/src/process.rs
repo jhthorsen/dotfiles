@@ -2,7 +2,8 @@
 pub struct Process {
     pub pid: u32,
     pub ppid: u32,
-    pub columns: Option<Vec<String>>,
+    pub columns: Vec<String>,
+    pub last: String,
     pub children: Vec<u32>,
 }
 
@@ -32,7 +33,8 @@ impl Process {
         Some(Process {
             pid,
             ppid,
-            columns: Some(columns),
+            last: columns.pop().unwrap_or_default(),
+            columns: columns,
             children: vec![],
         })
     }

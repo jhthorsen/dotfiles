@@ -1,9 +1,8 @@
 use crate::process::Process;
-use colored::*;
+use comfy_table::{Attribute, Cell, CellAlignment, Color, Row};
 use pager::Pager;
 use std::collections::HashMap;
 use std::env;
-use std::path::Path;
 use std::process::{self, Command};
 
 fn capture_stdout(cmd: &mut Command) -> String {
@@ -24,7 +23,8 @@ fn capture_stdout(cmd: &mut Command) -> String {
     String::from_utf8_lossy(&output.stdout).to_string()
 }
 
-fn print_process_tree(
+fn make_process_tree(
+    table: &mut comfy_table::Table,
     cli: &crate::cli::Cli,
     lookup: &HashMap<u32, Process>,
     pids: &Vec<u32>,
@@ -36,41 +36,46 @@ fn print_process_tree(
             continue;
         };
 
+        let mut row = Row::new();
+        row.add_cell(match node.last.is_empty() {
+            true => rcell(&node.pid.to_string()).add_attribute(Attribute::Dim),
+            false => rcell(&node.pid.to_string()),
+        });
+
         let last = i == pids.len() - 1;
         let arrow = if last { "└─" } else { "├─" };
-        if let Some(columns) = &node.columns {
-            let mut columns = columns.clone();
-            if cli.wide == false {
-                if let Some(last) = columns.last_mut() {
-                    *last = short_command(last)
-                }
+        let mut headers = table.header().unwrap().cell_iter();
+        headers.next(); // Skip the first header (PID)
+        for (i, val) in node.columns.iter().enumerate() {
+            let h = headers.next().unwrap();
+            let mut val = val.clone();
+            if ["rss", "rsz", "size", "sz", "trs", "vsz"]
+                .contains(&h.content().to_lowercase().as_str())
+            {
+                val = crate::util::format_with_suffix(val.parse::<usize>().unwrap_or(0));
             }
 
-            println!(
-                "{}{} {}{} {}",
-                " ".repeat(8 - node.pid.to_string().len()),
-                node.pid,
-                indent,
-                arrow.dimmed().green(),
-                columns.join(" "),
-            );
-        } else {
-            println!(
-                "{}{} {}{} {}",
-                " ".repeat(8 - node.pid.to_string().len()),
-                node.pid.to_string().dimmed(),
-                indent,
-                arrow.dimmed().green(),
-                "",
-            );
+            row.add_cell(match i {
+                i if i % 2 == 1 => rcell(&val),
+                _ => rcell(&val).add_attribute(Attribute::Dim),
+            });
         }
+
+        let command = match cli.wide {
+            false => crate::util::short_command(&node.last),
+            true => node.last.clone(),
+        };
+
+        row.add_cell(Cell::new(format!("{}{} {}", indent, arrow, command)).fg(Color::DarkYellow));
+
+        table.add_row(row);
 
         let indent = match last {
             true => format!("{}  ", indent),
-            false => format!("{}│ ", indent).dimmed().green().to_string(),
+            false => format!("{}│ ", indent),
         };
 
-        print_process_tree(&cli, lookup, &node.children, &indent);
+        make_process_tree(table, &cli, lookup, &node.children, &indent);
     }
 }
 
@@ -80,9 +85,9 @@ fn ps_flags(cli: &crate::cli::Cli) -> Vec<String> {
 
     let mut special: Vec<char> = vec![];
     for c in cli.special.iter() {
-        log::debug!("special={}", c);
         match c {
             'u' => output_format = "pid,ppid,user".to_string(),
+            'v' => output_format = "pid,ppid,time,%cpu,%mem,rss,vsz".to_string(),
             c => special.push(*c),
         };
     }
@@ -103,15 +108,22 @@ fn ps_flags(cli: &crate::cli::Cli) -> Vec<String> {
     flags
 }
 
+fn rcell(v: &str) -> Cell {
+    Cell::new(v).set_alignment(CellAlignment::Right)
+}
+
 pub fn run(cli: crate::cli::Cli) {
     let flags = ps_flags(&cli);
-    log::debug!("tree={:?}", flags);
+    log::debug!("ps {}", flags.join(" "));
 
-    let columns = flags.last().unwrap().split(",").collect::<Vec<&str>>();
+    let headers = flags.last().unwrap().split(",").collect::<Vec<&str>>();
     let pid = std::process::id();
     let mut lookup: HashMap<u32, Process> = HashMap::new();
     for line in capture_stdout(cli.ps_command().args(&flags)).split('\n') {
-        let Some(child) = Process::from_line(&line, &columns) else {
+        if line.is_empty() || line.contains(" PPID ") {
+            continue;
+        }
+        let Some(child) = Process::from_line(&line, &headers) else {
             log::warn!("Unable to parse \"{}\"", line);
             continue;
         };
@@ -123,7 +135,8 @@ pub fn run(cli: crate::cli::Cli) {
         let parent = lookup.entry(child.ppid).or_insert(Process {
             pid: child.ppid,
             ppid: 1,
-            columns: None,
+            last: "".to_string(),
+            columns: child.columns.iter().map(|_| "-".to_string()).collect(),
             children: vec![],
         });
 
@@ -146,30 +159,51 @@ pub fn run(cli: crate::cli::Cli) {
 
     root_pids.sort_unstable();
 
-    let pager = env::var("PS_PAGER").unwrap_or("less -SX".to_string());
-    if pager.starts_with("less") {
-        colored::control::set_override(true);
+    let mut table = comfy_table::Table::new();
+
+    table.load_preset(comfy_table::presets::NOTHING);
+    if table.is_tty() {
+        table.enforce_styling();
     }
 
-    Pager::with_pager(&pager).setup();
-    print_process_tree(&cli, &lookup, &root_pids, "");
-}
+    table.set_header(table_headers(&headers));
+    make_process_tree(&mut table, &cli, &lookup, &root_pids, "");
 
-fn short_command(command: &mut String) -> String {
-    let mut found_name = false;
-    let mut path: Vec<String> = vec![];
-    for part in command.split(" ") {
-        if found_name {
-            path.push(part.to_string());
-        } else {
-            path.push(part.to_string());
-            if Path::new(&path.join(" ")).is_file() {
-                path.clear();
-                path.push(part.split("/").last().unwrap().to_string());
-                found_name = true;
+    if table.is_tty() {
+        let pager = env::var("PS_PAGER").unwrap_or("less -SX".to_string());
+        Pager::with_pager(&pager).setup();
+        println!("{}", table);
+    } else {
+        for (i, line) in table.to_string().lines().enumerate() {
+            if i == 0 && cli.no_header {
+                continue;
             }
+            println!("{}", line.trim_end());
         }
     }
+}
 
-    path.join(" ").to_string()
+fn table_headers(headers: &[&str]) -> Vec<Cell> {
+    headers
+        .iter()
+        .enumerate()
+        .filter_map(|(i, h)| match i {
+            0 => None,
+            n if n == headers.len() - 1 => Some(
+                Cell::new(*h)
+                    .add_attributes(vec![Attribute::Bold])
+                    .fg(Color::DarkYellow),
+            ),
+            n if n % 2 == 1 => Some(
+                Cell::new(*h)
+                    .add_attributes(vec![Attribute::Bold])
+                    .set_alignment(CellAlignment::Right),
+            ),
+            _ => Some(
+                Cell::new(*h)
+                    .add_attributes(vec![Attribute::Bold, Attribute::Dim])
+                    .set_alignment(CellAlignment::Right),
+            ),
+        })
+        .collect::<Vec<Cell>>()
 }

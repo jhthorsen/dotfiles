@@ -1,6 +1,7 @@
 mod cli;
 mod process;
 mod tree;
+mod util;
 mod vanilla;
 
 fn main() {

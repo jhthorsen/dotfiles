@@ -16,7 +16,7 @@ pub fn ps_flags(cli: &crate::cli::Cli) -> Vec<String> {
 
 pub fn run(cli: crate::cli::Cli) {
     let flags = ps_flags(&cli);
-    log::debug!("vanilla={:?}", flags);
+    log::debug!("ps {}", flags.join(" "));
     let err = cli.ps_command().args(flags).exec();
     log::error!("Unable to exec ps: {}", err.to_string());
     std::process::exit(1); // Should not come to this
