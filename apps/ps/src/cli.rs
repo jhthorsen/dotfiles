@@ -6,7 +6,6 @@ use std::process;
 pub struct Cli {
     pub name: String,
     pub flags: Vec<String>,
-    pub output_format: String,
     pub special: Vec<char>,
     pub no_header: bool,
     pub tree: bool,
@@ -23,16 +22,13 @@ impl Cli {
             let arg = input.next().unwrap();
             log::trace!("arg={}", arg);
 
-            if arg.starts_with("-o") {
-                cli.output_format = input.next().unwrap_or_else(|| {
-                    log::error!("Missing argument for -o option");
-                    process::exit(1);
-                });
-            } else if arg.starts_with("-") {
+            if arg.starts_with("-") {
                 cli.flags.push(arg);
                 if let Some(val) = input.next() {
                     cli.flags.push(val);
                 }
+            } else if let Ok(_) = arg.parse::<usize>() {
+                cli.flags.push(arg);
             } else {
                 for c in arg.chars() {
                     // a: Not only yourself.

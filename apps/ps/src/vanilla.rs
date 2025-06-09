@@ -2,11 +2,6 @@ use std::os::unix::process::CommandExt;
 
 pub fn ps_flags(cli: &crate::cli::Cli) -> Vec<String> {
     let mut flags = cli.flags.clone();
-    if !cli.output_format.is_empty() {
-        flags.push("-o".to_string());
-        flags.push(cli.output_format.clone());
-    }
-
     if !cli.special.is_empty() {
         flags.insert(0, cli.special.iter().collect::<String>());
     }

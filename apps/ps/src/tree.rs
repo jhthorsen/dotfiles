@@ -79,7 +79,7 @@ fn make_process_tree(
     }
 }
 
-fn ps_flags(cli: &crate::cli::Cli) -> Vec<String> {
+fn ps_flags(cli: &crate::cli::Cli) -> (Vec<String>, Vec<String>) {
     let mut flags = cli.flags.clone();
     let mut output_format = "pid,ppid".to_string();
 
@@ -96,16 +96,16 @@ fn ps_flags(cli: &crate::cli::Cli) -> Vec<String> {
         flags.insert(0, special.iter().collect::<String>());
     }
 
-    if cli.output_format.is_empty() {
-        output_format.push_str(",command");
+    if let Some(i) = flags.iter().position(|c| c == "-o") {
+        output_format = format!("{},{}", output_format, flags[i + 1]);
+        flags[i + 1] = output_format.clone();
     } else {
-        output_format.push_str(",");
-        output_format.push_str(cli.output_format.as_str());
+        output_format = format!("{},command", output_format);
+        flags.push("-o".to_string());
+        flags.push(output_format.clone());
     }
 
-    flags.push("-o".to_string());
-    flags.push(output_format.to_string());
-    flags
+    (flags, output_format.split(",").map(|f| f.to_string()).collect::<Vec<String>>())
 }
 
 fn rcell(v: &str) -> Cell {
@@ -113,10 +113,9 @@ fn rcell(v: &str) -> Cell {
 }
 
 pub fn run(cli: crate::cli::Cli) {
-    let flags = ps_flags(&cli);
+    let (flags, headers) = ps_flags(&cli);
     log::debug!("ps {}", flags.join(" "));
 
-    let headers = flags.last().unwrap().split(",").collect::<Vec<&str>>();
     let pid = std::process::id();
     let mut lookup: HashMap<u32, Process> = HashMap::new();
     for line in capture_stdout(cli.ps_command().args(&flags)).split('\n') {
@@ -183,24 +182,24 @@ pub fn run(cli: crate::cli::Cli) {
     }
 }
 
-fn table_headers(headers: &[&str]) -> Vec<Cell> {
+fn table_headers(headers: &Vec<String>) -> Vec<Cell> {
     headers
         .iter()
         .enumerate()
         .filter_map(|(i, h)| match i {
             0 => None,
             n if n == headers.len() - 1 => Some(
-                Cell::new(*h)
+                Cell::new(h)
                     .add_attributes(vec![Attribute::Bold])
                     .fg(Color::DarkYellow),
             ),
             n if n % 2 == 1 => Some(
-                Cell::new(*h)
+                Cell::new(h)
                     .add_attributes(vec![Attribute::Bold])
                     .set_alignment(CellAlignment::Right),
             ),
             _ => Some(
-                Cell::new(*h)
+                Cell::new(h)
                     .add_attributes(vec![Attribute::Bold, Attribute::Dim])
                     .set_alignment(CellAlignment::Right),
             ),

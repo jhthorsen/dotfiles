@@ -8,7 +8,7 @@ pub struct Process {
 }
 
 impl Process {
-    pub fn from_line(line: &str, headers: &Vec<&str>) -> Option<Self> {
+    pub fn from_line(line: &str, headers: &Vec<String>) -> Option<Self> {
         let parts = line.split_whitespace().collect::<Vec<&str>>();
         if parts.len() < headers.len() {
             return None;
