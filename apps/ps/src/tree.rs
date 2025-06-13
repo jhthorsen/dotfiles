@@ -187,7 +187,7 @@ fn table_headers(headers: &Vec<String>) -> Vec<Cell> {
         .iter()
         .enumerate()
         .filter_map(|(i, h)| match i {
-            0 => None,
+            1 => None,
             n if n == headers.len() - 1 => Some(
                 Cell::new(h)
                     .add_attributes(vec![Attribute::Bold])
