@@ -13,9 +13,12 @@ pub struct Cli {
 }
 
 impl Cli {
-    pub fn parse_command_line_args() -> Self {
+    pub fn parse_command_line_args<I>(input: &mut I) -> Self
+    where
+        I: ExactSizeIterator<Item = String>,
+        <I as Iterator>::Item: std::fmt::Display,
+    {
         let mut cli = Cli::default();
-        let mut input = env::args();
         cli.name = input.next().unwrap();
 
         while input.len() > 0 {
@@ -86,5 +89,46 @@ impl Cli {
         }
 
         panic!("Unable to find the real ps command");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Cli;
+
+    #[test]
+    fn empty() {
+        let args: Vec<String> = "foo".split_whitespace().map(|s| s.to_string()).collect();
+        let cli = Cli::parse_command_line_args(&mut args.into_iter());
+        assert_eq!(cli.name, "foo".to_string());
+        assert_eq!(cli.flags, Vec::<String>::new());
+        assert_eq!(cli.special, Vec::<char>::new());
+        assert_eq!(cli.no_header, false);
+        assert_eq!(cli.tree, false);
+        assert_eq!(cli.wide, false);
+    }
+
+    #[test]
+    fn vanilla() {
+        let args: Vec<String> = "foo xa".split_whitespace().map(|s| s.to_string()).collect();
+        let cli = Cli::parse_command_line_args(&mut args.into_iter());
+        assert_eq!(cli.name, "foo".to_string());
+        assert_eq!(cli.flags, Vec::<String>::new());
+        assert_eq!(cli.special, vec!['x', 'a']);
+        assert_eq!(cli.no_header, false);
+        assert_eq!(cli.tree, false);
+        assert_eq!(cli.wide, false);
+    }
+
+    #[test]
+    fn many_options() {
+        let args: Vec<String> = "foo fvxhw -o ppid= 4242".split_whitespace().map(|s| s.to_string()).collect();
+        let cli = Cli::parse_command_line_args(&mut args.into_iter());
+        assert_eq!(cli.name, "foo".to_string());
+        assert_eq!(cli.flags, Vec::<String>::from(vec!["-o".into(), "ppid=".into(), "4242".into()]));
+        assert_eq!(cli.special, vec!['v', 'x', 'h', 'w']);
+        assert_eq!(cli.no_header, true);
+        assert_eq!(cli.tree, true);
+        assert_eq!(cli.wide, true);
     }
 }

@@ -38,3 +38,26 @@ pub fn short_command(command: &str) -> String {
 
     path.join(" ").to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{format_with_suffix, short_command};
+
+    #[test]
+    fn all_format_with_suffix() {
+        assert_eq!(format_with_suffix(0), "0.0k".to_string());
+        assert_eq!(format_with_suffix(1), "0.0k".to_string());
+        assert_eq!(format_with_suffix(10), "0.0k".to_string());
+        assert_eq!(format_with_suffix(200), "0.2k".to_string());
+        assert_eq!(format_with_suffix(3000), "3k".to_string());
+        assert_eq!(format_with_suffix(400000), "400k".to_string());
+        assert_eq!(format_with_suffix(50000000), "50M".to_string());
+        assert_eq!(format_with_suffix(6000000000), "6G".to_string());
+        assert_eq!(format_with_suffix(71123456789000), "71T".to_string());
+    }
+
+    #[test]
+    fn short_command_simple() {
+        assert_eq!(short_command("/bin/ps axf -o comm"), "ps axf -o comm".to_string());
+    }
+}
