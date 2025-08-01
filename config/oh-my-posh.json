@@ -1,0 +1,84 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "version": 3,
+  "final_space": true,
+  "terminal_background": "transparent",
+  "console_title_template": " {{ .Folder }} :: {{if .Root}}Admin{{end}}",
+  "palette": {
+    "bg": "#303030",
+    "fg": "#02AFD7"
+  },
+  "blocks": [
+    {
+      "alignment": "left",
+      "type": "prompt",
+      "segments": [
+        {
+          "type": "command",
+          "style": "plain",
+          "template": "{{ if eq .Output \"macbat2\" }}{{ else }}{{- .Output }} {{ end }}",
+          "background": "p:bg",
+          "foreground_templates": [
+            "{{ if .Env.SSH_TTY }}red{{ end }}",
+            "#02AFD7"
+          ],
+          "properties": {
+            "command": "hostname -s"
+          }
+        },
+        {
+          "type": "path",
+          "style": "plain",
+          "template": "{{ .Path }}",
+          "background": "p:bg",
+          "foreground": "p:fg",
+          "properties": {
+            "style": "agnoster_short",
+            "display_root": true,
+            "max_depth": 3
+          }
+        },
+        {
+          "type": "git",
+          "style": "plain",
+          "template": " ({{- .HEAD -}})",
+          "background": "p:bg",
+          "foreground": "p:fg",
+          "foreground_templates": [
+            "{{ if or (.Working.Changed) (.Staging.Changed) }}red{{ end }}",
+            "{{ if and (gt .Ahead 0) (gt .Behind 0)}}p:fg {{ end }}",
+            "{{ if gt .Ahead 0 }}magenta{{ end }}",
+            "{{ if gt .Behind 0 }magenta{{ end }}"
+          ],
+          "properties": {
+            "fetch_status": true,
+            "branch_icon": "\ue725 "
+          }
+        },
+        {
+          "type": "executiontime",
+          "style": "plain",
+          "template": " {{ .FormattedMs }}",
+          "background": "p:bg",
+          "properties": {
+            "threshold": 1000,
+            "style": "austin"
+          }
+        },
+        {
+          "type": "status",
+          "style": "diamond",
+          "trailing_diamond": "",
+          "template": " {{ if eq .Code 0 }}✓{{ else }}✗{{ end }} ",
+          "background": "p:bg",
+          "foreground_templates": [
+            "{{ if .Error }}red{{ end }}"
+          ],
+          "properties": {
+            "always_enabled": true
+          }
+        }
+      ]
+    }
+  ]
+}

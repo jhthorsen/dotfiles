@@ -26,6 +26,10 @@ ack() {
   return "$?";
 }
 
+acke() {
+  vi $(ack -l "$@")
+}
+
 git() {
   if [ -z "$*" ]; then command git status -bs; return "$?"; fi
   if [ ! -t 0 ]; then command git "$@"; return "$?"; fi
@@ -34,8 +38,9 @@ git() {
 }
 
 reload() {
+  "$DOTFILES_HOME/config/bash/generate.sh" "$DOTFILES_HOME/config/bash/bashrc.sh" > "$HOME/.bashrc";
+  "$DOTFILES_HOME/config/bash/generate.sh" "$DOTFILES_HOME/config/bash/bash_profile.sh" > "$HOME/.bash_profile";
   echo "Reloading bash v$BASH_VERSION";
-  "$DOTFILES_HOME/config/bash/bashrc.sh" > "$HOME/.bashrc";
   exec bash --login;
 }
 

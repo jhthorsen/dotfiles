@@ -54,11 +54,6 @@ install_apps() {
   local arch; arch="$(arch)";
   local platform="unknown-linux-musl";
 
-  # starship
-  [ "$(uname -o)" = "Darwin" ] && platform="apple-darwin";
-  [ "$(uname -o)" = "Darwin" ] && arch="aarch64";
-  ! command -v starship > /dev/null; and download_binary "https://github.com/starship/starship/releases/latest/download/starship-$arch-$platform.tar.gz";
-
   # eza
   local arch; arch="$(arch)";
   ! command -v eza > /dev/null; and download_binary "https://github.com/eza-community/eza/releases/download/v0.17.3/eza_$arch-unknown-linux-gnu.tar.gz";
@@ -78,7 +73,6 @@ install_apps() {
   [ -z "$SKIP_UPDATE" ]; and "$brew" update; and "$brew" upgrade;
 
   install_brew_package "alt-tab" "/Applications/AltTab.app";
-  install_brew_package "atuin";
   install_brew_package "balenaetcher" "/Applications/balenaEtcher.app";
   install_brew_package "bash-completion@2"
   install_brew_package "bat";
@@ -119,6 +113,7 @@ install_apps() {
   install_brew_package "nginx";
   install_brew_package "nmap";
   install_brew_package "node";
+  install_brew_package "oh-my-posh";
   install_brew_package "openssh";
   install_brew_package "openssl";
   install_brew_package "pass";
@@ -142,7 +137,6 @@ install_apps() {
   install_brew_package "ssh-copy-id";
   install_brew_package "sshuttle";
   install_brew_package "telnet";
-  install_brew_package "termshark";
   install_brew_package "th-ch/youtube-music/youtube-music" "/Applications/YouTube\ Music.app";
   install_brew_package "tmux";
   install_brew_package "trash-cli";
@@ -154,9 +148,8 @@ install_apps() {
   install_brew_package "ykman";
   install_brew_package "yubico-authenticator" "/Applications/Yubico Authenticator.app";
   install_brew_package "yubico-piv-tool";
-  install_brew_package "yubico-yubikey-manager" "/Applications/YubiKey Manager.app";
   install_brew_package "yubikey-personalization" "/opt/homebrew/Cellar/ykpers";
-  install_brew_package "z";
+  install_brew_package "zoxide";
 }
 
 install_brew_package() {
@@ -184,7 +177,7 @@ install_dotfiles() {
   run "$DOTFILES/config/bash/bashrc.sh" > "$HOME/.bashrc";
   lnk "$DOTFILES/config/bash/inputrc" "$HOME/.inputrc";
   lnk "$DOTFILES/config/ghostty" "$XDG_CONFIG_DIR/ghostty";
-  lnk "$DOTFILES/config/starship.toml" "$XDG_CONFIG_DIR/starship.toml";
+  lnk "$DOTFILES/config/oh-my-posh.json" "$XDG_CONFIG_DIR/oh-my-posh.json";
   lnk "$DOTFILES/config/wezterm" "$XDG_CONFIG_DIR/wezterm";
 
   # nvim
