@@ -146,6 +146,8 @@ install_apps() {
   install_brew_package "th-ch/youtube-music/youtube-music" "/Applications/YouTube\ Music.app";
   install_brew_package "tmux";
   install_brew_package "trash-cli";
+  install_brew_package "tree-sitter-cli";
+  install_brew_package "tree-sitter";
   install_brew_package "ukelele" "/Applications/Ukelele.app";
   install_brew_package "wezterm";
   install_brew_package "wget";
