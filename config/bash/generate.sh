@@ -3,6 +3,11 @@
 export DOTFILES_HOME="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")";
 export HOMEBREW_PREFIX="$(/opt/homebrew/bin/brew --prefix 2>/dev/null)";
 
+[ -r "$HOME/.config/shell/fzf-key-bindings.bash" ] \
+  || curl -Ls "https://github.com/junegunn/fzf/raw/master/shell/key-bindings.bash" > "$HOME/.config/shell/fzf-key-bindings.bash";
+[ -r "$HOME/.config/shell/fzf-completion.bash" ] \
+  || curl -Ls "https://github.com/junegunn/fzf/raw/master/shell/completion.bash" > "$HOME/.config/shell/fzf-completion.bash";
+
 generate_bash_functions() {
   grep "^[a-z]\+()" "$DOTFILES_HOME/config/bash/bash_functions.sh" | cut -d"(" -f1 | while read -r f; do
     echo "$f() { source \"$DOTFILES_HOME/config/bash/bash_functions.sh\"; $f \"\$@\"; };";
