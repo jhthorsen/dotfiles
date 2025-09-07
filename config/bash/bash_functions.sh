@@ -45,7 +45,9 @@ reload() {
 }
 
 vi() {
+  [ -d ".git" ] && tt start --quiet --resume;
   if [ -n "$*" ]; then nvim "$@";
   else nvim -c ':lua require("batphone.util").startup()';
   fi
+  [ -d ".git" ] && tt stop --quiet --tag-unless-same-project;
 }
