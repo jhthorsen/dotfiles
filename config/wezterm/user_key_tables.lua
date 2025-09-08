@@ -2,12 +2,40 @@ local wezterm = require 'wezterm'
 local act = wezterm.action
 local M = {}
 
-local clearScrollbackAndSendClearKey = act.Multiple({
+local activate_pane = function(dir, key)
+  return wezterm.action_callback(function(win, pane)
+    local info = pane:tab():panes_with_info()
+    for _, p in ipairs(info) do
+      if p.pane.pane_id == pane.pane_id and p.is_zoomed then
+        win:perform_action(wezterm.action.SendKey({key = 'w', mods = 'CTRL'}), pane)
+        win:perform_action(wezterm.action.SendKey({key = key}), pane)
+        return
+      end
+    end
+
+    if #info == 1 then
+      win:perform_action(wezterm.action.SendKey({key = 'w', mods = 'CTRL'}), pane)
+      win:perform_action(wezterm.action.SendKey({key = key}), pane)
+      return
+    end
+
+    win:perform_action(wezterm.action.ActivatePaneDirection(dir), pane)
+  end)
+end
+
+local clear_scrollback = act.Multiple({
   act.ClearScrollback('ScrollbackAndViewport'),
   act.SendString('\x03'),
   act.SendString('clear -a'),
   act.SendString('\x0d'),
 })
+
+local nvim_escape_terminal = wezterm.action_callback(function(win, pane)
+  win:perform_action(wezterm.action.SendKey({key = '\\', mods = 'CTRL'}), pane)
+  win:perform_action(wezterm.action.SendKey({key = 'n', mods = 'CTRL'}), pane)
+  win:perform_action(wezterm.action.SendKey({key = 'w', mods = 'CTRL'}), pane)
+  win:perform_action(wezterm.action.SendKey({key = 'h'}), pane)
+end)
 
 M.copy_mode = {
   {key = 'Escape', mods = 'NONE',        action = act.CopyMode('Close')},
@@ -33,6 +61,7 @@ M.normal_mode = {
   {key = 'Enter', mods = 'SUPER',       action = 'QuickSelect'},
   {key = '-',     mods = 'SUPER',       action = 'DecreaseFontSize'},
   {key = '-',     mods = 'SUPER|SHIFT', action = 'IncreaseFontSize'},
+  {key = '^',     mods = 'SUPER|ALT',   action = wezterm.action.ShowDebugOverlay},
   {key = '0',     mods = 'SUPER',       action = 'ResetFontSize'},
   {key = '0',     mods = 'SUPER|SHIFT', action = 'ResetFontSize'},
   {key = ']',     mods = 'SUPER|SHIFT', action = 'ShowDebugOverlay'},
@@ -42,7 +71,7 @@ M.normal_mode = {
   {key = 'c',     mods = 'SUPER',       action = act.CopyTo('Clipboard')},
   {key = 'p',     mods = 'SUPER|SHIFT', action = act.ActivateCommandPalette},
   {key = 'v',     mods = 'SUPER',       action = act.PasteFrom('Clipboard')},
-  {key = 'l',     mods = 'CTRL|SHIFT',  action = clearScrollbackAndSendClearKey},
+  {key = 'l',     mods = 'CTRL|SHIFT',  action = clear_scrollback},
   {key = 'u',     mods = 'CTRL|SUPER',  action = act.AttachDomain('unix')},
 
   {key = 't', mods = 'SUPER',       action = act.SpawnTab('CurrentPaneDomain')},
@@ -51,11 +80,12 @@ M.normal_mode = {
   {key = 's', mods = 'SUPER|SHIFT', action = act.SplitHorizontal({domain = 'CurrentPaneDomain'})},
   {key = 's', mods = 'SUPER',       action = act.SplitVertical({domain = 'CurrentPaneDomain'})},
   {key = 'w', mods = 'SUPER',       action = act.CloseCurrentTab({confirm = true})},
+  {key = 'Space', mods = 'SUPER|SHIFT',     action = nvim_escape_terminal},
 
-  {key = 'h', mods = 'SUPER',       action = act.ActivatePaneDirection('Left')},
-  {key = 'l', mods = 'SUPER',       action = act.ActivatePaneDirection('Right')},
-  {key = 'k', mods = 'SUPER',       action = act.ActivatePaneDirection('Up')},
-  {key = 'j', mods = 'SUPER',       action = act.ActivatePaneDirection('Down')},
+  {key = 'h', mods = 'SUPER',       action = activate_pane('Left', 'h')},
+  {key = 'l', mods = 'SUPER',       action = activate_pane('Right', 'l')},
+  {key = 'k', mods = 'SUPER',       action = activate_pane('Up', 'k')},
+  {key = 'j', mods = 'SUPER',       action = activate_pane('Down', 'j')},
   {key = 'h', mods = 'SUPER|SHIFT', action = act.AdjustPaneSize({'Left', 3})},
   {key = 'l', mods = 'SUPER|SHIFT', action = act.AdjustPaneSize({'Right', 3})},
   {key = 'k', mods = 'SUPER|SHIFT', action = act.AdjustPaneSize({'Up', 1})},
