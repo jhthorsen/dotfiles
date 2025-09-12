@@ -54,6 +54,12 @@ install_apps() {
   local arch; arch="$(arch)";
   local platform="unknown-linux-musl";
 
+  # rust
+  if ! command -v cargo > /dev/null; then
+    run curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh;
+    run rustup component add rust-analyzer;
+  fi
+
   # eza
   local arch; arch="$(arch)";
   ! command -v eza > /dev/null; and download_binary "https://github.com/eza-community/eza/releases/download/v0.17.3/eza_$arch-unknown-linux-gnu.tar.gz";
@@ -131,7 +137,6 @@ install_apps() {
   install_brew_package "rmlint";
   install_brew_package "rsync";
   install_brew_package "ruby";
-  install_brew_package "rust";
   install_brew_package "smartmontools";
   install_brew_package "sqlite";
   install_brew_package "ssh-copy-id";
