@@ -18,10 +18,10 @@ return function(window)
     height = height
     width = width
   else
-    overrides.dpi = 100
+    overrides.dpi = 109
     overrides.font_size = 9
-    height = height * 0.8
-    width = width > 2000 and 2000 or width * 0.9
+    height = height * 0.85
+    width = width > 2200 and 2200 or width * 0.9
   end
 
   -- wezterm.log_info(overrides)
@@ -37,7 +37,7 @@ return function(window)
     if screen.width == width then
       window:maximize()
     else
-      window:set_position(screen.width - width - 40, math.floor((screen.height - height) / 2))
+      window:set_position(screen.width - width, math.floor((screen.height - height) / 2))
     end
   end)
 end
