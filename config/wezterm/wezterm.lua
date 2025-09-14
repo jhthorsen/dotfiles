@@ -4,10 +4,7 @@ local mouse_bindings = require("user_mouse_bindings")
 local theme_kanagawa = require("user_theme_kanagawa")
 local config = wezterm.config_builder()
 
-wezterm.on("gui-startup", function()
-  local _, _, window = wezterm.mux.spawn_window({})
-  window:gui_window():maximize()
-end)
+wezterm.on("update-status", require("resize_window_on_scale_change"))
 
 config.audible_bell = "Disabled"
 config.debug_key_events = false
