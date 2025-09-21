@@ -2,6 +2,9 @@
 N_WORDS="${1:-100}";
 WORDS=()
 
+echo "$N_WORDS" | grep -q "^[1-9][0-9]*$" \
+  || exec echo "Usage: lorem [n_words]";
+
 while true; do
   [ "$N_WORDS" = 0 ] && break;
   page="$(find /usr/share/man/man1 -type f | sort -R | head -n1)";
