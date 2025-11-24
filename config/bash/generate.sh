@@ -1,6 +1,6 @@
 [ -z "$1" ] && exec echo "Usage: $0 {bashrc,bash_profile}";
 
-export DOTFILES_HOME="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")";
+export DOTFILES_HOME="${DOTFILES_HOME:-"$HOME/git/dotfiles"}";
 export HOMEBREW_PREFIX="$(/opt/homebrew/bin/brew --prefix 2>/dev/null)";
 
 [ -r "$HOME/.config/shell/fzf-key-bindings.bash" ] \
@@ -16,7 +16,6 @@ generate_bash_functions() {
 
 generate_gpg_config() {
   command -v gpgconf >/dev/null || return;
-  echo 'export GPG_TTY="$(tty)";';
   echo "export SSH_AUTH_SOCK=\"$(gpgconf --list-dirs agent-ssh-socket)\";";
   echo "(&>/dev/null gpgconf --launch gpg-agent &);";
 }
@@ -50,16 +49,15 @@ generate_paths() {
 }
 
 while read -r line; do
-  if [ "$line" = "" ]; then
-    inline="no";
-  elif [ "$line" = "# inline" ]; then
-    inline="yes";
-    line="# inlined";
-  elif [ "$inline" = "yes" ]; then
+  comment="$(echo "$line" | awk -F ' # ' '{print $2}')";
+  if [ "$comment" = "INLINE" ]; then
     condition="$(echo "$line" | awk -F ' && ' '{print $1}')";
     statement="$(echo "$line" | sed 's/^.* && //')";
-    eval "$condition" || echo -n "# ";
-    echo "$statement";
+    if eval "$condition"; then
+      echo "$statement" | sed 's/INLINE/generated/';
+    else
+      echo "# $statement" | sed 's/INLINE/generated/';
+    fi
     continue;
   fi
 
