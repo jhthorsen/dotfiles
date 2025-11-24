@@ -178,8 +178,8 @@ install_cpanm() {
 
 install_dotfiles() {
   # bash
-  run echo "source ~/.bashrc" > "$HOME/.bash_profile";
-  run "$DOTFILES/config/bash/bashrc.sh" > "$HOME/.bashrc";
+  run "$DOTFILES_HOME/config/bash/generate.sh" "$DOTFILES_HOME/config/bash/bashrc.sh" > "$HOME/.bashrc";
+  run "$DOTFILES_HOME/config/bash/generate.sh" "$DOTFILES_HOME/config/bash/bash_profile.sh" > "$HOME/.bash_profile";
   lnk "$DOTFILES/config/bash/inputrc" "$HOME/.inputrc";
   lnk "$DOTFILES/config/ghostty" "$XDG_CONFIG_DIR/ghostty";
   lnk "$DOTFILES/config/oh-my-posh.json" "$XDG_CONFIG_DIR/oh-my-posh.json";
@@ -202,7 +202,7 @@ install_dotfiles() {
   lnk "$DOTFILES/config/ackrc" "$HOME/.ackrc";
   lnk "$DOTFILES/config/dataprinter" "$HOME/.dataprinter";
   lnk "$DOTFILES/config/git" "$XDG_CONFIG_DIR/git";
-  lnk "$DOTFILES/config/git/gitignore" "$HOME/.gitignore";
+  lnk "$DOTFILES/config/git/gitconfig" "$HOME/.gitconfig";
   lnk "$DOTFILES/config/lf" "$XDG_CONFIG_DIR/lf";
   lnk "$DOTFILES/config/perlcriticrc" "$HOME/.perlcriticrc";
   lnk "$DOTFILES/config/perltidyrc" "$HOME/.perltidyrc";

@@ -32,6 +32,7 @@ acke() {
 
 git() {
   if [ -z "$*" ]; then command git status -bs; return "$?"; fi
+  if [ "$1" = "push" ]; then shift; $DOTFILES_HOME/bin/git-push.sh "$@"; return "$?"; fi
   if [ ! -t 0 ]; then command git "$@"; return "$?"; fi
   if ! command -v diffu >/dev/null; then command git "$@"; return "$?"; fi
   PAGER="diffu" command git "$@";

@@ -1,4 +1,85 @@
-[include]
-  path = ~/.config/git/base.ini
-  path = ~/.config/git/alias.ini
-  path = ~/.config/git/gpg.ini
+[user]
+  name = Jan Henning Thorsen
+  email = jan.henning@thorsenlabs.com
+  signingkey = ADE1198F
+
+[alias]
+  b = branch
+  c = commit --verbose
+  d = diff
+  l = log -p --color
+  s = show
+  t = tag --sort=authordate
+
+  ca = commit --amend -C HEAD
+  co = !/bin/bash -c 'git checkout "$0" && [ -x ../co ] && ../co "$0"'
+  cp = !/bin/bash -c 'git show "$0":"$1" > "$1"'
+  rh = !git reset HEAD^ && git reset --hard
+
+  dc = diff --cached --color
+  dh = diff HEAD^
+  di = diff --ignore-all-space
+  ds = diff --shortstat --numstat HEAD^
+  st = diff --numstat --ignore-all-space --shortstat
+
+  fzf = !git show $(git log --color --pretty=format:'%Cred%h%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset %C(yellow)%d%Creset' | fzf --reverse --ansi --preview='git show {1} | head -n100' | cut -d' ' -f1)
+  lg = log --pretty='format:%Cblue%h%Creset %s (%Cgreen%ar%Creset)'
+  lgg = lg --graph
+  lgh = lg -n10
+  standup = log --pretty=format:'%Cred%h%Creset -%Creset %s %Cgreen(%cD) %C(bold blue)<%an>%Creset' --since yesterday --author Jan
+
+  authors = git-ship --authors
+  graph = !git-graph.pl
+  ready = rebase -i @{u}
+  ship = git-ship
+  snapshot = !/bin/bash -c 'git branch _/$(date +%Y%m%d-%H%M%S)'
+  start = git-ship --start
+
+[color]
+  branch = auto
+  diff = auto
+  status = auto
+
+[color "diff"]
+  commit = "#ff9e3b"
+  diff = "#ff9e3b"
+  old = "#ff5d62"
+  new = "#98bb6c"
+  func = "#775500 #191919"
+  frag = "#aa8800 #181818"
+  context = "#998877"
+
+[color "status"]
+  header = "#998877"
+  branch = "#ff9e3b"
+  added = "#76946A"
+  changed = "#ff9e3b"
+  untracked = "#b15544"
+  nobranch = "#b15544"
+
+[branch]
+  autosetuprebase = always
+
+[core]
+  excludesfile = ~/.config/git/gitignore
+
+[credential]
+  helper = store
+
+[diff]
+  tool = vimdiff
+
+[diffu]
+  pager = "less -FRX -x2"
+
+[gpg]
+  program = gpg
+
+[init]
+  defaultBranch = main
+
+[merge]
+  tool = meld
+
+[pull]
+  rebase = true
