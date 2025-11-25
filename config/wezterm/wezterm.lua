@@ -16,7 +16,7 @@ config.window_decorations = "RESIZE"
 config.native_macos_fullscreen_mode = false
 config.scrollback_lines = 30000
 config.window_close_confirmation = "AlwaysPrompt"
-config.window_padding = { top = 12, right = 14, bottom = 14, left = 14 }
+config.window_padding = { top = 8, right = 8, bottom = 8, left = 8 }
 
 config.colors = theme_kanagawa
 config.font_size = 12.2
