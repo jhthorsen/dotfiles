@@ -14,7 +14,6 @@ export LESS="XFR";
 export LS_COLORS="";
 export TT_HOURS_PER_MONTH="150";
 
-command -v tmac >/dev/null && export NVIM_TERMINAL_SHELL="tmac"; # INLINE
 command -v nvim >/dev/null 2>&1 && export EDITOR="nvim"; # INLINE
 
 [ -e "/etc/profile.d/bash_completion.sh" ] && source "/etc/profile.d/bash_completion.sh"; # INLINE

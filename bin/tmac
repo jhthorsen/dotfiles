@@ -1,5 +1,0 @@
-#!/bin/bash
-[ -n "$TMUX" ] && exec "${SHELL:-bash}" --login;
-name="${1:-tmac}";
-tmux has-session -t "$name" 2>/dev/null || tmux new-session -s "$name" -d;
-tmux attach -t "$name";
