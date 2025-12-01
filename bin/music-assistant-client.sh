@@ -1,4 +1,5 @@
 #!/bin/bash
+[ -r "$HOME/.config/music-assistant.sh" ] && source "$HOME/.config/music-assistant.sh";
 [ -z "$SNAPSERVER" ] && exec echo "SNAPSERVER=example.com is not set" >&2;
 
 SNAPCLIENT_BIN="$(find /opt/homebrew/Cellar/snapcast/*/bin/snapclient | sort | head -n1)";
