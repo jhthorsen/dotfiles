@@ -12,11 +12,11 @@ config.enable_scroll_bar = false
 config.enable_tab_bar = false
 config.hide_tab_bar_if_only_one_tab = true
 config.inactive_pane_hsb = { brightness = 0.75, saturation = 0.85 }
-config.window_decorations = "RESIZE"
+config.window_decorations = "TITLE | RESIZE"
 config.native_macos_fullscreen_mode = false
 config.scrollback_lines = 30000
 config.window_close_confirmation = "AlwaysPrompt"
-config.window_padding = { top = 8, right = 8, bottom = 8, left = 8 }
+config.window_padding = { top = 4, right = 4, bottom = 8, left = 4 }
 
 config.colors = theme_kanagawa
 config.font_size = 12.2
