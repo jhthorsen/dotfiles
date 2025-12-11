@@ -36,6 +36,6 @@ stty -echoctl;
 [ -e "$HOME/.bash_profile_local" ] && source "$HOME/.bash_profile_local";
 
 command -v zoxide >/dev/null && eval "$(zoxide init --cmd cd bash)"; # INLINE
-command -v oh-my-posh >/dev/null && eval "$(oh-my-posh init bash --config $XDG_CONFIG_DIR/oh-my-posh.json)"; # INLINE
+# read:generate_ps1
 
 export PROMPT_COMMAND="history -a;$PROMPT_COMMAND";

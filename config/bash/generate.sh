@@ -20,6 +20,15 @@ generate_gpg_config() {
   echo "(&>/dev/null gpgconf --launch gpg-agent &);";
 }
 
+generate_ps1() {
+  local q='"';
+  if command -v prmt >/dev/null; then
+    echo "export PS1='\$(prmt --code \$? $q{path:#3478b6} {git:#bba574:f: } {ok:#a6e3a1}{fail:#ff5794} $q)'";
+  elif command -v oh-my-posh >/dev/null; then
+    echo "eval $q\$(oh-my-posh init bash --config $XDG_CONFIG_DIR/oh-my-posh.json)$q;";
+  fi
+}
+
 generate_paths() {
   command -v xcode-select >/dev/null && PATH="$(xcode-select --print-path)/usr/bin:$PATH";
   [ -n "$HOMEBREW_PREFIX" ] && PATH="$HOMEBREW_PREFIX/opt/gettext/bin:$PATH";
