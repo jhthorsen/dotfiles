@@ -32,6 +32,7 @@
   graph = !git-graph.pl
   ready = rebase -i @{u}
   ship = git-ship
+  sign = rebase -i --exec 'git commit --amend --no-edit --gpg-sign'
   snapshot = !/bin/bash -c 'git branch _/$(date +%Y%m%d-%H%M%S)'
   start = git-ship --start
 
