@@ -30,6 +30,20 @@ acke() {
   vi $(ack -l "$@")
 }
 
+f() {
+  if command -v fd &>/dev/null; then
+    fd -H -E .git "$@";
+  else
+    local -a args;
+    if [ -z "$1" ] || [ ! -e "$1" ]; then args=( . ); fi
+    args+=( "$@" );
+    for exclude in ".git" ".vscode" "node_modules" "dist" "target"; do
+      args+=( -not -path "*/$exclude/*" );
+    done
+    find "${args[@]}" -mindepth 1 | sed 's|^\./||' | sort;
+  fi
+}
+
 git() {
   if [ -z "$*" ]; then command git status -bs; return "$?"; fi
   if [ "$1" = "push" ]; then shift; $DOTFILES_HOME/bin/git-push.sh "$@"; return "$?"; fi
