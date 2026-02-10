@@ -16,7 +16,9 @@ window.addEventListener('load', async function() {
       }
 
       const orderDate = parseDate(text.match(/Order placed\W+(\w+\W+\d+\W+20\d\d)\s+/)[1]);
-      const cost = text.match(/Total\W+([\d.,]+)\s+/)[1];
+      const cost = text.match(/Total\W+([\d.,]+)\s+/i);
+      if (!cost) continue;
+
       for (const $product of $orderCard.querySelectorAll('a')) {
         if ($product.href.indexOf('/dp/') === -1) continue;
 
@@ -34,7 +36,7 @@ window.addEventListener('load', async function() {
         if (order.img_url && order.img_url !== $img.src) found++;
 
         order.content = $product.textContent.trim();
-        order.cost = cost;
+        order.cost = cost[1];
         order.ordered_at = orderDate;
         order.ts = new Date(order.ordered_at).getTime();
         order.img_url = $img.src;
