@@ -1,5 +1,10 @@
 source "$HOME/.bashrc";
 
+OSC133_PROMPT_START='\e]133;A\a'
+OSC133_PROMPT_END='\e]133;B\a'
+OSC133_COMMAND_START='\e]133;C\a'
+OSC133_COMMAND_END='\e]133;D\a'
+
 [ "$DOTFILES_HOME/config/bash/bashrc.sh" -nt "$HOME/.bashrc" ] && reload;
 [ "$DOTFILES_HOME/config/bash/bash_profile.sh" -nt "$HOME/.bash_profile" ] && reload;
 
@@ -35,7 +40,12 @@ stty -echoctl;
 
 [ -e "$HOME/.bash_profile_local" ] && source "$HOME/.bash_profile_local";
 
-command -v zoxide >/dev/null && eval "$(zoxide init --cmd cd bash)"; # INLINE
+command -v zoxide >/dev/null && eval "$(zoxide init bash)"; # INLINE
 command -v oh-my-posh >/dev/null && eval "$(oh-my-posh init bash --config $XDG_CONFIG_DIR/oh-my-posh.json)"; # INLINE
+export PROMPT_COMMAND="printf '${OSC133_PROMPT_START}';history -a;${PROMPT_COMMAND};printf '${OSC133_PROMPT_END}'";
+trap 'printf "${OSC133_COMMAND_START}"' DEBUG
+trap 'printf "${OSC133_COMMAND_END}"' EXIT
 
-export PROMPT_COMMAND="history -a;$PROMPT_COMMAND";
+cd() {
+  z "$@" && printf '\e]7;file://%s%s\a' "$HOSTNAME" "$PWD"
+}

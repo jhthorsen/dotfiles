@@ -9,6 +9,6 @@ return {
   scrollbar_thumb = "#16161d",
   split = "#2d3f57",
   ansi = { "#090618", "#c34043", "#76946a", "#c0a36e", "#7e9cd8", "#957fb8", "#6a9589", "#c8c093" },
-  brights = { "#727169", "#e82424", "#98bb6c", "#e6c384", "#7fb4ca", "#938aa9", "#7aa89f", "#dcd7ba" },
+  brights = { "#727169", "#e82424", "#98bb6c", "#feba08", "#7fb4ca", "#938aa9", "#7aa89f", "#dcd7ba" },
   indexed = { [16] = "#ffa066", [17] = "#ff5d62" },
 }
