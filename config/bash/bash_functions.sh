@@ -32,7 +32,11 @@ acke() {
 
 f() {
   if command -v fd &>/dev/null; then
-    fd -H -E .git "$@";
+    if [ -d "$1" ]; then
+      fd -H -E .git . "$@";
+    else
+      fd -H -E .git "$@";
+    fi
   else
     local -a args;
     if [ -z "$1" ] || [ ! -e "$1" ]; then args=( . ); fi
