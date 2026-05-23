@@ -42,7 +42,7 @@ stty -echoctl;
 
 command -v zoxide >/dev/null && eval "$(zoxide init bash)"; # INLINE
 command -v oh-my-posh >/dev/null && eval "$(oh-my-posh init bash --config $XDG_CONFIG_DIR/oh-my-posh.json)"; # INLINE
-export PROMPT_COMMAND="printf '${OSC133_PROMPT_START}';history -a;${PROMPT_COMMAND};printf '${OSC133_PROMPT_END}'";
+export PROMPT_COMMAND="printf '${OSC133_PROMPT_START}';history -a;${PROMPT_COMMAND%;};printf '${OSC133_PROMPT_END}'";
 trap 'printf "${OSC133_COMMAND_START}"' DEBUG
 trap 'printf "${OSC133_COMMAND_END}"' EXIT
 

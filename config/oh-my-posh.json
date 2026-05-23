@@ -4,9 +4,18 @@
   "final_space": true,
   "terminal_background": "transparent",
   "console_title_template": " {{ .Folder }} :: {{if .Root}}Admin{{end}}",
-  "palette": {
-    "bg": "#303030",
-    "fg": "#02AFD7"
+  "palettes": {
+    "template": "{{ if eq .Env.SHORTHOST \"macbat2\" }}macbat2{{ else }}remote{{ end }}",
+    "list": {
+      "macbat2": {
+        "bg": "#303030",
+        "fg": "#02AFD7"
+      },
+      "remote": {
+        "bg": "#303030",
+        "fg": "#dd8214"
+      }
+    }
   },
   "blocks": [
     {
@@ -14,17 +23,11 @@
       "type": "prompt",
       "segments": [
         {
-          "type": "command",
+          "type": "session",
           "style": "plain",
-          "template": "{{ if eq .Output \"macbat2\" }}{{ else }}{{- .Output }} {{ end }}",
+          "template": "{{ if eq .Env.SHORTHOST \"macbat2\" }}{{ else }}{{- .Env.SHORTHOST }} {{ end }}",
           "background": "p:bg",
-          "foreground_templates": [
-            "{{ if .Env.SSH_TTY }}red{{ end }}",
-            "#02AFD7"
-          ],
-          "properties": {
-            "command": "hostname -s"
-          }
+          "foreground": "p:fg"
         },
         {
           "type": "path",
