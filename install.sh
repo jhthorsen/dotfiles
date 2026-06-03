@@ -74,6 +74,9 @@ install_apps() {
 
   [ ! -e "/Applications/Easy Move+Resize.app" ];
     and brew install --cask easy-move-plus-resize;
+  [ ! -e "/Applications/tabularis.app" ];
+    and brew tap TabularisDB/tabularis;
+    and brew install --cask tabularis;
 
   ! command -v im-select > /dev/null; and "$brew" tap daipeihust/tap;
   [ -z "$SKIP_UPDATE" ]; and "$brew" update; and "$brew" upgrade;
