@@ -15,6 +15,12 @@ and() {
   [ "$x" = "0" ] && "$@";
 }
 
+or() {
+  local x="$?";
+  [ "$x" != "0" ] && echo "> $*" >&2 || echo "# $*" >&2;
+  [ "$x" != "0" ] && "$@";
+}
+
 run() {
   echo "> $*" >&2;
   "$@";
@@ -190,11 +196,8 @@ install_dotfiles() {
 
   # nvim
   mkdir -p "$XDG_CONFIG_DIR/nvim";
-  [ ! -e "$XDG_CONFIG_DIR/nvim/init.lua" ];
-    and curl -Lq --output "$XDG_CONFIG_DIR/nvim/init.lua" "https://raw.githubusercontent.com/jhthorsen/batphone.nvim/refs/heads/main/init.lazy.lua";
-
-  curl -sL "$1" | tar xz -C "$PWD/bin/";
-  lnk "$DOTFILES_HOME/share/nvim/site/pack/batpack" "$XDG_DATA_HOME/nvim/site/pack/batpack";
+  grep -q batphone.nvim "$XDG_CONFIG_DIR/nvim/init.lua";
+  or curl -Lq --output "$XDG_CONFIG_DIR/nvim/init.lua" "https://github.com/jhthorsen/batphone.nvim/raw/refs/heads/v2.x.x/.config/nvim/init.lua";
 
   # tmux
   lnk "$DOTFILES_HOME/config/tmux/tmux.conf" "$HOME/.tmux.conf";
