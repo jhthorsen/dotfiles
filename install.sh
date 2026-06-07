@@ -1,7 +1,7 @@
 #!/bin/bash
 XDG_CONFIG_DIR="$HOME/.config";
 XDG_DATA_HOME="$HOME/.local/share";
-DOTFILES="$(cd -- "$(dirname "$0")" >/dev/null ; pwd -P)";
+DOTFILES_HOME="$(cd -- "$(dirname "$0")" >/dev/null ; pwd -P)";
 [ -n "$HOMEBREW_PREFIX" ] && MAYBE_SUDO="" || MAYBE_SUDO="sudo";
 
 abort() {
@@ -183,10 +183,10 @@ install_dotfiles() {
   # bash
   run "$DOTFILES_HOME/config/bash/generate.sh" "$DOTFILES_HOME/config/bash/bashrc.sh" > "$HOME/.bashrc";
   run "$DOTFILES_HOME/config/bash/generate.sh" "$DOTFILES_HOME/config/bash/bash_profile.sh" > "$HOME/.bash_profile";
-  lnk "$DOTFILES/config/bash/inputrc" "$HOME/.inputrc";
-  lnk "$DOTFILES/config/ghostty" "$XDG_CONFIG_DIR/ghostty";
-  lnk "$DOTFILES/config/oh-my-posh.json" "$XDG_CONFIG_DIR/oh-my-posh.json";
-  lnk "$DOTFILES/config/wezterm" "$XDG_CONFIG_DIR/wezterm";
+  lnk "$DOTFILES_HOME/config/bash/inputrc" "$HOME/.inputrc";
+  lnk "$DOTFILES_HOME/config/ghostty" "$XDG_CONFIG_DIR/ghostty";
+  lnk "$DOTFILES_HOME/config/oh-my-posh.json" "$XDG_CONFIG_DIR/oh-my-posh.json";
+  lnk "$DOTFILES_HOME/config/wezterm" "$XDG_CONFIG_DIR/wezterm";
 
   # nvim
   mkdir -p "$XDG_CONFIG_DIR/nvim";
@@ -194,21 +194,21 @@ install_dotfiles() {
     and curl -Lq --output "$XDG_CONFIG_DIR/nvim/init.lua" "https://raw.githubusercontent.com/jhthorsen/batphone.nvim/refs/heads/main/init.lazy.lua";
 
   curl -sL "$1" | tar xz -C "$PWD/bin/";
-  lnk "$DOTFILES/share/nvim/site/pack/batpack" "$XDG_DATA_HOME/nvim/site/pack/batpack";
+  lnk "$DOTFILES_HOME/share/nvim/site/pack/batpack" "$XDG_DATA_HOME/nvim/site/pack/batpack";
 
   # tmux
-  lnk "$DOTFILES/config/tmux/tmux.conf" "$HOME/.tmux.conf";
+  lnk "$DOTFILES_HOME/config/tmux/tmux.conf" "$HOME/.tmux.conf";
   [ ! -d ~/.tmux/plugins ]; and mkdir -p ~/.tmux/plugins;
   [ ! -d ~/.tmux/plugins/tpm ]; and git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
   # misc
-  lnk "$DOTFILES/config/ackrc" "$HOME/.ackrc";
-  lnk "$DOTFILES/config/dataprinter" "$HOME/.dataprinter";
-  lnk "$DOTFILES/config/git" "$XDG_CONFIG_DIR/git";
-  lnk "$DOTFILES/config/git/gitconfig" "$HOME/.gitconfig";
-  lnk "$DOTFILES/config/lf" "$XDG_CONFIG_DIR/lf";
-  lnk "$DOTFILES/config/perlcriticrc" "$HOME/.perlcriticrc";
-  lnk "$DOTFILES/config/perltidyrc" "$HOME/.perltidyrc";
+  lnk "$DOTFILES_HOME/config/ackrc" "$HOME/.ackrc";
+  lnk "$DOTFILES_HOME/config/dataprinter" "$HOME/.dataprinter";
+  lnk "$DOTFILES_HOME/config/git" "$XDG_CONFIG_DIR/git";
+  lnk "$DOTFILES_HOME/config/git/gitconfig" "$HOME/.gitconfig";
+  lnk "$DOTFILES_HOME/config/lf" "$XDG_CONFIG_DIR/lf";
+  lnk "$DOTFILES_HOME/config/perlcriticrc" "$HOME/.perlcriticrc";
+  lnk "$DOTFILES_HOME/config/perltidyrc" "$HOME/.perltidyrc";
   lnk "$HOME/Nextcloud/.password-store" "$HOME/.password-store";
 }
 
