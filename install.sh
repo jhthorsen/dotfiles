@@ -83,6 +83,9 @@ install_apps() {
   [ ! -e "/Applications/tabularis.app" ];
     and brew tap TabularisDB/tabularis;
     and brew install --cask tabularis;
+  [ ! -d "/opt/homebrew/opt/browserpass" ];
+    and brew tap amar1729/formulae;
+    and brew install browserpass;
 
   ! command -v im-select > /dev/null; and "$brew" tap daipeihust/tap;
   [ -z "$SKIP_UPDATE" ]; and "$brew" update; and "$brew" upgrade;
