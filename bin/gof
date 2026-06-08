@@ -13,9 +13,9 @@ if [ -n "$IMPORT_FILE" ] ; then
 fi
 
 find_password_entries() {
-  find -L "$PASSWORD_STORE_DIR" -not -name .git -a -name '*.gpg' 2>/dev/null \
+  find -L "$PASSWORD_STORE_DIR"/* -not -name .git -a -name '*.gpg' 2>/dev/null \
     | sed -e "s:$PASSWORD_STORE_DIR/\{0,1\}::" -e 's/\.gpg//' -e 's/\\/\\\\/g' -e 's/:/\\:/g' \
-    | sort;
+    | grep -i "[a-z]" | sort;
 }
 
 find_password_entry() {
@@ -43,7 +43,11 @@ if [ "$sub_command" = "--help" ]; then
   $ gof loop
 HERE
 elif [ "$sub_command" = "ls" ]; then
-  find_password_entries;
+  while read -r entry; do
+    [ -L "$PASSWORD_STORE_DIR/$entry" ] && continue;
+    [ -L "$PASSWORD_STORE_DIR/$(dirname "$entry")" ] && continue;
+    echo "$entry";
+  done < <(find_password_entries);
 elif [ "$sub_command" = "export" ]; then
   OUTPUT="$2";
   [ -d "$OUTPUT" ] || exec echo "Output directory does not exists";
