@@ -127,8 +127,6 @@ install_apps() {
   install_brew_package "mysql";
   install_brew_package "mysql-client";
   install_brew_package "neovim";
-  install_brew_package "nextcloud" "/Applications/Nextcloud.app";
-  install_brew_package "nginx";
   install_brew_package "nmap";
   install_brew_package "node";
   install_brew_package "oh-my-posh";
