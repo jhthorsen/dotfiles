@@ -1,0 +1,3 @@
+#!/bin/bash
+[ "$*" = "" ] && exec echo "$0 5 x 10 + 10";
+echo "$*" | perl -pe's/\bx\b/*/g' | bc --mathlib;
