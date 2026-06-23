@@ -1,4 +1,11 @@
 #!/bin/bash
+if [ "$1" = "daemon" ]; then
+  while true; do
+    "$0";
+    sleep 10;
+  done
+  exit 0;
+fi
 
 LOKI_URL="$LOKI_BASE_URL/loki/api/v1/push"
 HOSTNAME="$(hostname)";
