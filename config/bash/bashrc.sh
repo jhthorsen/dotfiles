@@ -8,6 +8,7 @@ export FZF_DEFAULT_COMMAND="fd --type f";
 export FZF_DEFAULT_OPTS="--height 10 --reverse";
 export GPG_TTY="$(tty)";
 export HISTCONTROL="ignoredups:erasedups:ignorespace";
+export HISTIGNORE="ls:pwd:history:bg:fg";
 export HISTSIZE="10000";
 export HOSTNAME="$(hostname)";
 export SHORTHOST="$(hostname -s)";

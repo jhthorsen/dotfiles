@@ -1,16 +1,11 @@
 source "$HOME/.bashrc";
 
-OSC133_PROMPT_START='\e]133;A\a'
-OSC133_PROMPT_END='\e]133;B\a'
-OSC133_COMMAND_START='\e]133;C\a'
-OSC133_COMMAND_END='\e]133;D\a'
-
 [ "$DOTFILES_HOME/config/bash/bashrc.sh" -nt "$HOME/.bashrc" ] && reload;
 [ "$DOTFILES_HOME/config/bash/bash_profile.sh" -nt "$HOME/.bash_profile" ] && reload;
 
-[ -f "$HOMEBREW_PREFIX/etc/profile.d/bash-preexec.sh" ] && source "$HOMEBREW_PREFIX/etc/profile.d/bash-preexec.sh"; # INLINE
 [ -f "$HOME/.config/shell/fzf-completion.bash" ] && source "$HOME/.config/shell/fzf-completion.bash"; # INLINE
 [ -f "$HOME/.config/shell/fzf-key-bindings.bash" ] && source "$HOME/.config/shell/fzf-key-bindings.bash"; # INLINE
+[ -f "$HOMEBREW_PREFIX/etc/profile.d/bash-preexec.sh" ] && source "$HOMEBREW_PREFIX/etc/profile.d/bash-preexec.sh"; # INLINE
 
 alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
 alias cpanm='cpanm -M https://cpan.metacpan.org'
@@ -32,6 +27,7 @@ bind -m vi-command '\"\C-l\": clear-screen';
 bind -m vi-insert  '\"\C-l\": clear-screen';
 bind -m vi-insert  '\"\C-a\": beginning-of-line';
 bind -m vi-insert  '\"\C-e\": end-of-line';
+shopt -s cmdhist;
 shopt -s histappend;
 shopt -s progcomp;
 shopt -s progcomp_alias;
@@ -42,9 +38,31 @@ stty -echoctl;
 
 command -v zoxide >/dev/null && eval "$(zoxide init bash)"; # INLINE
 command -v oh-my-posh >/dev/null && eval "$(oh-my-posh init bash --config $XDG_CONFIG_DIR/oh-my-posh.json)"; # INLINE
-export PROMPT_COMMAND="printf '${OSC133_PROMPT_START}';history -a;${PROMPT_COMMAND%;};printf '${OSC133_PROMPT_END}'";
-trap 'printf "${OSC133_COMMAND_START}"' DEBUG
-trap 'printf "${OSC133_COMMAND_END}"' EXIT
+
+sqlite_hist_pre_command() {
+  __hist_last_command="$*";
+  __hist_last_started="$SECONDS";
+}
+
+sqlite_hist_insert_command() {
+  history -a;
+
+  [ -n "$__hist_last_command" ] && sqlite3 "$HOME/.bash_command_history.db" <<HERE
+insert into history (start, end, hostname, tty, pwd, command, exit_status)
+values (
+  strftime('%s', 'now') - $(( SECONDS - __hist_last_started )),
+  strftime('%s', 'now'),
+  '$HOSTNAME',
+  '$(tty | sed "s/'/''/g")',
+  '$(echo "$PWD" | sed "s/'/''/g")',
+  '$(echo "$__hist_last_command" | sed "s/'/''/g")',
+  $__bp_last_ret_value
+)
+HERE
+}
+
+preexec_functions+=(sqlite_hist_pre_command);
+precmd_functions+=(sqlite_hist_insert_command);
 
 cd() {
   z "$@" && printf '\e]7;file://%s%s\a' "$HOSTNAME" "$PWD"
