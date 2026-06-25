@@ -5,7 +5,6 @@ source "$HOME/.bashrc";
 
 [ -f "$HOME/.config/shell/fzf-completion.bash" ] && source "$HOME/.config/shell/fzf-completion.bash"; # INLINE
 [ -f "$HOME/.config/shell/fzf-key-bindings.bash" ] && source "$HOME/.config/shell/fzf-key-bindings.bash"; # INLINE
-[ -f "$HOMEBREW_PREFIX/etc/profile.d/bash-preexec.sh" ] && source "$HOMEBREW_PREFIX/etc/profile.d/bash-preexec.sh"; # INLINE
 
 alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
 alias cpanm='cpanm -M https://cpan.metacpan.org'
@@ -39,30 +38,36 @@ stty -echoctl;
 command -v zoxide >/dev/null && eval "$(zoxide init bash)"; # INLINE
 command -v oh-my-posh >/dev/null && eval "$(oh-my-posh init bash --config $XDG_CONFIG_DIR/oh-my-posh.json)"; # INLINE
 
-sqlite_hist_pre_command() {
-  __hist_last_command="$*";
-  __hist_last_started="$SECONDS";
+hist_track_command() {
+  case "$BASH_COMMAND" in
+    hist*) return ;;
+    fg*|bg*) return ;;
+    ls*) return ;;
+  esac
+
+  LAST_INTERACTIVE_COMMAND="$BASH_COMMAND";
+  LAST_INTERACTIVE_COMMAND_SECONDS="$SECONDS";
 }
 
-sqlite_hist_insert_command() {
+hist_insert_command() {
+  LAST_INTERACTIVE_COMMAND_STATUS="${1:-255}";
   history -a;
-
-  [ -n "$__hist_last_command" ] && sqlite3 "$HOME/.bash_command_history.db" <<HERE
+  [ -n "$LAST_INTERACTIVE_COMMAND" ] && sqlite3 "$HOME/.bash_command_history.db" <<HERE
 insert into history (start, end, hostname, tty, pwd, command, exit_status)
 values (
-  strftime('%s', 'now') - $(( SECONDS - __hist_last_started )),
+  strftime('%s', 'now') - $(( SECONDS - LAST_INTERACTIVE_COMMAND_SECONDS )),
   strftime('%s', 'now'),
   '$HOSTNAME',
   '$(tty | sed "s/'/''/g")',
   '$(echo "$PWD" | sed "s/'/''/g")',
-  '$(echo "$__hist_last_command" | sed "s/'/''/g")',
-  $__bp_last_ret_value
+  '$(echo "$LAST_INTERACTIVE_COMMAND" | sed "s/'/''/g")',
+  $LAST_INTERACTIVE_COMMAND_STATUS
 )
 HERE
 }
 
-preexec_functions+=(sqlite_hist_pre_command);
-precmd_functions+=(sqlite_hist_insert_command);
+[ -e "$HOME/.bash_command_history.db" ] && PROMPT_COMMAND="hist_insert_command \$?;${PROMPT_COMMAND%;}"; # INLINE
+[ -e "$HOME/.bash_command_history.db" ] && trap 'hist_track_command' DEBUG; # INLINE
 
 cd() {
   z "$@" && printf '\e]7;file://%s%s\a' "$HOSTNAME" "$PWD"
