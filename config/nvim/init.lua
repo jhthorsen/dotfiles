@@ -170,6 +170,43 @@ toggle({
 })
 
 ----------------------------------------------------------------------------------------------------
+-- Basic plugin - WhichKey
+----------------------------------------------------------------------------------------------------
+require("which-key").setup({
+  preset = "helix",
+  expand = function(node)
+    local children = node:count()
+    return node:can_expand() == false and children > 0 and children <= 2
+  end,
+  sort = { "group", "alphanum" },
+  plugins = {
+    marks = true,
+    registers = false,
+    spelling = { enabled = false },
+    presets = {
+      g = true,
+      motions = true,
+      nav = true,
+      operators = true,
+      text_objects = true,
+      windows = true,
+      z = true,
+    },
+  },
+})
+
+require("which-key.plugins.presets").operators["v"] = nil
+require("which-key").add({
+  { "<leader>h", function() require("which-key").show() end, icon = "🎹", desc = "Show All Keys" },
+  { "<leader>c", group = "Code...", icon = "󰅩" },
+  { "<leader>d", group = "Diagnostics...", icon = "󰒡" },
+  { "<leader>f", group = "Files...", icon = "󰈔" },
+  { "<leader>m", group = "Multicursors...", icon = "󰘞" },
+  { "<leader>n", group = "Neovim...", icon = "" },
+  { "<leader>q", group = "Quit...", icon = "󰩈" },
+})
+
+----------------------------------------------------------------------------------------------------
 -- Color picker
 ----------------------------------------------------------------------------------------------------
 local ccc = require("ccc")
