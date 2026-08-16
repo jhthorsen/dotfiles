@@ -196,9 +196,7 @@ install_dotfiles() {
   lnk "$DOTFILES_HOME/config/wezterm" "$XDG_CONFIG_DIR/wezterm";
 
   # nvim
-  mkdir -p "$XDG_CONFIG_DIR/nvim";
-  grep -q batphone.nvim "$XDG_CONFIG_DIR/nvim/init.lua";
-  or curl -Lq --output "$XDG_CONFIG_DIR/nvim/init.lua" "https://github.com/jhthorsen/batphone.nvim/raw/refs/heads/v2.x.x/.config/nvim/init.lua";
+  lnk "$DOTFILES_HOME/config/nvim" "$XDG_CONFIG_DIR/nvim";
 
   # tmux
   lnk "$DOTFILES_HOME/config/tmux/tmux.conf" "$HOME/.tmux.conf";

@@ -107,7 +107,7 @@ reload() {
 vi() {
   [ -d ".git" ] && tt start --quiet --resume;
   if [ -n "$*" ]; then nvim "$@";
-  else nvim -c ':lua require("batphone.util").startup()';
+  else nvim -c ":lua Snacks.picker.smart()";
   fi
   [ -d ".git" ] && tt stop --quiet --tag-unless-same-project;
 }
