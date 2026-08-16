@@ -1,20 +1,20 @@
 vim.pack.add({
   -- { src = "https://github.com/saghen/blink.cmp", version = "v1" },
   -- { src = "https://github.com/fang2hou/blink-copilot" },
-  -- { src = "https://github.com/uga-rosa/ccc.nvim" },
+  { src = "https://github.com/uga-rosa/ccc.nvim" },
   -- { src = "https://github.com/olimorris/codecompanion.nvim" },
   -- { src = "https://github.com/ravitemer/codecompanion-history.nvim" },
   -- { src = "https://github.com/zbirenbaum/copilot.lua" },
   -- { src = "https://github.com/rafamadriz/friendly-snippets" },
   -- { src = "https://github.com/ravitemer/mcphub.nvim" },
   -- { src = "https://github.com/echasnovski/mini.nvim" },
-  -- { src = "https://github.com/jake-stewart/multicursor.nvim" },
+  { src = "https://github.com/jake-stewart/multicursor.nvim" },
   -- { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
   -- { src = "https://github.com/nvim-lua/plenary.nvim" },
   -- { src = "https://github.com/mrcjkb/rustaceanvim" },
   -- { src = "https://github.com/folke/snacks.nvim" },
-  -- { src = "https://github.com/jbyuki/venn.nvim" },
-  -- { src = "https://github.com/folke/which-key.nvim" },
+  { src = "https://github.com/jbyuki/venn.nvim" },
+  { src = "https://github.com/folke/which-key.nvim" },
 })
 
 require("vim._core.ui2").enable({})
@@ -170,6 +170,24 @@ toggle({
 })
 
 ----------------------------------------------------------------------------------------------------
+-- Color picker
+----------------------------------------------------------------------------------------------------
+local ccc = require("ccc")
+ccc.setup({
+  alpha_show = "show",
+  highlighter = { auto_enable = true },
+  inputs = { ccc.input.oklch, ccc.input.rgb, ccc.input.hsl },
+  outputs = { ccc.output.css_hsl, ccc.output.hex, ccc.output.css_oklch },
+  convert = {
+    { ccc.picker.hex,       ccc.output.css_hsl },
+    { ccc.picker.css_hsl,   ccc.output.css_oklch },
+    { ccc.picker.css_oklch, ccc.output.hex },
+  },
+})
+vim.keymap.set("n", "<leader>cp", "<cmd>CccPick<cr>", { desc = "Open Color Picker" })
+vim.keymap.set("n", "<leader>cP", "<cmd>CccConvert<cr>", { desc = "Convert Color" })
+
+----------------------------------------------------------------------------------------------------
 -- Create Parent Directories on Write
 ----------------------------------------------------------------------------------------------------
 vim.api.nvim_create_autocmd("BufWritePre", {
@@ -288,6 +306,27 @@ vim.api.nvim_create_autocmd("LspAttach", {
 })
 
 ----------------------------------------------------------------------------------------------------
+-- Multi cursor - Edit with ease
+----------------------------------------------------------------------------------------------------
+local mc = require("multicursor-nvim")
+mc.setup({})
+
+vim.keymap.set({ "n", "x" }, "<c-d>", function() mc.matchAddCursor(1) end, { desc = "Add Next Cursor" })
+vim.keymap.set({ "n", "x" }, "<c-s-d>", function() mc.matchAddCursor(-1) end, { desc = "Add Prev Cursor" })
+vim.keymap.set({ "n" }, "<leader>mt", mc.toggleCursor, { desc = "Add and Remove Cursors" })
+vim.keymap.set({ "n", "v", "x" }, "<leader>ma", mc.alignCursors, { desc = "Align Cursors" })
+vim.keymap.set({ "v" }, "<space>mi", "<s-i>", { desc = "Insert Before Selection" })
+vim.keymap.set({ "v" }, "<space>ma", "<s-a>", { desc = "Insert After Selection" })
+
+mc.addKeymapLayer(function(mk)
+  mk({ "n" }, "<esc>", mc.clearCursors)
+  mk({ "v" }, "I", "<c-a>i", { desc = "Insert Before Selection" })
+  mk({ "v" }, "A", "<esc>li", { desc = "Insert After Selection" })
+  mk({ "v" }, "<space>i", "<c-a>i", { desc = "Insert Before Selection" })
+  mk({ "v" }, "<space>a", "<esc>li", { desc = "Insert After Selection" })
+end)
+
+----------------------------------------------------------------------------------------------------
 -- Quickfixlist
 ----------------------------------------------------------------------------------------------------
 vim.keymap.set("n", "<leader>d", function()
@@ -321,3 +360,31 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 vim.cmd.colorscheme("catppuccin")
 vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#89b4fa", bg = "NONE" })
 vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+
+----------------------------------------------------------------------------------------------------
+-- Venn - Draw ASCII diagrams
+----------------------------------------------------------------------------------------------------
+vim.keymap.set("n", "<leader>nv", function()
+  local venn_enabled = vim.inspect(vim.b.venn_enabled)
+  if venn_enabled == "nil" then
+    vim.b.venn_enabled = true
+    vim.cmd [[setlocal ve=all]]
+    vim.api.nvim_buf_set_keymap(0, "n", "J", "<c-v>j:VBox<CR>", { noremap = true })
+    vim.api.nvim_buf_set_keymap(0, "n", "K", "<c-v>k:VBox<CR>", { noremap = true })
+    vim.api.nvim_buf_set_keymap(0, "n", "H", "<c-v>h:VBox<CR>", { noremap = true })
+    vim.api.nvim_buf_set_keymap(0, "n", "L", "<c-v>l:VBox<CR>", { noremap = true })
+    vim.api.nvim_buf_set_keymap(0, "n", "<leader>j", "R▼<Esc>", { noremap = true })
+    vim.api.nvim_buf_set_keymap(0, "n", "<leader>k", "R▲<Esc>", { noremap = true })
+    vim.api.nvim_buf_set_keymap(0, "n", "<leader>h", "R◄<Esc>", { noremap = true })
+    vim.api.nvim_buf_set_keymap(0, "n", "<leader>l", "R►<Esc>", { noremap = true })
+    vim.api.nvim_buf_set_keymap(0, "v", "f", ":VBox<CR>", { noremap = true })
+  else
+    vim.cmd [[setlocal ve=]]
+    vim.api.nvim_buf_del_keymap(0, "n", "J")
+    vim.api.nvim_buf_del_keymap(0, "n", "K")
+    vim.api.nvim_buf_del_keymap(0, "n", "L")
+    vim.api.nvim_buf_del_keymap(0, "n", "H")
+    vim.api.nvim_buf_del_keymap(0, "v", "f")
+    vim.b.venn_enabled = nil
+  end
+end, { desc = "Draw ASCII diagrams", noremap = true })
