@@ -2,15 +2,15 @@ vim.pack.add({
   -- { src = "https://github.com/saghen/blink.cmp", version = "v1" },
   -- { src = "https://github.com/fang2hou/blink-copilot" },
   { src = "https://github.com/uga-rosa/ccc.nvim" },
-  -- { src = "https://github.com/olimorris/codecompanion.nvim" },
-  -- { src = "https://github.com/ravitemer/codecompanion-history.nvim" },
-  -- { src = "https://github.com/zbirenbaum/copilot.lua" },
+  { src = "https://github.com/olimorris/codecompanion.nvim" },
+  { src = "https://github.com/ravitemer/codecompanion-history.nvim" },
+  { src = "https://github.com/zbirenbaum/copilot.lua" },
   -- { src = "https://github.com/rafamadriz/friendly-snippets" },
-  -- { src = "https://github.com/ravitemer/mcphub.nvim" },
+  { src = "https://github.com/ravitemer/mcphub.nvim" },
   -- { src = "https://github.com/echasnovski/mini.nvim" },
   { src = "https://github.com/jake-stewart/multicursor.nvim" },
   { src = "https://github.com/nvim-treesitter/nvim-treesitter",     version = "main" },
-  -- { src = "https://github.com/nvim-lua/plenary.nvim" },
+  { src = "https://github.com/nvim-lua/plenary.nvim" },
   { src = "https://github.com/mrcjkb/rustaceanvim" },
   -- { src = "https://github.com/folke/snacks.nvim" },
   { src = "https://github.com/jbyuki/venn.nvim" },
@@ -18,6 +18,7 @@ vim.pack.add({
 })
 
 require("vim._core.ui2").enable({})
+require("plenary") -- Used by Codecompanion
 
 ----------------------------------------------------------------------------------------------------
 -- Basic Options
@@ -296,6 +297,65 @@ function _G.native_find(text, _)
 end
 
 vim.opt.findfunc = "v:lua.native_find"
+
+----------------------------------------------------------------------------------------------------
+-- LLM - Codecompanion, Copilot and MCP client
+----------------------------------------------------------------------------------------------------
+local codecompanion_adapter = {
+  name = string.match(vim.api.nvim_buf_get_name(0) or "", "([^/]+)%.ai$") or vim.env.CODECOMPANION_ADAPTER or "copilot",
+  model = vim.env.CODECOMPANION_MODEL or "claude-sonnet-4.5",
+}
+
+vim.keymap.set("n", "<leader>cc", "<cmd>CodeCompanionChat Toggle<cr>", { desc = "CodeCompanion Chat" })
+vim.keymap.set("n", "<leader>cH", "<cmd>CodeCompanionHistory<cr>", { desc = "CodeCompanion History" })
+vim.keymap.set("n", "<leader>cs", "<cmd>CodeCompanionSummaries<cr>", { desc = "CodeCompanion Summaries" })
+vim.keymap.set("v", "<leader>ce", "<cmd>CodeCompanion /explain<cr>", { desc = "Explain Code" })
+vim.keymap.set("v", "<leader>cf", "<cmd>CodeCompanion /fix<cr>", { desc = "Fix Code" })
+vim.keymap.set("n", "<leader>cl", "<cmd>CodeCompanion /lsp<cr>", { desc = "Explain The LSP Diagnostics" })
+vim.keymap.set("v", "<leader>ct", "<cmd>CodeCompanion /tests<cr>", { desc = "Generte Tests" })
+
+require("copilot").setup({
+  suggestion = { debounce = 350 },
+  should_attach = function(_, bufname)
+    if string.match(bufname, ".env") then return false end
+    if string.match(bufname, "_alien") then return false end
+    return true
+  end
+})
+
+require("codecompanion._extensions.history")
+require("codecompanion").setup({
+  display = { chat = { window = { opts = { number = false, relativenumber = false, signcolumn = "no" } } } },
+  extensions = {
+    history = { enabled = true },
+  },
+  interactions = {
+    chat = { adapter = codecompanion_adapter },
+    inline = { adapter = codecompanion_adapter },
+  },
+})
+
+require("mcphub").setup({})
+
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufReadPost", "VimResized" }, {
+  callback = function()
+    local config = require("codecompanion.config").config
+    local codecompanion_adapter_name = string.match(vim.api.nvim_buf_get_name(0) or "", "([^/]+)%.ai$")
+
+    if codecompanion_adapter_name then
+      config.display.chat.window.layout = "buffer"
+      vim.cmd("CodeCompanionChat")
+    elseif vim.o.columns > 200 then
+      config.display.chat.window.width = 0.4
+      config.display.chat.window.layout = "vertical"
+      config.display.chat.window.position = "right"
+    else
+      config.display.chat.window.height = 0.7
+      config.display.chat.window.layout = "horizontal"
+      config.display.chat.window.position = "bottom"
+    end
+  end
+})
 
 ----------------------------------------------------------------------------------------------------
 -- LSP Setup
