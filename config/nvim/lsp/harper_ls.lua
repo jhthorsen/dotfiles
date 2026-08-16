@@ -50,4 +50,20 @@ return {
     'sh',
   },
   root_markers = { '.harper-dictionary.txt', '.git' },
+  settings = {
+    ['harper-ls'] = {
+      userDictPath = "~/.local/share/harper/dict.txt",
+      isolateEnglish = false,  -- Does not seem to work as well as I hoped
+      isLikelyEnglish = false, -- Does not seem to work as well as I hoped
+      linters = {
+        SpellCheck = true,
+        SentenceCapitalization = false,
+        SpelledNumbers = false,
+        ToDoHyphen = false,
+      },
+      markdown = {
+        IgnoreLinkTitle = true,
+      },
+    },
+  }
 }

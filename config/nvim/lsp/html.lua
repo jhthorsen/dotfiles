@@ -37,7 +37,15 @@ return {
   filetypes = { 'html' },
   root_markers = { 'package.json', '.git' },
   ---@type lspconfig.settings.html
-  settings = {},
+  settings = {
+    html = {
+      format = {
+        contentUnformatted = "pre,code,textarea",
+        unformatted = "pre",
+        enable = true,
+      },
+    },
+  },
   init_options = {
     provideFormatter = true,
     embeddedLanguages = { css = true, javascript = true },
