@@ -9,9 +9,9 @@ vim.pack.add({
   -- { src = "https://github.com/ravitemer/mcphub.nvim" },
   -- { src = "https://github.com/echasnovski/mini.nvim" },
   { src = "https://github.com/jake-stewart/multicursor.nvim" },
-  -- { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
+  { src = "https://github.com/nvim-treesitter/nvim-treesitter",     version = "main" },
   -- { src = "https://github.com/nvim-lua/plenary.nvim" },
-  -- { src = "https://github.com/mrcjkb/rustaceanvim" },
+  { src = "https://github.com/mrcjkb/rustaceanvim" },
   -- { src = "https://github.com/folke/snacks.nvim" },
   { src = "https://github.com/jbyuki/venn.nvim" },
   { src = "https://github.com/folke/which-key.nvim" },
@@ -57,6 +57,15 @@ vim.opt.wrap = false
 ----------------------------------------------------------------------------------------------------
 -- Functions / Utilities
 ----------------------------------------------------------------------------------------------------
+local get_lsp_client = function(name)
+  for _, l in ipairs(vim.lsp.get_clients()) do
+    if l and l.name == name then
+      return l
+    end
+  end
+  return nil
+end
+
 local smart_close = function()
   local is_terminal = string.match(vim.api.nvim_buf_get_name(0), "term://") ~= nil
   if is_terminal then return vim.cmd("close!") end
@@ -292,36 +301,32 @@ vim.opt.findfunc = "v:lua.native_find"
 -- LSP Setup
 ----------------------------------------------------------------------------------------------------
 vim.cmd("set completeopt+=noselect")
-vim.lsp.enable({ "lua_ls", "tsgo" })
 vim.diagnostic.config({ virtual_text = true })
 
 vim.keymap.set("n", "<leader>ca", function() vim.lsp.buf.code_action() end, { desc = "Code Action" })
 vim.keymap.set("n", "<leader>cf", function() vim.lsp.buf.format() end, { desc = "Format code" })
 vim.keymap.set("n", "<leader>cr", function() vim.lsp.buf.rename() end, { desc = "Rename symbol" })
-vim.keymap.set("n", "<leader>cS", function() vim.lsp.buf.signature_help() end, { desc = "Signature Help" })
-vim.keymap.set("n", "gK", function() vim.lsp.buf.signature_help() end, { desc = "Signature Help" })
-vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end,
-  { desc = "Displays information about the symbol under the cursor in a floating window" })
+vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, { desc = "Info about the symbol" })
 
 toggle({
-  key = "<leader>dx",
-  desc = { enabled = "Disable Diagnostics", disabled = "Enable Diagnostics" },
-  current = function() return vim.diagnostic.is_enabled() end,
-  set = function(enabled) vim.diagnostic.enable(not enabled) end,
-})
-
-toggle({
-  key = "<leader>nh",
-  desc = { enabled = "Hide Inlay Hints", disabled = "Show Inlay Hints" },
-  current = function() return vim.lsp.inlay_hint.is_enabled({ bufnr = 0 }) end,
-  set = function(enabled) vim.lsp.inlay_hint.enable(not enabled, { bufnr = 0 }) end,
+  key = "<leader>ng",
+  desc = { enabled = "Disable Grammar LSP", disabled = "Enable Grammar LSP" },
+  is_enabled = function() return get_lsp_client("harper_ls") and true or false end,
+  set = function(enabled) vim.lsp.enable("harper_ls", not enabled) end
 })
 
 toggle({
   key = "<leader>dv",
   desc = { enabled = "Hide Virtual Lines", disabled = "Show Virtual Lines" },
-  current = function() return vim.diagnostic.config().virtual_lines and true or false end,
+  is_enabled = function() return vim.diagnostic.config().virtual_lines and true or false end,
   set = function(enabled) vim.diagnostic.config({ virtual_lines = not enabled }) end
+})
+
+toggle({
+  key = "<leader>dV",
+  desc = { enabled = "Hide Virtual Text", disabled = "Show Virtual Text" },
+  is_enabled = function() return vim.diagnostic.config().virtual_lines and true or false end,
+  set = function(enabled) vim.diagnostic.config({ virtual_text = not enabled }) end
 })
 
 vim.api.nvim_create_autocmd("LspAttach", {
@@ -335,12 +340,59 @@ vim.api.nvim_create_autocmd("LspAttach", {
       vim.api.nvim_create_autocmd("BufWritePre", {
         buffer = ev.buf,
         callback = function()
-          vim.lsp.buf.format({ async = false, bufnr = ev.buf, id = client.id })
+          if vim.b.allow_autocmd_format == true then
+            vim.lsp.buf.format({ async = false, bufnr = ev.buf, id = client.id })
+          end
         end,
       })
     end
   end,
 })
+
+vim.g.rustaceanvim = function()
+  local features = {}
+  for _, feature in ipairs(vim.split(vim.env.RUST_FEATURES or "", ",")) do
+    if feature ~= "" then table.insert(features, feature) end
+  end
+
+  return {
+    server = {
+      default_settings = {
+        ["rust-analyzer"] = {
+          cargo = {
+            allFeatures = false,
+            features = features,
+            loadOutDirsFromCheck = false,
+          },
+          check = { features = features },
+          inlayHints = { enable = false },
+          procMacos = { enable = true },
+        },
+      },
+    },
+  }
+end
+
+-- https://github.com/neovim/nvim-lspconfig/tree/master/lsp
+vim.lsp.enable({ "bashls" })                -- sh: pnpm install -g bash-language-server
+vim.lsp.enable({ "css_variables" })         -- sh: pnpm install -g css-variable-ls
+vim.lsp.enable({ "cssls" })                 -- sh: pnpm install -g vscode-langservers-extracted
+vim.lsp.enable({ "cssmodules_ls" })         -- sh: pnpm install -g cssmodules-language-server
+vim.lsp.enable({ "denols" })                -- sh: brew install deno
+vim.lsp.enable({ "dprint" })                -- sh: cargo install dprint
+vim.lsp.enable({ "emmet_language_server" }) -- sh: pnpm install -g emmet-language-server
+vim.lsp.enable({ "gopls" })                 -- sh: brew install gopls
+vim.lsp.enable({ "harper_ls" })             -- sh: brew install harper
+vim.lsp.enable({ "html" })                  -- sh: pnpm install -g vscode-langservers-extracted
+vim.lsp.enable({ "jinja_lsp" })             -- sh: cargo install jinja-lsp
+vim.lsp.enable({ "jsonls" })                -- sh: pnpm install -g vscode-langservers-extracted
+vim.lsp.enable({ "lua_ls" })                -- sh: brew install lua-language-server
+vim.lsp.enable({ "marksman" })              -- sh: brew install marksman
+vim.lsp.enable({ "perlnavigator" })         -- sh: pnpm install -g perlnavigator-server
+vim.lsp.enable({ "sqlls" })                 -- sh: pnpm install -g sql-language-server
+vim.lsp.enable({ "svelte" })                -- sh: pnpm install -g svelte-language-server
+vim.lsp.enable({ "systemd_lsp" })           -- sh: pnpm install -g systemd-language-server
+vim.lsp.enable({ "yamlls" })                -- sh: pnpm install -g yaml-language-server
 
 ----------------------------------------------------------------------------------------------------
 -- Multi cursor - Edit with ease
@@ -366,10 +418,15 @@ end)
 ----------------------------------------------------------------------------------------------------
 -- Quickfixlist
 ----------------------------------------------------------------------------------------------------
-vim.keymap.set("n", "<leader>d", function()
+vim.keymap.set("n", "<leader>de", function()
   vim.diagnostic.setqflist({ bufnr = 0, severity = vim.diagnostic.severity.ERROR })
   vim.cmd("copen")
-end, { silent = true })
+end, { silent = true, desc = "Send errors to quickfix list" })
+
+vim.keymap.set("n", "<leader>da", function()
+  vim.diagnostic.setqflist({ bufnr = 0 })
+  vim.cmd("copen")
+end, { silent = true, desc = "Send diagnostics to quickfix list" })
 
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "qf",
@@ -389,6 +446,33 @@ vim.api.nvim_create_autocmd("BufReadPost", {
       vim.api.nvim_win_set_cursor(0, mark)
     end
   end,
+})
+
+----------------------------------------------------------------------------------------------------
+-- Treesitter - https://github.com/nvim-treesitter/nvim-treesitter/blob/main/SUPPORTED_LANGUAGES.md
+----------------------------------------------------------------------------------------------------
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+  pattern = { "*.html", "*.html.j2" },
+  callback = function()
+    vim.bo.filetype = "html"
+  end,
+})
+
+require("nvim-treesitter").install({
+  "bash",
+  "css",
+  "gitcommit",
+  "go",
+  "html",
+  "javascript",
+  "jinja",
+  "markdown",
+  "perl",
+  "python",
+  "rust",
+  "sql",
+  "svelte",
+  "yaml",
 })
 
 ----------------------------------------------------------------------------------------------------
