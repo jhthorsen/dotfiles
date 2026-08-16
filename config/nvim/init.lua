@@ -33,6 +33,7 @@ vim.opt.autoindent = true
 vim.opt.backup = false
 vim.opt.breakindent = true
 vim.opt.cmdheight = 0
+vim.opt.clipboard = "unnamedplus"
 vim.opt.expandtab = true
 vim.opt.foldenable = false
 vim.opt.hlsearch = false
@@ -167,29 +168,6 @@ toggle({
   desc = { enabled = "Cut Long Lines", disabled = "Wrap Lines" },
   option = "wrap",
 })
-
-----------------------------------------------------------------------------------------------------
--- Clipboard - https://github.com/neovim/neovim/discussions/28010#discussioncomment-9877494
-----------------------------------------------------------------------------------------------------
-local function paste()
-  return {
-    vim.fn.split(vim.fn.getreg(""), "\n"),
-    vim.fn.getregtype(""),
-  }
-end
-
-vim.o.clipboard = "unnamedplus"
-vim.g.clipboard = {
-  name = "OSC 52",
-  copy = {
-    ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
-    ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
-  },
-  paste = {
-    ["+"] = paste,
-    ["*"] = paste,
-  },
-}
 
 ----------------------------------------------------------------------------------------------------
 -- Create Parent Directories on Write
