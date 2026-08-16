@@ -7,7 +7,7 @@ vim.pack.add({
   { src = "https://github.com/zbirenbaum/copilot.lua" },
   { src = "https://github.com/rafamadriz/friendly-snippets" },
   { src = "https://github.com/ravitemer/mcphub.nvim" },
-  -- { src = "https://github.com/echasnovski/mini.nvim" },
+  { src = "https://github.com/echasnovski/mini.nvim" },
   { src = "https://github.com/jake-stewart/multicursor.nvim" },
   { src = "https://github.com/nvim-treesitter/nvim-treesitter",     version = "main" },
   { src = "https://github.com/nvim-lua/plenary.nvim" },
@@ -78,7 +78,7 @@ local smart_close = function()
   if n_buffers <= 1 then
     vim.api.nvim_command("quit")
   else
-    vim.api.nvim_command("bd!")
+    require("mini.bufremove").delete()
   end
 end
 
@@ -177,6 +177,31 @@ toggle({
   key = "<leader>nw",
   desc = { enabled = "Cut Long Lines", disabled = "Wrap Lines" },
   option = "wrap",
+})
+
+----------------------------------------------------------------------------------------------------
+-- Basic plugin - mini.nvim
+----------------------------------------------------------------------------------------------------
+require("mini.align").setup({})
+require("mini.comment").setup({})
+require("mini.files").setup({})
+require("mini.move").setup({})
+require("mini.surround").setup({})
+require("mini.statusline").setup({})
+
+vim.keymap.set("n", ",e", function() MiniFiles.open(vim.api.nvim_buf_get_name(0)) end, { desc = "Find and Edit" })
+vim.keymap.set("n", "<leader>fe", function() MiniFiles.open() end, { desc = "Open File Explorer" })
+
+vim.api.nvim_create_autocmd("User", {
+  pattern = "MiniFilesWindowUpdate",
+  callback = function(ev)
+    local win_id = ev.data.win_id
+    vim.wo[win_id].winblend = 1
+    local config = vim.api.nvim_win_get_config(win_id)
+    config.relative = "laststatus"
+    config.height = 16
+    vim.api.nvim_win_set_config(win_id, config)
+  end,
 })
 
 ----------------------------------------------------------------------------------------------------
