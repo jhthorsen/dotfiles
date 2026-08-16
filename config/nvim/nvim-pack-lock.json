@@ -29,10 +29,6 @@
       "rev": "6cd7280adead7f586db6fccbd15d2cac7e2188b9",
       "src": "https://github.com/rafamadriz/friendly-snippets"
     },
-    "kanagawa.nvim": {
-      "rev": "bb85e4bfc8d89b0e62c8fa53ccdd13d12e2f77b3",
-      "src": "https://github.com/rebelot/kanagawa.nvim"
-    },
     "mcphub.nvim": {
       "rev": "7cd5db330f41b7bae02b2d6202218a061c3ebc1f",
       "src": "https://github.com/ravitemer/mcphub.nvim"
@@ -57,10 +53,6 @@
     "rustaceanvim": {
       "rev": "b25d186481624964523fee34f44c529b101c7435",
       "src": "https://github.com/mrcjkb/rustaceanvim"
-    },
-    "snacks.nvim": {
-      "rev": "882c996cf28183f4d63640de0b4c02ec886d01f2",
-      "src": "https://github.com/folke/snacks.nvim"
     },
     "venn.nvim": {
       "rev": "b09c2f36ddf70b498281845109bedcf08a7e0de0",

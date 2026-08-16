@@ -12,7 +12,6 @@ vim.pack.add({
   { src = "https://github.com/nvim-treesitter/nvim-treesitter",     version = "main" },
   { src = "https://github.com/nvim-lua/plenary.nvim" },
   { src = "https://github.com/mrcjkb/rustaceanvim" },
-  { src = "https://github.com/folke/snacks.nvim" },
   { src = "https://github.com/jbyuki/venn.nvim" },
   { src = "https://github.com/folke/which-key.nvim" },
 })
@@ -58,6 +57,21 @@ vim.opt.wrap = false
 ----------------------------------------------------------------------------------------------------
 -- Functions / Utilities
 ----------------------------------------------------------------------------------------------------
+local edit_scratch_window = function(lines, on_close)
+  local buf = vim.api.nvim_create_buf(false, true) -- listed=false, scratch=true
+  local win = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_buf(win, buf)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = buf })
+  vim.api.nvim_create_autocmd("WinClosed", {
+    callback = function(event)
+      if tonumber(event.match) == win then
+        on_close(vim.api.nvim_buf_get_lines(buf, 0, -1, false))
+      end
+    end,
+  })
+end
+
 local get_lsp_client = function(name)
   for _, l in ipairs(vim.lsp.get_clients()) do
     if l and l.name == name then
@@ -132,6 +146,7 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Basic Key Bindings
 ----------------------------------------------------------------------------------------------------
+vim.keymap.set("n", "<leader>nR", "<cmd>restart<cr>", { desc = "Restart Neovim" })
 vim.keymap.set("n", "<leader>nU", function() vim.pack.update() end, { desc = "Update Neovim Plugins" })
 vim.keymap.set("n", "<leader>nH", ":checkhealth<cr>", { desc = "Check Neovim Health" })
 vim.keymap.set("n", "<s-tab>", "<cmd>bprevious<cr>", { desc = "Next Buffer" })
@@ -180,16 +195,67 @@ toggle({
 
 ----------------------------------------------------------------------------------------------------
 -- Basic plugin - mini.nvim
+-- TODO:
+-- * <leader>nn = List notifications
+-- * <leader>nI = List icons
 ----------------------------------------------------------------------------------------------------
+local MiniPick = require("mini.pick")
+
 require("mini.align").setup({})
+require("mini.colors").setup({})
 require("mini.comment").setup({})
-require("mini.files").setup({})
 require("mini.move").setup({})
+require("mini.pick").setup({
+  mappings = {
+    move_down = "<c-j>",
+    move_up   = "<c-k>",
+  },
+})
 require("mini.surround").setup({})
 require("mini.statusline").setup({})
 
-vim.keymap.set("n", ",e", function() MiniFiles.open(vim.api.nvim_buf_get_name(0)) end, { desc = "Find and Edit" })
-vim.keymap.set("n", "<leader>fe", function() MiniFiles.open() end, { desc = "Open File Explorer" })
+vim.keymap.set("n", ",e", function() require("mini.files").open(vim.api.nvim_buf_get_name(0)) end,
+  { desc = "Find and Edit" })
+vim.keymap.set("n", "<leader>fe", function() require("mini.files").open() end, { desc = "Open File Explorer" })
+
+vim.keymap.set("n", "<leader><space>", function() MiniPick.builtin.files() end, { desc = "Find Files" })
+vim.keymap.set("n", "<leader>b", function() MiniPick.builtin.buffers() end, { desc = "Switch Buffer" })
+vim.keymap.set("n", "<leader>ff", function() MiniPick.builtin.files() end, { desc = "Find Files" })
+vim.keymap.set("n", "<leader>fg", function() MiniPick.builtin.grep_live() end, { desc = "Grep Project Files" })
+vim.keymap.set("n", "<leader>fx",
+  function() MiniPick.builtin.files({}, { source = { cwd = vim.fn.fnamemodify(vim.fn.getcwd(), ":h") } }) end,
+  { desc = "Find Parent Files" })
+
+vim.keymap.set("n", "z=", function() require("mini.extra").pickers.spellsuggest() end, { desc = "Search Colorschemes" })
+vim.keymap.set("n", "<leader>nC", function() require("mini.extra").pickers.colorschemes() end,
+  { desc = "Search Colorschemes" })
+vim.keymap.set("n", "<leader>nf", function() require("mini.misc").zoom() end, { desc = "Fullscreen Window" })
+
+vim.keymap.set("n", '<leader>nr', function()
+  local items = {}
+  for _, regname in ipairs(vim.split('"*+/=-0123456789abcdefghijklmnopqrstuvwxyz', "")) do
+    local _, regval = pcall(vim.fn.getreg, regname, 1)
+    local text = string.format('%s │ %s', regname, regval or "")
+    table.insert(items, { prompt = "Edit register: ", regname = regname, default = regval, text = text })
+  end
+
+  MiniPick.start({
+    source = {
+      items = items,
+      name = "Registers",
+      choose = function(item)
+        MiniPick.stop()
+        if item == nil then return end
+        vim.schedule(function()
+          vim.cmd("split")
+          edit_scratch_window({ item.default }, function(lines)
+            vim.fn.setreg(item.regname, table.concat(lines, "\n"))
+          end)
+        end)
+      end
+    }
+  })
+end, { desc = "Edit Register" })
 
 vim.api.nvim_create_autocmd("User", {
   pattern = "MiniFilesWindowUpdate",
@@ -542,96 +608,6 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     end
   end,
 })
-
-----------------------------------------------------------------------------------------------------
--- Snacks
-----------------------------------------------------------------------------------------------------
-local snacks = require("snacks")
-local picker = require("snacks.picker")
-
-snacks.setup({
-  notifier = {
-    level = vim.log.levels.DEBUG,
-    sort = { "added" },
-  },
-  picker = {
-    formatters = {
-      file = {
-        truncate = 90,
-      },
-    },
-    layout = {
-      preview = "main",
-      layout = {
-        border = "rounded",
-        box = "vertical",
-        col = -1,
-        row = -1,
-        width = function()
-          if vim.o.columns < 90 then
-            return 0.9
-          else
-            return 90
-          end
-        end,
-        height = 20,
-        title = " {title} {live} {flags}",
-        title_pos = "center",
-        { win = "input",   height = 1,         border = "none" },
-        { win = "list",    border = "none" },
-        { win = "preview", title = "{preview}" },
-      },
-    },
-    sources = {
-      autocmds = { layout = { preview = false } },
-      buffers = { layout = { preview = false } },
-      command_history = { layout = { preview = false } },
-      lines = { layout = { preview = false } },
-      registers = { layout = { preview = false } },
-      search_history = { layout = { preview = false } },
-      select = { layout = { preview = false, layout = { relative = "cursor" } } },
-      spelling = { layout = { preview = false, layout = { relative = "cursor", row = 1, width = 0.4 } } },
-    },
-  },
-})
-
-vim.keymap.set("n", "z=", function() picker.spelling() end, { desc = "Spelling suggestions" })
-vim.keymap.set("n", "<leader><space>", function() picker.smart() end, { desc = "Smart Find Files" })
-vim.keymap.set("n", "<leader>b", function() picker.buffers() end, { desc = "Switch Buffer" })
-vim.keymap.set("n", "<leader>ff", function() picker.files({ hidden = true }) end, { desc = "Find Files" })
-vim.keymap.set("n", "<leader>fx", function() picker.files({ cwd = ".." }) end, { desc = "Find parent Files" })
-vim.keymap.set("n", "<leader>fg", function() picker.grep() end, { desc = "Grep Project Files" })
-vim.keymap.set("n", "<leader>fb", function() picker.grep_buffers() end, { desc = "Grep Open Buffers" })
-
-vim.keymap.set("n", "<leader>nf", function() picker.files({ dirs = vim.api.nvim_get_runtime_file("lua/", true) }) end,
-  { desc = "Plugin files" })
-vim.keymap.set("n", "<leader>nn", function() snacks.notifier.show_history() end, { desc = "Show notifications" })
-vim.keymap.set("n", "<leader>nI", function() picker.icons() end, { desc = "Search Icons" })
-vim.keymap.set("n", "<leader>nk", function() picker.keymaps() end, { desc = "Search Keymaps" })
-vim.keymap.set("n", "<leader>nC", function() picker.colorschemes() end, { desc = "Search Colorschemes" })
-vim.keymap.set("n", "<leader>nf", function() snacks.zen.zoom() end, { desc = "Fullscreen Window" })
-
-vim.keymap.set("n", '<leader>nr', function()
-  picker.registers({
-    preview = "none",
-    confirm = function(p, item)
-      local cannot_update = item.reg == '"' or item.reg == '.'
-      local title = cannot_update and "(read-only) " or "Edit register "
-      p:close()
-      Snacks.win({
-        text = item.value,
-        on_close = function(win)
-          if cannot_update then
-            vim.print("Can't update register " .. item.reg)
-          else
-            vim.fn.setreg(item.reg, vim.api.nvim_buf_get_lines(win.buf, 0, -1, false))
-            vim.print("Updated register " .. item.reg)
-          end
-        end,
-      }):set_title(title .. item.reg, "center")
-    end
-  })
-end, { desc = "Edit Register" })
 
 ----------------------------------------------------------------------------------------------------
 -- Treesitter - https://github.com/nvim-treesitter/nvim-treesitter/blob/main/SUPPORTED_LANGUAGES.md

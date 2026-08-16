@@ -107,7 +107,7 @@ reload() {
 vi() {
   [ -d ".git" ] && tt start --quiet --resume;
   if [ -n "$*" ]; then nvim "$@";
-  else nvim -c ":lua Snacks.picker.smart()";
+  else nvim -c ":lua MiniPick.builtin.files()";
   fi
   [ -d ".git" ] && tt stop --quiet --tag-unless-same-project;
 }
