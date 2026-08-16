@@ -338,7 +338,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 ----------------------------------------------------------------------------------------------------
 local codecompanion_adapter = {
   name = string.match(vim.api.nvim_buf_get_name(0) or "", "([^/]+)%.ai$") or vim.env.CODECOMPANION_ADAPTER or "copilot",
-  model = vim.env.CODECOMPANION_MODEL or "claude-sonnet-4.5",
+  model = vim.env.CODECOMPANION_MODEL or "gpt-5.6-terra",
 }
 
 vim.keymap.set("n", "<leader>cc", "<cmd>CodeCompanionChat Toggle<cr>", { desc = "CodeCompanion Chat" })
