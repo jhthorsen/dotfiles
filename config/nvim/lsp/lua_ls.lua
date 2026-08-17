@@ -64,6 +64,16 @@
 --- * [Lua.workspace.library](https://luals.github.io/wiki/settings/#workspacelibrary)
 ---
 
+local libraries = { vim.env.VIMRUNTIME }
+
+for _, path in ipairs(vim.api.nvim_list_runtime_paths()) do
+  local lua_dir = path .. "/lua"
+  local stat = vim.loop.fs_stat(lua_dir)
+  if stat and stat.type == "directory" then
+    table.insert(libraries, lua_dir)
+  end
+end
+
 local root_markers1 = {
   '.emmyrc.json',
   '.luarc.json',
@@ -89,6 +99,7 @@ return {
       codeLens = { enable = true },
       diagnostics = { globals = { 'vim' } },
       hint = { enable = true, semicolon = 'Disable' },
+      workspace = { checkThirdParty = false, library = libraries }
     },
   },
 }

@@ -204,8 +204,6 @@ toggle({
 -- * <leader>nn = List notifications
 -- * <leader>nI = List icons
 ----------------------------------------------------------------------------------------------------
-local MiniPick = require("mini.pick")
-
 require("mini.align").setup({})
 require("mini.colors").setup({})
 require("mini.comment").setup({})
