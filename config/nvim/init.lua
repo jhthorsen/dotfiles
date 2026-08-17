@@ -23,36 +23,36 @@ require("plenary") -- Used by Codecompanion
 -- Basic Options
 ----------------------------------------------------------------------------------------------------
 vim.g.mapleader = " "
-vim.g.netrw_liststyle = 3    -- tree view
-vim.g.netrw_banner = 0       -- hide the top banner
-vim.g.netrw_winsize = 25     -- fix the left split width
-vim.g.netrw_browse_split = 0 -- open files in the previous window
-vim.g.netrw_altfile = 1      -- keep the alternate file correct
+vim.g.netrw_liststyle = 3                     -- tree view
+vim.g.netrw_banner = 0                        -- hide the top banner
+vim.g.netrw_winsize = 25                      -- fix the left split width
+vim.g.netrw_browse_split = 0                  -- open files in the previous window
+vim.g.netrw_altfile = 1                       -- keep the alternate file correct
 
-vim.opt.autoindent = true
-vim.opt.backup = false
-vim.opt.breakindent = true
-vim.opt.cmdheight = 0
-vim.opt.clipboard = "unnamedplus"
-vim.opt.expandtab = true
-vim.opt.foldenable = false
-vim.opt.hlsearch = false
-vim.opt.isfname:append("@-@")
-vim.opt.lazyredraw = true
-vim.opt.linebreak = true
-vim.opt.mouse = ""
-vim.opt.number = true
-vim.opt.scrolloff = 8
-vim.opt.shiftwidth = 2
-vim.opt.signcolumn = "yes"
-vim.opt.smartindent = true
-vim.opt.softtabstop = 2
-vim.opt.splitright = true
-vim.opt.swapfile = false
-vim.opt.tabstop = 2
-vim.opt.wildmode = { "longest:list", "full" }
-vim.opt.winborder = "rounded"
-vim.opt.wrap = false
+vim.opt.autoindent = true                     -- keep indentation from previous line
+vim.opt.backup = false                        -- don't create backup files
+vim.opt.breakindent = true                    -- preserve indent when wrapping lines
+vim.opt.clipboard = "unnamedplus"             -- use system clipboard
+vim.opt.cmdheight = 0                         -- hide command line when not used
+vim.opt.expandtab = true                      -- convert tabs to spaces
+vim.opt.foldenable = false                    -- disable code folding
+vim.opt.hlsearch = false                      -- don't highlight search matches
+vim.opt.isfname:append("@-@")                 -- treat @-@ as filename characters
+vim.opt.lazyredraw = true                     -- redraw only when needed (faster macros)
+vim.opt.linebreak = true                      -- wrap lines at word boundaries
+vim.opt.mouse = ""                            -- disable mouse support
+vim.opt.number = true                         -- show line numbers
+vim.opt.scrolloff = 8                         -- keep 8 lines visible above/below cursor
+vim.opt.shiftwidth = 2                        -- indent width for << and >>
+vim.opt.signcolumn = "yes"                    -- always show sign column
+vim.opt.smartindent = true                    -- smarter auto-indentation
+vim.opt.softtabstop = 2                       -- number of spaces per tab in insert mode
+vim.opt.splitright = true                     -- open vertical splits to the right
+vim.opt.swapfile = false                      -- disable swapfile creation
+vim.opt.tabstop = 2                           -- number of spaces a tab counts for
+vim.opt.wildmode = { "longest:list", "full" } -- enhanced command-line completion
+vim.opt.winborder = "rounded"                 -- rounded window borders
+vim.opt.wrap = false                          -- disable line wrapping
 
 ----------------------------------------------------------------------------------------------------
 -- Functions / Utilities
