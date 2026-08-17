@@ -17,7 +17,13 @@ vim.pack.add({
 })
 
 require("vim._core.ui2").enable({})
-require("plenary") -- Used by CodeCompanion
+require("plenary")              -- Used by CodeCompanion
+require("mini.align").setup({}) -- ga, gA
+require("mini.colors").setup({})
+require("mini.comment").setup({})
+require("mini.icons").setup({})
+require("mini.move").setup({})     -- <M-j>, <M-k>, <M-h>, <M-l>
+require("mini.surround").setup({}) -- sa, sd, sf, sF, sr
 
 ----------------------------------------------------------------------------------------------------
 -- Basic Options
@@ -166,6 +172,7 @@ vim.keymap.set("n", "<c-h>", ":wincmd h<CR>", { silent = true, desc = "Move to l
 vim.keymap.set("n", "<c-j>", ":wincmd j<CR>", { silent = true, desc = "Move to below split" })
 vim.keymap.set("n", "<c-k>", ":wincmd k<CR>", { silent = true, desc = "Move to above split" })
 vim.keymap.set("n", "<c-l>", ":wincmd l<CR>", { silent = true, desc = "Move to right split" })
+vim.keymap.set("n", "<leader>nf", function() require("mini.misc").zoom() end, { desc = "Fullscreen Window" })
 
 vim.keymap.set({ "n", "v" }, "0d", '"_d', { desc = "Delete Line" })
 vim.keymap.set("v", "<", "<gv", { desc = "Indent and stay in indent mode" })
@@ -174,6 +181,7 @@ vim.keymap.set({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'",
   { desc = "Moving the cursor through long soft-wrapped lines", expr = true, silent = true })
 vim.keymap.set({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'",
   { desc = "Moving the cursor through long soft-wrapped lines", expr = true, silent = true })
+vim.keymap.set("n", "z=", function() require("mini.extra").pickers.spellsuggest() end, { desc = "Spell suggestion" })
 
 toggle({
   key = "<leader>nl",
@@ -199,23 +207,17 @@ toggle({
 })
 
 ----------------------------------------------------------------------------------------------------
--- Basic plugin - mini.nvim
+-- Basic Plugin - File and Buffer Pickers
 -- TODO:
 -- * <leader>nn = List notifications
 -- * <leader>nI = List icons
 ----------------------------------------------------------------------------------------------------
-require("mini.align").setup({})
-require("mini.colors").setup({})
-require("mini.comment").setup({})
-require("mini.move").setup({})
 require("mini.pick").setup({
   mappings = {
     move_down = "<c-j>",
     move_up   = "<c-k>",
   },
 })
-require("mini.surround").setup({})
-require("mini.statusline").setup({})
 
 vim.keymap.set("n", ",e", function() require("mini.files").open(vim.api.nvim_buf_get_name(0)) end,
   { desc = "Find and Edit" })
@@ -229,34 +231,20 @@ vim.keymap.set("n", "<leader>fx",
   function() MiniPick.builtin.files({}, { source = { cwd = vim.fn.fnamemodify(vim.fn.getcwd(), ":h") } }) end,
   { desc = "Find Parent Files" })
 
-vim.keymap.set("n", "z=", function() require("mini.extra").pickers.spellsuggest() end, { desc = "Search Colorschemes" })
-vim.keymap.set("n", "<leader>nC", function() require("mini.extra").pickers.colorschemes() end,
-  { desc = "Search Colorschemes" })
-vim.keymap.set("n", "<leader>nf", function() require("mini.misc").zoom() end, { desc = "Fullscreen Window" })
-
-vim.keymap.set("n", '<leader>nr', function()
-  local items = {}
-  for _, regname in ipairs(vim.split('"*+/=-0123456789abcdefghijklmnopqrstuvwxyz', "")) do
-    local _, regval = pcall(vim.fn.getreg, regname, 1)
-    local text = string.format('%s │ %s', regname, regval or "")
-    table.insert(items, { prompt = "Edit register: ", regname = regname, default = regval, text = text })
-  end
-
-  MiniPick.start({
+vim.keymap.set("n", "<leader>nr", function()
+  require("mini.extra").pickers.registers({}, {
     source = {
-      items = items,
-      name = "Registers",
       choose = function(item)
         MiniPick.stop()
         if item == nil then return end
         vim.schedule(function()
           vim.cmd("split")
-          edit_scratch_window({ item.default }, function(lines)
+          edit_scratch_window(vim.split(item.regcontents, "\n"), function(lines)
             vim.fn.setreg(item.regname, table.concat(lines, "\n"))
           end)
         end)
       end
-    }
+    },
   })
 end, { desc = "Edit Register" })
 
@@ -649,14 +637,19 @@ require("nvim-treesitter").install({
 })
 
 ----------------------------------------------------------------------------------------------------
--- Theme
+-- Theme, Colorscheme
 ----------------------------------------------------------------------------------------------------
+vim.keymap.set("n", "<leader>nC", function() require("mini.extra").pickers.colorschemes() end,
+  { desc = "Search Colorschemes" })
+
 vim.cmd.colorscheme("catppuccin")
 vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
 vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#89b4fa", bg = "#181825" })
 vim.api.nvim_set_hl(0, "FloatNormal", { fg = "#89b4fa", bg = "#181825" })
 vim.api.nvim_set_hl(0, "MiniFilesBorder", { fg = "#89b4fa", bg = "#181825" })
 vim.api.nvim_set_hl(0, "MiniFilesNormal", { bg = "#181825" })
+
+require("mini.statusline").setup({})
 
 ----------------------------------------------------------------------------------------------------
 -- Venn - Draw ASCII diagrams
