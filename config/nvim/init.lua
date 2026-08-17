@@ -17,7 +17,7 @@ vim.pack.add({
 })
 
 require("vim._core.ui2").enable({})
-require("plenary") -- Used by Codecompanion
+require("plenary") -- Used by CodeCompanion
 
 ----------------------------------------------------------------------------------------------------
 -- Basic Options
@@ -44,12 +44,17 @@ vim.opt.mouse = ""                            -- disable mouse support
 vim.opt.number = true                         -- show line numbers
 vim.opt.scrolloff = 8                         -- keep 8 lines visible above/below cursor
 vim.opt.shiftwidth = 2                        -- indent width for << and >>
+vim.opt.showcmd = false                       -- don't show command in statusline
 vim.opt.signcolumn = "yes"                    -- always show sign column
 vim.opt.smartindent = true                    -- smarter auto-indentation
 vim.opt.softtabstop = 2                       -- number of spaces per tab in insert mode
+vim.opt.splitbelow = true                     -- open horizontal splits below
 vim.opt.splitright = true                     -- open vertical splits to the right
 vim.opt.swapfile = false                      -- disable swapfile creation
 vim.opt.tabstop = 2                           -- number of spaces a tab counts for
+vim.opt.timeoutlen = 250                      -- time to wait for mapped sequence
+vim.opt.undofile = true                       -- persistent undo across sessions
+vim.opt.virtualedit = "block"                 -- allow cursor anywhere in visual block mode
 vim.opt.wildmode = { "longest:list", "full" } -- enhanced command-line completion
 vim.opt.winborder = "rounded"                 -- rounded window borders
 vim.opt.wrap = false                          -- disable line wrapping
@@ -461,8 +466,17 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufReadPost", "VimResized" }, {
 ----------------------------------------------------------------------------------------------------
 -- LSP Setup
 ----------------------------------------------------------------------------------------------------
-vim.cmd("set completeopt+=noselect")
-vim.diagnostic.config({ virtual_text = true })
+vim.diagnostic.config({
+  virtual_text = true,
+  signs = {
+    text = {
+      [vim.diagnostic.severity.HINT] = ">",
+      [vim.diagnostic.severity.INFO] = "",
+      [vim.diagnostic.severity.WARN] = "⚠️",
+      [vim.diagnostic.severity.ERROR] = "‼️",
+    },
+  },
+})
 
 vim.keymap.set("n", "<leader>ca", function() vim.lsp.buf.code_action() end, { desc = "Code Action" })
 vim.keymap.set("n", "<leader>cf", function() vim.lsp.buf.format() end, { desc = "Format code" })
