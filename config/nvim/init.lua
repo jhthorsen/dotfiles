@@ -504,6 +504,8 @@ vim.keymap.set("n", "<leader>ca", function() vim.lsp.buf.code_action() end, { de
 vim.keymap.set("n", "<leader>cf", function() vim.lsp.buf.format() end, { desc = "Format code" })
 vim.keymap.set("n", "<leader>cr", function() vim.lsp.buf.rename() end, { desc = "Rename symbol" })
 vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, { desc = "Info about the symbol" })
+vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, { desc = "Goto Definition" })
+vim.keymap.set("n", "gr", function() vim.lsp.buf.references() end, { desc = "Goto References" })
 
 toggle({
   key = "<leader>ng",
