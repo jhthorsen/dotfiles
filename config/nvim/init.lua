@@ -563,25 +563,25 @@ vim.g.rustaceanvim = function()
 end
 
 -- https://github.com/neovim/nvim-lspconfig/tree/master/lsp
-vim.lsp.enable({ "bashls" })                -- sh: pnpm install -g bash-language-server
-vim.lsp.enable({ "css_variables" })         -- sh: pnpm install -g css-variable-ls
-vim.lsp.enable({ "cssls" })                 -- sh: pnpm install -g vscode-langservers-extracted
-vim.lsp.enable({ "cssmodules_ls" })         -- sh: pnpm install -g cssmodules-language-server
-vim.lsp.enable({ "denols" })                -- sh: brew install deno
-vim.lsp.enable({ "dprint" })                -- sh: cargo install dprint
-vim.lsp.enable({ "emmet_language_server" }) -- sh: pnpm install -g emmet-language-server
-vim.lsp.enable({ "gopls" })                 -- sh: brew install gopls
-vim.lsp.enable({ "harper_ls" })             -- sh: brew install harper
-vim.lsp.enable({ "html" })                  -- sh: pnpm install -g vscode-langservers-extracted
-vim.lsp.enable({ "jinja_lsp" })             -- sh: cargo install jinja-lsp
-vim.lsp.enable({ "jsonls" })                -- sh: pnpm install -g vscode-langservers-extracted
-vim.lsp.enable({ "lua_ls" })                -- sh: brew install lua-language-server
-vim.lsp.enable({ "marksman" })              -- sh: brew install marksman
-vim.lsp.enable({ "perlnavigator" })         -- sh: pnpm install -g perlnavigator-server
-vim.lsp.enable({ "sqlls" })                 -- sh: pnpm install -g sql-language-server
-vim.lsp.enable({ "svelte" })                -- sh: pnpm install -g svelte-language-server
-vim.lsp.enable({ "systemd_lsp" })           -- sh: pnpm install -g systemd-language-server
-vim.lsp.enable({ "yamlls" })                -- sh: pnpm install -g yaml-language-server
+vim.lsp.enable({ "bashls" })
+vim.lsp.enable({ "css_variables" })
+vim.lsp.enable({ "cssls" })
+vim.lsp.enable({ "cssmodules_ls" })
+vim.lsp.enable({ "denols" })
+vim.lsp.enable({ "dprint" })
+vim.lsp.enable({ "emmet_language_server" })
+vim.lsp.enable({ "gopls" })
+vim.lsp.enable({ "harper_ls" })
+vim.lsp.enable({ "html" })
+vim.lsp.enable({ "jinja_lsp" })
+vim.lsp.enable({ "jsonls" })
+vim.lsp.enable({ "lua_ls" })
+vim.lsp.enable({ "marksman" })
+vim.lsp.enable({ "perlnavigator" })
+vim.lsp.enable({ "sqlls" })
+vim.lsp.enable({ "svelte" })
+vim.lsp.enable({ "systemd_lsp" })
+vim.lsp.enable({ "yamlls" })
 
 ----------------------------------------------------------------------------------------------------
 -- Multi cursor - Edit with ease

@@ -267,16 +267,29 @@ HERE
 
 install_lsp_servers() {
   # sudo xcodebuild -license accept
+  install_brew_package pnpm;
+  install_brew_package deno;
+  install_brew_package gopls;
+  install_brew_package harper;
   install_brew_package lua-language-server;
+  install_brew_package marksman;
+  install_brew_package shellcheck;
   install_brew_package yaml-language-server;
 
-  true; and $MAYBE_SUDO cpanm -n PLS::Server Neovim::Ext;
-  true; and $MAYBE_SUDO npm -g install \
-    emmet-ls                   neovim                        \
-    bash-language-server       svelte-language-server        \
-    typescript                 typescript-language-server    \
-    @volar/vue-language-server vscode-langservers-extracted  \
-    yaml-language-server;
+  $MAYBE_SUDO pnpm install -g bash-language-server;
+  $MAYBE_SUDO pnpm install -g css-variable-ls;
+  $MAYBE_SUDO pnpm install -g cssmodules-language-server;
+  $MAYBE_SUDO pnpm install -g emmet-language-server;
+  $MAYBE_SUDO pnpm install -g perlnavigator-server;
+  $MAYBE_SUDO pnpm install -g sql-language-server;
+  $MAYBE_SUDO pnpm install -g svelte-language-server;
+  $MAYBE_SUDO pnpm install -g systemd-language-server;
+  $MAYBE_SUDO pnpm install -g vscode-langservers-extracted;
+  $MAYBE_SUDO pnpm install -g typescript-language-server;
+  $MAYBE_SUDO pnpm install -g yaml-language-server;
+
+  cargo install dprint
+  cargo install jinja-lsp
 }
 
 install_macos() {
