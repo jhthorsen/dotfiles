@@ -205,6 +205,20 @@ toggle({
 })
 
 toggle({
+  key = "<leader>nq",
+  desc = { enabled = "Hide quickfixlist", disabled = "Show quickfixlist" },
+  is_enabled = function()
+    for _, win in ipairs(vim.fn.getwininfo()) do
+      if win.quickfix == 1 and win.loclist == 0 then return true end
+    end
+    return false
+  end,
+  set = function(enabled)
+    vim.cmd(enabled and "cclose" or "copen")
+  end
+})
+
+toggle({
   key = "<leader>nS",
   desc = { enabled = "Hide Sign Column", disabled = "Show Sign Column" },
   is_enabled = function() return vim.wo.signcolumn == "yes" end,
