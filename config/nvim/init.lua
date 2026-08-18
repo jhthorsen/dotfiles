@@ -172,7 +172,7 @@ vim.keymap.set("n", "<c-h>", ":wincmd h<CR>", { silent = true, desc = "Move to l
 vim.keymap.set("n", "<c-j>", ":wincmd j<CR>", { silent = true, desc = "Move to below split" })
 vim.keymap.set("n", "<c-k>", ":wincmd k<CR>", { silent = true, desc = "Move to above split" })
 vim.keymap.set("n", "<c-l>", ":wincmd l<CR>", { silent = true, desc = "Move to right split" })
-vim.keymap.set("n", "<leader>nf", function() require("mini.misc").zoom() end, { desc = "Fullscreen Window" })
+vim.keymap.set("n", "<leader>nz", function() require("mini.misc").zoom() end, { desc = "Zoom Window" })
 
 vim.keymap.set({ "n", "v" }, "0d", '"_d', { desc = "Delete Line" })
 vim.keymap.set("v", "<", "<gv", { desc = "Indent and stay in indent mode" })
