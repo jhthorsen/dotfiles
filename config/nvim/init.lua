@@ -664,7 +664,30 @@ vim.api.nvim_set_hl(0, "FloatNormal", { fg = "#89b4fa", bg = "#181825" })
 vim.api.nvim_set_hl(0, "MiniFilesBorder", { fg = "#89b4fa", bg = "#181825" })
 vim.api.nvim_set_hl(0, "MiniFilesNormal", { bg = "#181825" })
 
-require("mini.statusline").setup({})
+require("mini.statusline").setup({
+  content = {
+    inactive = nil,
+    active = function()
+      local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })
+      local diagnostics   = MiniStatusline.section_diagnostics({ trunc_width = 75 })
+      local lsp           = MiniStatusline.section_lsp({ trunc_width = 75 })
+      local filename      = MiniStatusline.section_filename({ trunc_width = 500 })
+      local fileinfo      = MiniStatusline.section_fileinfo({ trunc_width = 120 })
+      local location      = MiniStatusline.section_location({ trunc_width = 500 })
+      local search        = MiniStatusline.section_searchcount({ trunc_width = 75 })
+
+      return MiniStatusline.combine_groups({
+        { hl = mode_hl,                  strings = { mode } },
+        '%<', -- Mark general truncate point
+        { hl = 'MiniStatuslineFileinfo', strings = { filename } },
+        '%=', -- End left alignment
+        { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
+        { hl = 'MiniStatuslineDevinfo',  strings = { lsp, diagnostics } },
+        { hl = mode_hl,                  strings = { search, location } },
+      })
+    end
+  },
+})
 
 ----------------------------------------------------------------------------------------------------
 -- Venn - Draw ASCII diagrams
