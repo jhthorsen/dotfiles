@@ -208,9 +208,6 @@ toggle({
 
 ----------------------------------------------------------------------------------------------------
 -- Basic Plugin - File and Buffer Pickers
--- TODO:
--- * <leader>nn = List notifications
--- * <leader>nI = List icons
 ----------------------------------------------------------------------------------------------------
 require("mini.pick").setup({
   mappings = {
@@ -389,6 +386,30 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     end
   end,
 })
+
+----------------------------------------------------------------------------------------------------
+-- Icon picker
+----------------------------------------------------------------------------------------------------
+vim.keymap.set("n", "<leader>nI", function()
+  local items = {}
+  for _, category in ipairs({ "default", "directory", "extension", "file", "filetype", "lsp", "os" }) do
+    for _, name in pairs(MiniIcons.list(category)) do
+      local icon, hl = MiniIcons.get(category, name)
+      table.insert(items, { hl = hl, icon = icon, text = string.format("%s  %s %s", icon, category, name) })
+    end
+  end
+
+  MiniPick.start({
+    source = {
+      name = "Icons",
+      items = items,
+      choose = function(item)
+        MiniPick.stop()
+        if item == nil then vim.schedule(function() vim.api.nvim_put({ item.icon }, "c", true, true) end) end
+      end,
+    },
+  })
+end, { desc = "Pick Icon" })
 
 ----------------------------------------------------------------------------------------------------
 -- LLM - Codecompanion, Copilot and MCP client
