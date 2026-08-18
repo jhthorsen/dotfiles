@@ -236,7 +236,32 @@ toggle({
 })
 
 ----------------------------------------------------------------------------------------------------
--- Basic Plugin - File and Buffer Pickers
+-- BufWritePre - Create Parent Directories on Write
+----------------------------------------------------------------------------------------------------
+vim.api.nvim_create_autocmd("BufWritePre", {
+  callback = function(event)
+    if not event.match:match("^%w%w+:[\\/][\\/]") then
+      local file = vim.uv.fs_realpath(event.match) or event.match
+      vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
+    end
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+-- BufReadPost - Restore Last Position, when Opening a File
+----------------------------------------------------------------------------------------------------
+vim.api.nvim_create_autocmd("BufReadPost", {
+  callback = function(ev)
+    local mark = vim.api.nvim_buf_get_mark(ev.buf, '"')
+    local line_count = vim.api.nvim_buf_line_count(ev.buf)
+    if mark[1] > 0 and mark[1] <= line_count then
+      vim.api.nvim_win_set_cursor(0, mark)
+    end
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+-- File and Buffer Pickers
 ----------------------------------------------------------------------------------------------------
 require("mini.pick").setup({
   mappings = {
@@ -284,43 +309,6 @@ vim.api.nvim_create_autocmd("User", {
     config.height = 16
     vim.api.nvim_win_set_config(win_id, config)
   end,
-})
-
-----------------------------------------------------------------------------------------------------
--- Basic plugin - WhichKey
-----------------------------------------------------------------------------------------------------
-require("which-key").setup({
-  preset = "helix",
-  expand = function(node)
-    local children = node:count()
-    return node:can_expand() == false and children > 0 and children <= 2
-  end,
-  sort = { "group", "alphanum" },
-  plugins = {
-    marks = true,
-    registers = false,
-    spelling = { enabled = false },
-    presets = {
-      g = true,
-      motions = true,
-      nav = true,
-      operators = true,
-      text_objects = true,
-      windows = true,
-      z = true,
-    },
-  },
-})
-
-require("which-key.plugins.presets").operators["v"] = nil
-require("which-key").add({
-  { "<leader>h", function() require("which-key").show() end, icon = "🎹", desc = "Show All Keys" },
-  { "<leader>c", group = "Code...", icon = "󰅩" },
-  { "<leader>d", group = "Diagnostics...", icon = "󰒡" },
-  { "<leader>f", group = "Files...", icon = "󰈔" },
-  { "<leader>m", group = "Multicursors...", icon = "󰘞" },
-  { "<leader>n", group = "Neovim...", icon = "" },
-  { "<leader>q", group = "Quit...", icon = "󰩈" },
 })
 
 ----------------------------------------------------------------------------------------------------
@@ -403,18 +391,6 @@ ccc.setup({
 })
 vim.keymap.set("n", "<leader>cp", "<cmd>CccPick<cr>", { desc = "Open Color Picker" })
 vim.keymap.set("n", "<leader>cP", "<cmd>CccConvert<cr>", { desc = "Convert Color" })
-
-----------------------------------------------------------------------------------------------------
--- Create Parent Directories on Write
-----------------------------------------------------------------------------------------------------
-vim.api.nvim_create_autocmd("BufWritePre", {
-  callback = function(event)
-    if not event.match:match("^%w%w+:[\\/][\\/]") then
-      local file = vim.uv.fs_realpath(event.match) or event.match
-      vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
-    end
-  end,
-})
 
 ----------------------------------------------------------------------------------------------------
 -- Icon picker
@@ -649,19 +625,6 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 ----------------------------------------------------------------------------------------------------
--- Restore Last Position, when Opening a File
-----------------------------------------------------------------------------------------------------
-vim.api.nvim_create_autocmd("BufReadPost", {
-  callback = function(ev)
-    local mark = vim.api.nvim_buf_get_mark(ev.buf, '"')
-    local line_count = vim.api.nvim_buf_line_count(ev.buf)
-    if mark[1] > 0 and mark[1] <= line_count then
-      vim.api.nvim_win_set_cursor(0, mark)
-    end
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
 -- Treesitter - https://github.com/nvim-treesitter/nvim-treesitter/blob/main/SUPPORTED_LANGUAGES.md
 ----------------------------------------------------------------------------------------------------
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
@@ -730,3 +693,40 @@ vim.keymap.set("n", "<leader>nv", function()
     vim.b.venn_enabled = nil
   end
 end, { desc = "Draw ASCII diagrams", noremap = true })
+
+----------------------------------------------------------------------------------------------------
+-- WhichKey
+----------------------------------------------------------------------------------------------------
+require("which-key").setup({
+  preset = "helix",
+  expand = function(node)
+    local children = node:count()
+    return node:can_expand() == false and children > 0 and children <= 2
+  end,
+  sort = { "group", "alphanum" },
+  plugins = {
+    marks = true,
+    registers = false,
+    spelling = { enabled = false },
+    presets = {
+      g = true,
+      motions = true,
+      nav = true,
+      operators = true,
+      text_objects = true,
+      windows = true,
+      z = true,
+    },
+  },
+})
+
+require("which-key.plugins.presets").operators["v"] = nil
+require("which-key").add({
+  { "<leader>h", function() require("which-key").show() end, icon = "🎹", desc = "Show All Keys" },
+  { "<leader>c", group = "Code...", icon = "󰅩" },
+  { "<leader>d", group = "Diagnostics...", icon = "󰒡" },
+  { "<leader>f", group = "Files...", icon = "󰈔" },
+  { "<leader>m", group = "Multicursors...", icon = "󰘞" },
+  { "<leader>n", group = "Neovim...", icon = "" },
+  { "<leader>q", group = "Quit...", icon = "󰩈" },
+})
