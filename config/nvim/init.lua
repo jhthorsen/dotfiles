@@ -183,6 +183,21 @@ vim.keymap.set({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'",
   { desc = "Moving the cursor through long soft-wrapped lines", expr = true, silent = true })
 vim.keymap.set("n", "z=", function() require("mini.extra").pickers.spellsuggest() end, { desc = "Spell suggestion" })
 
+vim.keymap.set("n", "<leader>nn", function()
+  local notify = require("mini.notify")
+  notify.show_history()
+
+  local buf = vim.api.nvim_get_current_buf()
+  vim.keymap.set("n", "q", "<cmd>bd<cr>", { buffer = buf })
+
+  local notifications = notify.get_all()
+  if #notifications == 0 then
+    vim.bo[buf].modifiable = true
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "No notifications." })
+    vim.bo[buf].modifiable = false
+  end
+end, { desc = "Notification History" })
+
 toggle({
   key = "<leader>nl",
   desc = { enabled = "Absolute Line Numbers", disabled = "Relative Line Numbers" },
