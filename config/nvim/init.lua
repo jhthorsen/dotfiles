@@ -22,6 +22,7 @@ require("mini.align").setup({}) -- ga, gA
 require("mini.colors").setup({})
 require("mini.comment").setup({})
 require("mini.icons").setup({})
+require("mini.jump").setup({})     -- f, F, t, T
 require("mini.move").setup({})     -- <M-j>, <M-k>, <M-h>, <M-l>
 require("mini.surround").setup({}) -- sa, sd, sf, sF, sr
 
