@@ -175,9 +175,11 @@ vim.keymap.set("n", "<c-k>", ":wincmd k<CR>", { silent = true, desc = "Move to a
 vim.keymap.set("n", "<c-l>", ":wincmd l<CR>", { silent = true, desc = "Move to right split" })
 vim.keymap.set("n", "<leader>nz", function() require("mini.misc").zoom() end, { desc = "Zoom Window" })
 
-vim.keymap.set({ "n", "v" }, "0d", '"_d', { desc = "Delete Line" })
+vim.keymap.set("x", "V", function() vim.treesitter.select("child", vim.v.count1) end, { desc = "Select child" })
+vim.keymap.set("x", "v", function() vim.treesitter.select("parent", vim.v.count1) end, { desc = "Select parent" })
 vim.keymap.set("v", "<", "<gv", { desc = "Indent and stay in indent mode" })
 vim.keymap.set("v", ">", ">gv", { desc = "Indent and stay in indent mode" })
+vim.keymap.set({ "n", "v" }, "0d", '"_d', { desc = "Delete" })
 vim.keymap.set({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'",
   { desc = "Moving the cursor through long soft-wrapped lines", expr = true, silent = true })
 vim.keymap.set({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'",
