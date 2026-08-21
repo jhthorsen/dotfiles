@@ -128,6 +128,7 @@ __battape_render_history_ui_start() {
   local fs=$'\037' rs=$'\036';
   local prompt="${PS1@P}";
   local query="$READLINE_LINE";
+  local query_changed=1;
   local matches=();
   local selected=0;
   cols="$(tput cols 2>/dev/null || printf 80)";
@@ -156,8 +157,11 @@ __battape_render_history_ui_start() {
 
   printf '\e7\e[s'; # save cursor
   while :; do
-    mapfile -d "$rs" -t matches < <(__battape_query_commands "$query" "$BATTAPE_ROWS");
-    [ "${#matches[@]}" -gt 0 ] || matches=("${fs}${fs}${fs}${query}");
+    if [ "$query_changed" -eq 1 ]; then
+      mapfile -d "$rs" -t matches < <(__battape_query_commands "$query" "$BATTAPE_ROWS");
+      [ "${#matches[@]}" -gt 0 ] || matches=("${fs}${fs}${fs}${query}");
+      query_changed=0;
+    fi
     [ "$selected" -ge "${#matches[@]}" ] && selected=$((${#matches[@]} - 1));
     [ "$selected" -lt 0 ] && selected=0;
     __battape_render_history_ui;
@@ -189,8 +193,18 @@ __battape_render_history_ui_start() {
       $'\v')
         [ "$selected" -gt 0 ] && ((selected--))
         ;;
-      $'\177'|$'\b') [ -n "$query" ] && query="${query:0:${#query}-1}" ;;
-      *) [[ "$key" =~ [[:print:]] ]] && query+="$key" ;;
+      $'\177'|$'\b')
+        if [ -n "$query" ]; then
+          query="${query:0:${#query}-1}";
+          query_changed=1;
+        fi
+        ;;
+      *)
+        if [[ "$key" =~ [[:print:]] ]]; then
+          query+="$key";
+          query_changed=1;
+        fi
+        ;;
     esac
   done
 
