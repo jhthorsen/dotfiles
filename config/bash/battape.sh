@@ -9,15 +9,15 @@ BATTAPE_COLOR_SELECTED=$'\e[1;97m';
 BATTAPE_COLOR_SUCCESS=$'\e[32m';
 
 __battape_cleanup() {
-  stty "$BATTAPE_STTY_SETTINGS";
+  stty "$stty_settings" 2>/dev/null || :;
   local i;
   printf '\e8\e[u'; # restore cursor
-  for ((i = 0; i <= "$BATTAPE_ROWS"; i++)); do
+  for ((i = 0; i <= "$rows"; i++)); do
     printf '\e[K';
-    [ "$i" -lt "$BATTAPE_ROWS" ] && printf '\r\n';
+    [ "$i" -lt "$rows" ] && printf '\r\n';
   done
   printf '\e8\e[u'; # restore cursor
-  tput cnorm 2>/dev/null;
+  tput cnorm 2>/dev/null || :;
 }
 
 __battape_cursor_position() {
@@ -94,7 +94,7 @@ __battape_render_history_ui() {
   printf '\e[K';
   printf '\r\n';
 
-  for ((i = 0; i < "$BATTAPE_ROWS"; i++)); do
+  for ((i = 0; i < "$rows"; i++)); do
     if [ "$i" -lt "${#matches[@]}" ]; then
       record="${matches[i]}";
       IFS="$fs" read -r _ end exit_status cmd < <(printf "%s" "$record");
@@ -119,12 +119,12 @@ __battape_render_history_ui() {
     fi
 
     printf '\e[K';
-    [ "$i" -lt $((BATTAPE_ROWS - 1)) ] && printf '\r\n';
+    [ "$i" -lt $((rows - 1)) ] && printf '\r\n';
   done
 }
 
 __battape_render_history_ui_start() {
-  local cmd col key now pos row cols lines;
+  local active_signal_traps cmd col key now pos row rows cols lines;
   local fs=$'\037' rs=$'\036';
   local prompt="${PS1@P}";
   local query="$READLINE_LINE";
@@ -135,21 +135,31 @@ __battape_render_history_ui_start() {
   lines="$(tput lines 2>/dev/null || printf 24)";
   now="$(date +%s)";
 
-  BATTAPE_STTY_SETTINGS="$(stty -g)" || return;
+  stty_settings="$(stty -g)" || return;
   [[ "$BATTAPE_MAX_ROWS" =~ ^[1-9][0-9]*$ ]] || BATTAPE_MAX_ROWS=12;
-  BATTAPE_ROWS="$((lines - 2))";
-  [ "$BATTAPE_ROWS" -gt "$BATTAPE_MAX_ROWS" ] && BATTAPE_ROWS="$BATTAPE_MAX_ROWS";
-  [ "$BATTAPE_ROWS" -gt 0 ] || BATTAPE_ROWS=1;
+  rows="$((lines - 2))";
+  [ "$rows" -gt "$BATTAPE_MAX_ROWS" ] && rows="$BATTAPE_MAX_ROWS";
+  [ "$rows" -gt 0 ] || rows=1;
 
-  trap '__battape_cleanup; trap - INT; return' INT;
-  tput civis 2>/dev/null;
-  stty raw;
+  active_signal_traps="$(trap -p EXIT HUP INT QUIT TERM TSTP)";
+  if [ -n "$active_signal_traps" ]; then
+    printf 'battape: custom signal trap already set; history search disabled\n' >&2;
+    return 1;
+  fi
+
+  trap '__battape_cleanup; trap - EXIT HUP INT QUIT TERM TSTP; return' EXIT HUP INT QUIT TERM TSTP;
+  tput cnorm 2>/dev/null || :;
+  if ! stty raw; then
+    __battape_cleanup;
+    trap - EXIT HUP INT QUIT TERM TSTP;
+    return 1;
+  fi
   pos="$(__battape_cursor_position)";
   read -r row col < <(printf "%s" "$pos")
 
   # reserve space
   if [ -n "$row" ] && [ -n "$col" ]; then
-    local scroll_rows=$((row + BATTAPE_ROWS - lines));
+    local scroll_rows=$((row + rows - lines));
     if [ "$scroll_rows" -gt 0 ]; then
       printf '\e[%sS\e[%s;%sH' "$scroll_rows" "$((row - scroll_rows))" "$col";
     fi
@@ -158,7 +168,7 @@ __battape_render_history_ui_start() {
   printf '\e7\e[s'; # save cursor
   while :; do
     if [ "$query_changed" -eq 1 ]; then
-      mapfile -d "$rs" -t matches < <(__battape_query_commands "$query" "$BATTAPE_ROWS");
+      mapfile -d "$rs" -t matches < <(__battape_query_commands "$query" "$rows");
       [ "${#matches[@]}" -gt 0 ] || matches=("${fs}${fs}${fs}${query}");
       query_changed=0;
     fi
@@ -208,7 +218,7 @@ __battape_render_history_ui_start() {
     esac
   done
 
-  trap - INT;
+  trap - EXIT HUP INT QUIT TERM TSTP;
   __battape_cleanup;
 }
 
