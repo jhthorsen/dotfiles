@@ -36,6 +36,39 @@ __battape_match_command() {
   printf '%s' "$record";
 }
 
+__battape_truncate_display() {
+  local text="$1" limit="$2" char char_width escape output="" width=0;
+
+  if [[ "$text" != *$'\e'* && "$text" != *[!\ -~]* ]]; then
+    printf '%s' "${text:0:limit}";
+    [ "${#text}" -le "$limit" ] || printf '%s' "$BATTAPE_COLOR_RESET";
+    return;
+  fi
+
+  while [ -n "$text" ] && [ "$width" -lt "$limit" ]; do
+    if [[ "$text" =~ ^$'\e'\[[0-9\;?]*[[:alpha:]~] ]]; then
+      escape="${BASH_REMATCH[0]}";
+      output+="$escape";
+      text="${text:${#escape}}";
+      continue;
+    fi
+
+    char="${text:0:1}";
+    if [[ "$char" == [\ -~] ]]; then
+      char_width=1;
+    else
+      char_width="$(printf '%s\n' "$char" | wc -L)";
+    fi
+    [ "$((width + char_width))" -le "$limit" ] || break;
+    output+="$char";
+    text="${text:1}";
+    width="$((width + char_width))";
+  done
+
+  printf '%s' "$output";
+  [ -z "$text" ] || printf '%s' "$BATTAPE_COLOR_RESET";
+}
+
 __battape_query_commands() {
   local limit="${2:-12}";
   local prefix="" q="%" term sql;
@@ -86,11 +119,26 @@ __battape_query_commands() {
 }
 
 __battape_render_history_ui() {
-  local age i record cmd end exit_status arrow_color text_color;
+  local age i record cmd char char_width end exit_status arrow_color text_color query_cursor_width query_start;
   [ "$cols" -gt 3 ] || cols=4;
 
+  query_start="$query_point";
+  query_cursor_width=0;
+  while [ "$query_start" -gt 0 ]; do
+    char="${query:query_start-1:1}";
+    if [[ "$char" == [\ -~] ]]; then
+      char_width=1;
+    else
+      char_width="$(printf '%s\n' "$char" | wc -L)";
+    fi
+    [ "$((query_cursor_width + char_width))" -le "$((cols - 3))" ] || break;
+    ((query_start--));
+    query_cursor_width="$((query_cursor_width + char_width))";
+  done
+
   printf '\e8\e[u'; # restore cursor
-  printf '%s%s' "$prompt" "${query:0:$((cols - 3))}";
+  printf '? ';
+  __battape_truncate_display "${query:query_start}" "$((cols - 3))";
   printf '\e[K';
   printf '\r\n';
 
@@ -102,32 +150,37 @@ __battape_render_history_ui() {
       cmd="${cmd//$'\n'/\\n}";
       cmd="${cmd//$'\r'/\\r}";
       cmd="${cmd//$'\t'/\\t}";
-      cmd="${cmd:0:$((cols - 3))}";
       text_color="$BATTAPE_COLOR_SELECTED";
       if [ "$i" -eq "$selected" ]; then
         arrow_color="$BATTAPE_COLOR_SUCCESS";
         [ "$exit_status" != 0 ] && arrow_color="$BATTAPE_COLOR_FAIL";
-        printf '%s>%s %s%s%s' "$arrow_color" "$BATTAPE_COLOR_RESET" "$text_color" "$cmd" "$BATTAPE_COLOR_RESET";
+        printf '%s>%s %s' "$arrow_color" "$BATTAPE_COLOR_RESET" "$text_color";
+        __battape_truncate_display "$cmd" "$((cols - 3))";
+        printf '%s' "$BATTAPE_COLOR_RESET";
       else
         age="$((now - end))";
         if [ -z "$end" ] || [ "$age" -gt 86400 ]; then text_color="$BATTAPE_COLOR_OLDEST";
         elif [ "$age" -lt 3600 ]; then text_color="$BATTAPE_COLOR_RECENT";
         else text_color="$BATTAPE_COLOR_OLD";
         fi
-        printf '  %s%s%s' "$text_color" "$cmd" "$BATTAPE_COLOR_RESET";
+        printf '  %s' "$text_color";
+        __battape_truncate_display "$cmd" "$((cols - 3))";
+        printf '%s' "$BATTAPE_COLOR_RESET";
       fi
     fi
 
     printf '\e[K';
     [ "$i" -lt $((rows - 1)) ] && printf '\r\n';
   done
+
+  printf '\e8\e[u\e[%sC' "$((query_cursor_width + 2))"; # restore cursor to query
 }
 
 __battape_render_history_ui_start() {
   local active_signal_traps cmd col key now pos row rows cols lines;
   local fs=$'\037' rs=$'\036';
-  local prompt="${PS1@P}";
   local query="$READLINE_LINE";
+  local query_point="$READLINE_POINT";
   local query_changed=1;
   local matches=();
   local selected=0;
@@ -136,6 +189,7 @@ __battape_render_history_ui_start() {
   now="$(date +%s)";
 
   stty_settings="$(stty -g)" || return;
+  [ "$query_point" -le "${#query}" ] || query_point="${#query}";
   [[ "$BATTAPE_MAX_ROWS" =~ ^[1-9][0-9]*$ ]] || BATTAPE_MAX_ROWS=12;
   rows="$((lines - 2))";
   [ "$rows" -gt "$BATTAPE_MAX_ROWS" ] && rows="$BATTAPE_MAX_ROWS";
@@ -185,6 +239,15 @@ __battape_render_history_ui_start() {
         case "$key" in
           '[A') [ "$selected" -gt 0 ] && ((selected--)) ;;
           '[B') [ "$selected" -lt $((${#matches[@]} - 1)) ] && ((selected++)) ;;
+          '[C') [ "$query_point" -lt "${#query}" ] && ((query_point++)) ;;
+          '[D') [ "$query_point" -gt 0 ] && ((query_point--)) ;;
+          '[3')
+            IFS= read -rs -t 0.05 -n 1 key < /dev/tty 2>/dev/null;
+            if [ "$key" = '~' ] && [ "$query_point" -lt "${#query}" ]; then
+              query="${query:0:query_point}${query:query_point+1}";
+              query_changed=1;
+            fi
+            ;;
           *) break ;;
         esac
         ;;
@@ -204,14 +267,24 @@ __battape_render_history_ui_start() {
         [ "$selected" -gt 0 ] && ((selected--))
         ;;
       $'\177'|$'\b')
-        if [ -n "$query" ]; then
-          query="${query:0:${#query}-1}";
+        if [ "$query_point" -gt 0 ]; then
+          query="${query:0:query_point-1}${query:query_point}";
+          ((query_point--));
           query_changed=1;
         fi
         ;;
+      $'\004')
+        if [ "$query_point" -lt "${#query}" ]; then
+          query="${query:0:query_point}${query:query_point+1}";
+          query_changed=1;
+        fi
+        ;;
+      $'\001') query_point=0 ;;
+      $'\005') query_point="${#query}" ;;
       *)
         if [[ "$key" =~ [[:print:]] ]]; then
-          query+="$key";
+          query="${query:0:query_point}${key}${query:query_point}";
+          ((query_point++));
           query_changed=1;
         fi
         ;;
