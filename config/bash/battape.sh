@@ -1,4 +1,4 @@
-BATTAPE_DB="${BATTAPE_DB:-"$HOME/.bash_command_history.db"}";
+BATTAPE_DB="${BATTAPE_DB:-"$HOME/.local/share/battape/battape.sqlite"}";
 BATTAPE_MAX_ROWS="${BATTAPE_MAX_ROWS:-12}";
 BATTAPE_COLOR_FAIL=$'\e[31m';
 BATTAPE_COLOR_OLD=$'\e[37m';
@@ -114,8 +114,7 @@ __battape_query_commands() {
       limit $limit";
   fi
 
-  sqlite3 -batch -cmd '.timeout 1000' -noheader -separator "$fs" \
-    -newline "$rs" "$BATTAPE_DB" "$sql";
+  sqlite3 -batch -cmd '.timeout 1000' -noheader -separator "$fs" -newline "$rs" "$BATTAPE_DB" "$sql";
 }
 
 __battape_render_history_ui() {
@@ -308,8 +307,7 @@ __battape_record() {
   [[ "$LAST_INTERACTIVE_COMMAND" == __battape* ]] && return "$status";
   [[ -z "$LAST_INTERACTIVE_COMMAND" ]] && return "$status";
   sqlite3 -cmd '.timeout 1000' "$BATTAPE_DB" <<HERE
-insert into history (start, end, hostname, tty, pwd, command, exit_status)
-values (
+insert into history (start, end, hostname, tty, pwd, command, exit_status) values (
   strftime('%s', 'now') - $(( SECONDS - LAST_INTERACTIVE_COMMAND_SECONDS )),
   strftime('%s', 'now'),
   '$hostname',
@@ -333,8 +331,8 @@ __battape_track_command() {
 if [[ -z "${__battape_loaded:-}" ]] \
   && ((BASH_VERSINFO[0] > 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 4))) \
   && command -v sqlite3 >/dev/null \
-  && [[ (-e "$BATTAPE_DB" && -w "$BATTAPE_DB") || (! -e "$BATTAPE_DB" && -w "$(dirname "$BATTAPE_DB")") ]] \
   && [[ -z "$(trap -p DEBUG)" ]]; then
+  mkdir -p "$(dirname "$BATTAPE_DB")" 2>/dev/null || :;
   sqlite3 -batch -cmd '.timeout 1000' "$BATTAPE_DB" <<'HERE' || return
 create table if not exists history (
   id integer primary key autoincrement,
