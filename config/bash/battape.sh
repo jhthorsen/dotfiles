@@ -227,7 +227,7 @@ __battape_render_history_ui_start() {
     fi
     [ "$selected" -ge "${#matches[@]}" ] && selected=$((${#matches[@]} - 1));
     [ "$selected" -lt 0 ] && selected=0;
-    __battape_render_history_ui;
+    printf "%s" "$(__battape_render_history_ui)";
 
     key="$(dd bs=1 count=1 2>/dev/null; printf x)";
     key="${key%x}";
