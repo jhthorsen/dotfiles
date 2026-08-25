@@ -36,6 +36,28 @@ __battape_match_command() {
   printf '%s' "$record";
 }
 
+__battape_read_key() {
+  local byte remaining=0;
+
+  BATTAPE_KEY="$(dd bs=1 count=1 2>/dev/null; printf x)";
+  BATTAPE_KEY="${BATTAPE_KEY%x}";
+  [ -n "$BATTAPE_KEY" ] || return 1;
+
+  case "$BATTAPE_KEY" in
+    [$'\xC2'-$'\xDF']) remaining=1 ;;
+    [$'\xE0'-$'\xEF']) remaining=2 ;;
+    [$'\xF0'-$'\xF4']) remaining=3 ;;
+  esac
+
+  while [ "$remaining" -gt 0 ]; do
+    byte="$(dd bs=1 count=1 2>/dev/null; printf x)";
+    byte="${byte%x}";
+    [ -n "$byte" ] || return 1;
+    BATTAPE_KEY+="$byte";
+    ((remaining--));
+  done
+}
+
 __battape_read_bracketed_paste() {
   local byte buffered="" char paste="" sanitized="" terminator=$'\e[201~';
 
@@ -257,9 +279,8 @@ __battape_render_history_ui_start() {
     [ "$selected" -lt 0 ] && selected=0;
     printf "%s" "$(__battape_render_history_ui)";
 
-    key="$(dd bs=1 count=1 2>/dev/null; printf x)";
-    key="${key%x}";
-    [ -n "$key" ] || break;
+    __battape_read_key || break;
+    key="$BATTAPE_KEY";
     case "$key" in
       $'\e')
         IFS= read -rs -t 0.05 -n 2 key < /dev/tty 2>/dev/null;
