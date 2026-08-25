@@ -36,6 +36,34 @@ __battape_match_command() {
   printf '%s' "$record";
 }
 
+__battape_read_bracketed_paste() {
+  local byte buffered="" char paste="" sanitized="" terminator=$'\e[201~';
+
+  while :; do
+    byte="$(dd bs=1 count=1 2>/dev/null; printf x)";
+    byte="${byte%x}";
+    [ -n "$byte" ] || break;
+    buffered+="$byte";
+
+    while [ -n "$buffered" ] && [[ "$terminator" != "$buffered"* ]]; do
+      paste+="${buffered:0:1}";
+      buffered="${buffered:1}";
+    done
+    [ "$buffered" = "$terminator" ] && break;
+  done
+
+  while [ -n "$paste" ]; do
+    char="${paste:0:1}";
+    paste="${paste:1}";
+    if [[ "$char" =~ [[:print:]] ]]; then
+      sanitized+="$char";
+    elif [[ "$char" == $'\t' || "$char" == $'\r' || "$char" == $'\n' ]]; then
+      sanitized+=' ';
+    fi
+  done
+  BATTAPE_PASTED="$sanitized";
+}
+
 __battape_truncate_display() {
   local text="$1" limit="$2" char char_width escape output="" width=0;
 
@@ -245,6 +273,17 @@ __battape_render_history_ui_start() {
             if [ "$key" = '~' ] && [ "$query_point" -lt "${#query}" ]; then
               query="${query:0:query_point}${query:query_point+1}";
               query_changed=1;
+            fi
+            ;;
+          '[2')
+            IFS= read -rs -t 0.05 -n 3 key < /dev/tty 2>/dev/null;
+            if [ "$key" = '00~' ]; then
+              __battape_read_bracketed_paste;
+              query="${query:0:query_point}${BATTAPE_PASTED}${query:query_point}";
+              query_point="$((query_point + ${#BATTAPE_PASTED}))";
+              query_changed=1;
+            else
+              break;
             fi
             ;;
           *) break ;;
