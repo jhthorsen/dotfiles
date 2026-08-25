@@ -147,7 +147,7 @@ __battape_query_commands() {
         row_number() over (partition by command order by end desc, id desc) as row_number
       from history
     ) where row_number = 1
-      order by end desc, id desc
+      order by id desc
       limit $limit";
   else
     sql="select id, end, exit_status, command from (
@@ -355,37 +355,18 @@ __battape_render_history_ui_start() {
 }
 
 __battape_record() {
-  local status="${1:-255}";
-  local hostname="${HOSTNAME//\'/\'\'}";
-  local tty;
-  local pwd="${PWD//\'/\'\'}";
-  local command="${LAST_INTERACTIVE_COMMAND//\'/\'\'}";
-
-  tty="$(tty)";
-  tty="${tty//\'/\'\'}";
-  LAST_INTERACTIVE_COMMAND_STATUS="$status";
-  [[ "$LAST_INTERACTIVE_COMMAND" == __battape* ]] && return "$status";
-  [[ -z "$LAST_INTERACTIVE_COMMAND" ]] && return "$status";
   sqlite3 -cmd '.timeout 1000' "$BATTAPE_DB" <<HERE
 insert into history (start, end, hostname, tty, pwd, command, exit_status) values (
-  strftime('%s', 'now') - $(( SECONDS - LAST_INTERACTIVE_COMMAND_SECONDS )),
+  strftime('%s', 'now') - $(( SECONDS - LAST_INTERACTIVE_COMMAND_START )),
   strftime('%s', 'now'),
-  '$hostname',
-  '$tty',
-  '$pwd',
-  '$command',
-  $LAST_INTERACTIVE_COMMAND_STATUS
+  '${HOSTNAME//\'/\'\'}',
+  '$(tty)',
+  '${PWD//\'/\'\'}',
+  '$(fc -ln -1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e "s/'/\\'\\'/g")',
+  $1
 )
 HERE
-  return "$status";
-}
-
-__battape_track_command() {
-  local cmd="$BASH_COMMAND";
-  [[ "$cmd" == _* ]] && return;
-  LAST_INTERACTIVE_COMMAND="$cmd";
-  LAST_INTERACTIVE_COMMAND_SECONDS="$SECONDS";
-  BASH_COMMAND="$cmd";
+  return "$1";
 }
 
 if [[ -z "${__battape_loaded:-}" ]] \
@@ -419,8 +400,13 @@ HERE
   bind -m vi-insert -x '"\C-r":__battape_render_history_ui_start';
   bind -m vi-command -x '"\C-r":__battape_render_history_ui_start';
 
-  PROMPT_COMMAND="__battape_record \$?;${PROMPT_COMMAND%;}";
-  trap '__battape_track_command' DEBUG;
+  if [[ "$(declare -p PROMPT_COMMAND 2>/dev/null)" == 'declare -a '* ]]; then
+    PROMPT_COMMAND=("__battape_record \$?" "${PROMPT_COMMAND[@]}");
+  else
+    PROMPT_COMMAND="__battape_record \$?;${PROMPT_COMMAND%;}";
+  fi
+
+  trap '[[ "$BASH_COMMAND" == _* ]] || LAST_INTERACTIVE_COMMAND_START="$SECONDS"' DEBUG;
 elif [[ -z "${__battape_loaded:-}" && -n "$(trap -p DEBUG)" ]]; then
   printf 'battape: DEBUG trap already set; command tracking disabled\n' >&2;
 elif [[ -z "${__battape_loaded:-}" ]] \
