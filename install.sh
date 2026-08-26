@@ -129,7 +129,6 @@ install_apps() {
   install_brew_package "neovim";
   install_brew_package "nmap";
   install_brew_package "node";
-  install_brew_package "oh-my-posh";
   install_brew_package "openssh";
   install_brew_package "openssl";
   install_brew_package "pass";
@@ -192,7 +191,6 @@ install_dotfiles() {
   run "$DOTFILES_HOME/config/bash/generate.sh" "$DOTFILES_HOME/config/bash/bash_profile.sh" > "$HOME/.bash_profile";
   lnk "$DOTFILES_HOME/config/bash/inputrc" "$HOME/.inputrc";
   lnk "$DOTFILES_HOME/config/ghostty" "$XDG_CONFIG_DIR/ghostty";
-  lnk "$DOTFILES_HOME/config/oh-my-posh.json" "$XDG_CONFIG_DIR/oh-my-posh.json";
   lnk "$DOTFILES_HOME/config/wezterm" "$XDG_CONFIG_DIR/wezterm";
 
   # nvim

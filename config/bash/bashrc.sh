@@ -22,4 +22,8 @@ command -v nvim >/dev/null 2>&1 && export EDITOR="nvim"; # INLINE
 [ -e "/etc/profile.d/bash_completion.sh" ] && source "/etc/profile.d/bash_completion.sh"; # INLINE
 [ -e "/opt/homebrew/etc/profile.d/bash_completion.sh" ] && source "/opt/homebrew/etc/profile.d/bash_completion.sh"; # INLINE
 
+# Required by battape.sh and ps1.sh
+LAST_INTERACTIVE_COMMAND_START=$SECONDS;
+trap '[[ "$BASH_COMMAND" == __* ]] || LAST_INTERACTIVE_COMMAND_START="$SECONDS"' DEBUG;
+
 # read:generate_gpg_config

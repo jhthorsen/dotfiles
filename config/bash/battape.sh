@@ -405,8 +405,6 @@ HERE
   else
     PROMPT_COMMAND="__battape_record \$?;${PROMPT_COMMAND%;}";
   fi
-
-  trap '[[ "$BASH_COMMAND" == _* ]] || LAST_INTERACTIVE_COMMAND_START="$SECONDS"' DEBUG;
 elif [[ -z "${__battape_loaded:-}" && -n "$(trap -p DEBUG)" ]]; then
   printf 'battape: DEBUG trap already set; command tracking disabled\n' >&2;
 elif [[ -z "${__battape_loaded:-}" ]] \

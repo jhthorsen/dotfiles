@@ -32,9 +32,9 @@ stty -echoctl;
 
 [ -e "$HOME/.bash_profile_local" ] && source "$HOME/.bash_profile_local";
 
-command -v zoxide >/dev/null && eval "$(zoxide init bash)"; # INLINE
-command -v oh-my-posh >/dev/null && eval "$(oh-my-posh init bash --config "$XDG_CONFIG_DIR/oh-my-posh.json")"; # INLINE
+[ -f "$DOTFILES_HOME/config/bash/ps1.sh" ] && source "$DOTFILES_HOME/config/bash/ps1.sh";
 [ -f "$DOTFILES_HOME/config/bash/battape.sh" ] && source "$DOTFILES_HOME/config/bash/battape.sh";
+command -v zoxide >/dev/null && eval "$(zoxide init bash)"; # INLINE
 
 cd() {
   z "$@" && printf '\e]7;file://%s%s\a' "$HOSTNAME" "$PWD"
