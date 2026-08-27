@@ -163,7 +163,6 @@ install_apps() {
   install_brew_package "yubico-authenticator" "/Applications/Yubico Authenticator.app";
   install_brew_package "yubico-piv-tool";
   install_brew_package "yubikey-personalization" "/opt/homebrew/Cellar/ykpers";
-  install_brew_package "zoxide";
 }
 
 install_brew_package() {

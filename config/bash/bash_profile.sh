@@ -34,8 +34,4 @@ stty -echoctl;
 
 [ -f "$DOTFILES_HOME/config/bash/ps1.sh" ] && source "$DOTFILES_HOME/config/bash/ps1.sh";
 [ -f "$DOTFILES_HOME/config/bash/battape.sh" ] && source "$DOTFILES_HOME/config/bash/battape.sh";
-command -v zoxide >/dev/null && eval "$(zoxide init bash)"; # INLINE
-
-cd() {
-  z "$@" && printf '\e]7;file://%s%s\a' "$HOSTNAME" "$PWD"
-}
+[ -f "$DOTFILES_HOME/config/bash/cd.sh" ] && source "$DOTFILES_HOME/config/bash/cd.sh";
