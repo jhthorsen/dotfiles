@@ -142,20 +142,30 @@ __battape_query_commands() {
   # then recency. "git log" matches "git status && git log", while only
   # commands beginning with "git" receive the prefix-match priority.
   if [ -z "$prefix" ]; then
-    sql="select id, end, exit_status, command from (
-      select id, command, end, exit_status,
-        row_number() over (partition by command order by end desc, id desc) as row_number
-      from history
-    ) where row_number = 1
+    sql="select id, end, exit_status, display_command as command from (
+      select id, end, exit_status, display_command,
+        row_number() over (partition by display_command order by end desc, id desc) as display_row_number
+      from (
+        select id, command, end, exit_status,
+          case when command like 'cd %' then 'cd ' || pwd else command end as display_command,
+          row_number() over (partition by command order by end desc, id desc) as command_row_number
+        from history
+      ) where command_row_number = 1
+    ) where display_row_number = 1
       order by id desc
       limit $limit";
   else
-    sql="select id, end, exit_status, command from (
-      select id, command, end, exit_status,
-        row_number() over (partition by command order by end desc, id desc) as row_number
-      from history
-      where command like '$q' escape '\\' collate nocase
-    ) where row_number = 1
+    sql="select id, end, exit_status, display_command as command from (
+      select id, command, end, exit_status, display_command,
+        row_number() over (partition by display_command order by end desc, id desc) as display_row_number
+      from (
+        select id, command, end, exit_status,
+          case when command like 'cd %' then 'cd ' || pwd else command end as display_command,
+          row_number() over (partition by command order by end desc, id desc) as command_row_number
+        from history
+        where command like '$q' escape '\\' collate nocase
+      ) where command_row_number = 1
+    ) where display_row_number = 1
       order by
         case when command like '$prefix' escape '\\' collate nocase then 0 else 1 end,
         case when exit_status = 0 then 0 else 1 end,
