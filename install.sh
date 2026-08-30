@@ -178,10 +178,9 @@ install_brew_package() {
 install_cpanm() {
   true; and $MAYBE_SUDO cpanm -n \
     App::errno     App::githook_perltidy App::httpstatus  \
-    App::pause     App::podify           App::tt          \
-    CPAN::Uploader Devel::Cover          Getopt::App      \
-    Mojolicious    Pod::Markdown         Term::ReadKey    \
-    Regexp::Common;
+    App::pause     App::podify           CPAN::Uploader   \
+    Devel::Cover   Getopt::App           Mojolicious      \
+    Pod::Markdown  Term::ReadKey         Regexp::Common;
 }
 
 install_dotfiles() {

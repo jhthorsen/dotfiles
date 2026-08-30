@@ -105,9 +105,8 @@ reload() {
 }
 
 vi() {
-  [ -d ".git" ] && tt start --quiet --resume;
+  [ -d ".git" ] && tt edit --quiet --or-start;
   if [ -n "$*" ]; then nvim "$@";
   else nvim -c ":lua MiniPick.builtin.files()";
   fi
-  [ -d ".git" ] && tt stop --quiet --tag-unless-same-project;
 }
