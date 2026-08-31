@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source_dir="${1:-$HOME/.TimeTracker}"
+database="${BATTAPE_DB:-$HOME/.local/share/battape/battape.sqlite}"
+
+if [ "$#" -gt 1 ]; then
+  echo "Usage: $0 [TimeTracker directory]" >&2
+  exit 2
+fi
+
+if [ ! -d "$source_dir" ]; then
+  echo "TimeTracker directory does not exist: $source_dir" >&2
+  exit 1
+fi
+
+command -v jq >/dev/null || { echo 'jq is required' >&2; exit 1; }
+command -v sqlite3 >/dev/null || { echo 'sqlite3 is required' >&2; exit 1; }
+
+mkdir -p "$(dirname "$database")"
+sql_file="$(mktemp "${TMPDIR:-/tmp}/import-timetracker.XXXXXX")"
+trap 'rm -f "$sql_file"' EXIT
+
+cat >"$sql_file" <<'SQL'
+.timeout 1000
+begin immediate;
+create table if not exists time_tracker (
+  start integer not null,
+  end integer not null,
+  hostname text not null,
+  user text not null,
+  account text not null,
+  description text not null,
+  tags text not null
+);
+create index if not exists idx_time_tracker_account on time_tracker(account);
+SQL
+
+export IMPORT_TIMETRACKER_HOSTNAME="$(hostname)"
+export IMPORT_TIMETRACKER_USER="${USER:-}"
+
+while IFS= read -r -d '' file; do
+  jq -er '
+    def epoch:
+      sub("\\.[0-9]+$"; "")
+      | sub(" "; "T")
+      | strptime("%Y-%m-%dT%H:%M:%S")
+      | mktime as $utc
+      | ($utc | localtime | mktime) as $local_as_utc
+      | $utc - ($local_as_utc - $utc);
+    def text: "\u0027" + (tostring | gsub("\u0027"; "\u0027\u0027")) + "\u0027";
+    (.start | epoch) as $start
+    | ((.stop // .start) | epoch) as $end
+    | select($end >= $start)
+    | [
+        $start,
+        $end,
+        (.hostname // env.IMPORT_TIMETRACKER_HOSTNAME),
+        (.user // env.IMPORT_TIMETRACKER_USER),
+        .project,
+        (.description // ""),
+        (if (.tags | type) == "array" then (.tags | join(",")) else (.tags // "") end)
+      ] as $values
+    | "insert into time_tracker (start, end, hostname, user, account, description, tags) "
+      + "select " + ($values | map(text) | join(", "))
+      + " where not exists (select 1 from time_tracker where "
+      + (["start", "end", "hostname", "user", "account", "description", "tags"]
+         | to_entries
+         | map(.value + " = " + ($values[.key] | text))
+         | join(" and "))
+      + ");"
+  ' "$file" >>"$sql_file"
+done < <(find "$source_dir/" -type f -name '*.trc' -print0)
+
+printf 'commit;\n' >>"$sql_file"
+sqlite3 -batch -bail "$database" <"$sql_file"
+echo "Imported entries from $source_dir into $database."
