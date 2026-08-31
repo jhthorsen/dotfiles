@@ -138,39 +138,39 @@ __battape_query_commands() {
   done
 
   # Search before ranking duplicates, then retain the newest row for each
-  # command. Prefix matches rank first, followed by successful commands and
-  # then recency. "git log" matches "git status && git log", while only
-  # commands beginning with "git" receive the prefix-match priority.
+  # command. Results are always newest first; prefix matches and successful
+  # commands only break ties. "git log" matches "git status && git log",
+  # while only commands beginning with "git" receive the prefix-match
+  # priority.
   if [ -z "$prefix" ]; then
-    sql="select id, end, exit_status, display_command as command from (
-      select id, end, exit_status, display_command,
-        row_number() over (partition by display_command order by end desc, id desc) as display_row_number
+    sql="select start, end, exit_status, display_command as command from (
+      select start, end, exit_status, display_command,
+        row_number() over (partition by display_command order by end desc) as display_row_number
       from (
-        select id, command, end, exit_status,
+        select start, command, end, exit_status,
           case when command like 'cd %' then 'cd ' || pwd else command end as display_command,
-          row_number() over (partition by command order by end desc, id desc) as command_row_number
+          row_number() over (partition by command order by end desc) as command_row_number
         from history
       ) where command_row_number = 1
     ) where display_row_number = 1
-      order by id desc
+      order by end desc
       limit $limit";
   else
-    sql="select id, end, exit_status, display_command as command from (
-      select id, command, end, exit_status, display_command,
-        row_number() over (partition by display_command order by end desc, id desc) as display_row_number
+    sql="select start, end, exit_status, display_command as command from (
+      select start, command, end, exit_status, display_command,
+        row_number() over (partition by display_command order by end desc) as display_row_number
       from (
-        select id, command, end, exit_status,
+        select start, command, end, exit_status,
           case when command like 'cd %' then 'cd ' || pwd else command end as display_command,
-          row_number() over (partition by command order by end desc, id desc) as command_row_number
+          row_number() over (partition by command order by end desc) as command_row_number
         from history
         where command like '$q' escape '\\' collate nocase
       ) where command_row_number = 1
     ) where display_row_number = 1
       order by
-        case when command like '$prefix' escape '\\' collate nocase then 0 else 1 end,
-        case when exit_status = 0 then 0 else 1 end,
         end desc,
-        id desc
+        case when command like '$prefix' escape '\\' collate nocase then 0 else 1 end,
+        case when exit_status = 0 then 0 else 1 end
       limit $limit";
   fi
 
@@ -386,7 +386,6 @@ if [[ -z "${__battape_loaded:-}" ]] \
   mkdir -p "$(dirname "$BATTAPE_DB")" 2>/dev/null || :;
   sqlite3 -batch -cmd '.timeout 1000' "$BATTAPE_DB" <<'HERE' || return
 create table if not exists history (
-  id integer primary key autoincrement,
   start integer not null,
   end integer not null,
   hostname text not null,
@@ -399,8 +398,8 @@ create index if not exists idx_history_end on history(end);
 HERE
 
   schema_columns="$(sqlite3 -batch -noheader "$BATTAPE_DB" \
-    "select group_concat(name, ',') from pragma_table_info('history');")";
-  if [[ "$schema_columns" != 'id,start,end,hostname,tty,pwd,command,exit_status' ]]; then
+    "select group_concat(name, ',') from pragma_table_info('history') where name in ('start', 'end', 'hostname', 'tty', 'pwd', 'command', 'exit_status');")";
+  if [[ "$schema_columns" != 'start,end,hostname,tty,pwd,command,exit_status' ]]; then
     printf 'battape: history table has an unsupported schema; command tracking disabled\n' >&2;
     return;
   fi
