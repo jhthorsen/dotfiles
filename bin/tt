@@ -4,7 +4,7 @@ BATTAPE_DB="${BATTAPE_DB:-"$HOME/.local/share/battape/battape.sqlite"}";
 abort() {
   local code="$1";
   shift;
-  echo "ERR! $*" >&2
+  echo "$*" >&2
   exit "$code";
 }
 
@@ -24,34 +24,36 @@ __battape_tt_epoch() {
   elif [[ "$1" -ge 0 ]] 2>/dev/null; then
     echo "$1";
   else
-    date -v "${1:-"+0S"}" +%s || exit "$?";
+    date -v 0H -v 0M -v 0S -v "${1:-"+0S"}" +%s || exit "$?";
   fi
 }
 
 # tt normalize_tags "f'oo,bar,baz,,foo,,,x,a,,," => ",a,bar,baz,foo,x,"
 __battape_tt_normalize_tags() {
-  printf "%s" "$1" | tr -d "'" | tr ',[:space:]' '\n' | sort -u | awk 'NF { out = out "," $0 } END { print out "," }';
+  [ -z "$1" ] || printf "%s" "$1" | tr -d "'" | tr ',[:space:]' '\n' | sort -u | awk 'NF { out = out "," $0 } END { print out "," }';
 }
 
 __battape_tt_drop() {
-  local id answer;
+  local hostname; hostname="$(__battape_tt_hostname)";
+  local id answer quiet;
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --yes) answer="yes"; shift ;;
-      0|1*|2*|3*|4*|5*|6*|7*|8*|9*) id="$1"; shift ;;
-      *) abort 2 "Unknown option: $1" ;;
+      --quiet) quiet="$1"; shift ;;
+      1*|2*) id="$1"; shift ;;
+      *) abort 2 "ERR! Unknown option: $1" ;;
     esac
   done
 
-  [[ "$id" =~ ^[0-9]+$ ]] || abort 2 "Expected a non-negative integer for id, got: $id";
+  [ -n "$id" ] || id="$(sqlite3 "$BATTAPE_DB" "select start from time_tracker where end = 0 and hostname = '$hostname' order by start desc limit 1")";
+  [[ "$id" =~ ^[0-9]+$ ]] || abort 2 "Usage: tt drop <id>";
 
-  local hostname; hostname="$(__battape_tt_hostname)";
-  [ -n "$answer" ] || read -r -p "Do you want to drop entry $id on $hostname? " answer;
+  local n; n="$(sqlite3 "$BATTAPE_DB" "select count(*) from time_tracker where start = $id and hostname = '$hostname' limit 1")";
+  [ "$n" -gt 0 ] || abort 0 "No such ID found.";
+  [ -n "$quiet" ] || __battape_tt_report --no-footer --limit 1 --start "$id" --end "$id";
+  [ -n "$answer" ] || read -r -p "Do you want to drop entry $id on $hostname? [y/N] " answer;
   [[ "$answer" != y* ]] && [[ "$answer" != Y* ]] && return 0;
-
-  local min_start; min_start="$(sqlite3 "$BATTAPE_DB" "select min(start) from time_tracker")";
-  [ -n "$min_start" ] || abort 1 "No entries in the database.";
-  sqlite3 "$BATTAPE_DB" "delete from time_tracker where start = $((min_start + id)) and hostname = '$hostname'";
+  sqlite3 "$BATTAPE_DB" "delete from time_tracker where start = $id and hostname = '$hostname'";
 }
 
 __battape_tt_edit() {
@@ -67,34 +69,27 @@ __battape_tt_edit() {
       -t|--tags) tags="$2"; shift 2 ;;
       -A|--add-tag) add_tags="${add_tags:+$add_tags,}$2"; shift 2 ;;
       -D|--delete-tag) delete_tags="${delete_tags:+$delete_tags,}$2"; shift 2 ;;
-      -q|--quiet) quiet=1; shift ;;
-      --or-start) or_start=1; shift ;;
-      0|1*|2*|3*|4*|5*|6*|7*|8*|9*) id="$1"; shift ;;
-      *) abort 2 "Unknown option: $1" ;;
+      -q|--quiet) quiet="$1"; shift ;;
+      --or-start) or_start="$1"; shift ;;
+      1*|2*) id="$1"; shift ;;
+      *) abort 2 "ERR! Unknown option: $1" ;;
     esac
   done
 
   local hostname; hostname="$(__battape_tt_hostname)";
-  local started;
-  if [ -n "$id" ]; then
-    [[ "$id" =~ ^[0-9]+$ ]] || abort 2 "Expected a non-negative integer for id, got: $id";
-    started="$((id + $(sqlite3 "$BATTAPE_DB" "select min(start) from time_tracker")))";
-  else
-    started="$(sqlite3 "$BATTAPE_DB" "select start from time_tracker where end = 0 and hostname = '$hostname' order by start desc limit 1")";
-  fi
+  [ -n "$id" ] || id="$(sqlite3 "$BATTAPE_DB" "select start from time_tracker where end = 0 and hostname = '$hostname' order by start desc limit 1")";
 
-  if [ -z "$started" ]; then
-    [ -n "$or_start" ] || abort 1 "Usage: tt edit [id] [options]";
-    [ "$quiet" = "1" ] && quiet="--quiet";
+  if [ -z "$id" ] && [ -n "$or_start" ]; then
     __battape_tt_start $quiet --start "$start" --end "$end" --account "$account" --description "$description" --tags "$tags";
     return "$?";
   fi
 
-  [ -n "$start" ] || start="$(sqlite3 "$BATTAPE_DB" "select start from time_tracker where start = $started and hostname = '$hostname'")";
-  [ -n "$end" ] || end="$(sqlite3 "$BATTAPE_DB" "select end from time_tracker where start = $started and hostname = '$hostname'")";
-  [ "$end" -ne 0 ] && [ "$end" -lt "$start" ] && abort 2 "End time cannot be before start time";
+  [[ "$id" =~ ^[0-9]+$ ]] || abort 1 "Usage: tt edit [id] [options]";
+  [ -n "$start" ] || start="$(sqlite3 "$BATTAPE_DB" "select start from time_tracker where start = $id and hostname = '$hostname'")";
+  [ -n "$end" ] || end="$(sqlite3 "$BATTAPE_DB" "select end from time_tracker where start = $id and hostname = '$hostname'")";
+  [ "$end" -ne 0 ] && [ "$end" -lt "$start" ] && abort 2 "ERR! End time cannot be before start time";
 
-  [ -n "$tags" ] || tags="$(sqlite3 "$BATTAPE_DB" "select tags from time_tracker where start = $started and hostname = '$hostname'")";
+  [ -n "$tags" ] || tags="$(sqlite3 "$BATTAPE_DB" "select tags from time_tracker where start = $id and hostname = '$hostname'")";
   [ -n "$delete_tags" ] && tags="$(printf '%s' "$tags" | tr ',' '\n' | awk -v remove=",$delete_tags," 'index(remove, "," $0 ",") == 0 { out = out (out ? "," : "") $0 } END { print out }')";
   [ -n "$add_tags" ] && tags="$tags,$add_tags";
   tags="$(__battape_tt_normalize_tags "$tags")";
@@ -106,10 +101,10 @@ update time_tracker set
   account = case when $has_account then '${account//\'/\'\'}' else account end,
   description = case when $has_description then '${description//\'/\'\'}' else description end,
   tags = '$tags'
-where start = $started and hostname = '$hostname'
+where start = $id and hostname = '$hostname'
 HERE
 
-  [ -n "$quiet" ] || __battape_tt_report --no-footer --limit 1 --start "$started" --end "$started";
+  [ -n "$quiet" ] || __battape_tt_report --no-footer --limit 1 --start "${start:-$id}" --end "${start:-$id}";
 }
 
 __battape_tt_report() {
@@ -117,18 +112,19 @@ __battape_tt_report() {
   while [ "$#" -gt 0 ]; do
     case "$1" in
       -a|--account) account="${2//\'/\'\'}"; shift 2 ;;
-      -t|--tag) tag="$(__battape_tt_normalize_tags "$2")"; shift 2 ;;
+      -t|--tag) tag="${2//\'/\'\'}"; shift 2 ;;
       -s|--start) start="$(__battape_tt_epoch "$2")"; shift 2 ;;
       -e|--end) end="$(__battape_tt_epoch "$2")"; shift 2 ;;
       -l|--limit) limit="$2"; shift 2 ;;
       --no-footer) footer=""; shift ;;
-      *) abort 2 "Unknown option: $1" ;;
+      *) abort 2 "ERR! Unknown option: $1" ;;
     esac
   done
 
-  [[ "$start" =~ ^[0-9]+$ ]] || abort 2 "Invalid --start argument: $start";
-  [[ "$end" =~ ^[0-9]+$ ]] || abort 2 "Invalid --end argument: $end";
-  [[ "$limit" =~ ^[0-9]+$ ]] || abort 2 "Expected a non-negative integer for --limit, got: $limit";
+  [[ "$start" =~ ^[0-9]+$ ]] || abort 3 "ERR! Invalid --start argument: $start";
+  [[ "$end" =~ ^[0-9]+$ ]] || abort 3 "ERR! Invalid --end argument: $end";
+  [[ "$limit" =~ ^[0-9]+$ ]] || abort 3 "ERR! Expected a non-negative integer for --limit, got: $limit";
+  [ "$end" = 0 ] && end="$(date +"%s")";
 
   sqlite3 "$BATTAPE_DB" <<HERE
 select
@@ -143,10 +139,10 @@ select
   ) as Duration,
   trim(tags, ',') as Tags
   from time_tracker
-  where ($start = 0 or start >= $start)
-    and ($end = 0 or end <= $end)
+  where (start >= $start)
+    and (start <= $end)
     and (length('$account') = 0 or account = '$account')
-    and (length('$tag') = 0 or tags glob '*$tag*')
+    and (length('$tag') = 0 or tags glob '*,$tag,*')
   order by time_tracker.start desc
   limit $limit;
 HERE
@@ -155,10 +151,10 @@ HERE
     stats=$(sqlite3 -batch -noheader -separator ' ' "$BATTAPE_DB" "
 select count(*), coalesce(sum(if(end > 0, end, strftime('%s')) - start), 0)
   from time_tracker
-  where ($start = 0 or start <= $start)
-    and ($end = 0 or end >= $end or end = 0)
+  where (start >= $start)
+    and (start <= $end)
     and (length('$account') = 0 or account = '$account')
-    and (length('$tag') = 0 or tags glob '*$tag*')
+    and (length('$tag') = 0 or tags glob '*,$tag,*')
 ") || return;
 
     read -r events total_seconds <<< "$stats";
@@ -204,23 +200,23 @@ __battape_tt_start() {
       -d|--description) description="${2//\'/\'\'}"; shift 2 ;;
       -t|--tags) tags="$(__battape_tt_normalize_tags "$2")"; shift 2 ;;
       -q|--quiet) quiet=1; shift ;;
-      *) abort 2 "Unknown option: $1" ;;
+      *) abort 2 "ERR! Unknown option: $1" ;;
     esac
   done
 
   [ -z "$tags" ] && [ -d ".git" ] && tags="$(basename "${PWD//\'/\'\'}")";
-  [ -n "$account" ] || account="$(sqlite3 "$BATTAPE_DB" "select account from time_tracker where tags glob '*$tags*' order by start desc limit 1")";
+  [ -n "$account" ] || account="$(sqlite3 "$BATTAPE_DB" "select account from time_tracker where (length('$tags') = 0 or tags glob '*$tags*') or (length('$tags') = 0 and end = 0) order by start desc limit 1")";
   [ -n "$account" ] || abort 1 "Unable to guess --acount from tags '$tags'. Please specify an account with --account.";
   [[ "$start" -gt 0 ]] || start="$(date +%s)";
-  [[ "$start" =~ ^[0-9]+$ ]] || abort 2 "Invalid --start argument: $start";
-  [[ "$end" =~ ^[0-9]+$ ]] || abort 2 "Invalid --end argument: $end";
-  [ "$end" -ne 0 ] && [ "$end" -lt "$start" ] && abort 2 "End time cannot be before start time";
+  [[ "$start" =~ ^[0-9]+$ ]] || abort 2 "ERR! Invalid --start argument: $start";
+  [[ "$end" =~ ^[0-9]+$ ]] || abort 2 "ERR! Invalid --end argument: $end";
+  [ "$end" -ne 0 ] && [ "$end" -lt "$start" ] && abort 2 "ERR! End time cannot be before start time";
 
   sqlite3 "$BATTAPE_DB" <<HERE
 insert into time_tracker (start, end, hostname, user, account, description, tags) values (
   $start,
   $end,
-  '${HOSTNAME//\'/\'\'}',
+  '$hostname'
   '${USER//\'/\'\'}',
   '${account//\'/\'\'}',
   '${description//\'/\'\'}',
@@ -238,8 +234,8 @@ Usage: tt [command] [options]
 Track time entries in the local battape database.
 
 Commands:
+  status                    Show the most recent entries (default).
   edit [id] [options]       Edit the most recent entry or by ID
-  status                    Show the most recent entry (default).
   start [options]           Start an entry, or update the active entry.
   stop [options]            Stop the active entry.
   report [options]          List matching entries.
@@ -281,7 +277,7 @@ HERE
 
 __battape_tt() {
   [ -s "$BATTAPE_DB" ] || __battape_tt_setup;
-  local cmd="${1:-default}";
+  local cmd="${1:-status}";
   shift;
 
   case "$cmd" in
@@ -290,8 +286,7 @@ __battape_tt() {
     edit) __battape_tt_edit "$@" ;;
     drop) __battape_tt_drop "$@" ;;
     report) __battape_tt_report --start -1m "$@" ;;
-    status) __battape_tt_report --limit 1 --no-footer ;;
-    default) __battape_tt_report --limit 5 --no-footer ;;
+    status) __battape_tt_report --no-footer --start -1d "$@" ;;
     epoch|hostname|normalize_tags) "__battape_tt_$cmd" "$@" ;; # for testing
     -h|--help) __battape_tt_help ;;
     *) echo "Unknown command: $cmd" >&2; return 2 ;;
