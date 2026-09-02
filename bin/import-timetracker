@@ -17,6 +17,10 @@ fi
 command -v jq >/dev/null || { echo 'jq is required' >&2; exit 1; }
 command -v sqlite3 >/dev/null || { echo 'sqlite3 is required' >&2; exit 1; }
 
+random_id() {
+  LC_ALL=C tr -dc 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789' </dev/urandom | head -c 10
+}
+
 mkdir -p "$(dirname "$database")"
 sql_file="$(mktemp "${TMPDIR:-/tmp}/import-timetracker.XXXXXX")"
 trap 'rm -f "$sql_file"' EXIT
@@ -25,6 +29,7 @@ cat >"$sql_file" <<'SQL'
 .timeout 1000
 begin immediate;
 create table if not exists time_tracker (
+  id text primary key not null,
   start integer not null,
   end integer not null,
   hostname text not null,
@@ -40,6 +45,7 @@ export IMPORT_TIMETRACKER_HOSTNAME="$(hostname)"
 export IMPORT_TIMETRACKER_USER="${USER:-}"
 
 while IFS= read -r -d '' file; do
+  export IMPORT_TIMETRACKER_ID="$(random_id)"
   jq -er '
     def epoch:
       sub("\\.[0-9]+$"; "")
@@ -60,13 +66,14 @@ while IFS= read -r -d '' file; do
         .project,
         (.description // ""),
         (if (.tags | type) == "array" then (.tags | join(",")) else (.tags // "") end)
-      ] as $values
-    | "insert into time_tracker (start, end, hostname, user, account, description, tags) "
+      ] as $entry
+    | [env.IMPORT_TIMETRACKER_ID, $entry[]] as $values
+    | "insert into time_tracker (id, start, end, hostname, user, account, description, tags) "
       + "select " + ($values | map(text) | join(", "))
       + " where not exists (select 1 from time_tracker where "
       + (["start", "end", "hostname", "user", "account", "description", "tags"]
          | to_entries
-         | map(.value + " = " + ($values[.key] | text))
+         | map(.value + " = " + ($entry[.key] | text))
          | join(" and "))
       + ");"
   ' "$file" >>"$sql_file"
