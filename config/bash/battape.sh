@@ -1,5 +1,6 @@
 BATTAPE_DB="${BATTAPE_DB:-"$HOME/.local/share/battape/battape.sqlite"}";
 BATTAPE_MAX_ROWS="${BATTAPE_MAX_ROWS:-12}";
+BATTAPE_CURRENT_TTY="$(tty 2>/dev/null || echo '/dev/tty')";
 BATTAPE_COLOR_FAIL=$'\e[31m';
 BATTAPE_COLOR_OLD=$'\e[37m';
 BATTAPE_COLOR_OLDEST=$'\e[90m';
@@ -121,7 +122,6 @@ __battape_truncate_display() {
 
 __battape_query_commands() {
   local limit="${2:-12}";
-  local prefix="" q="%" term sql;
   local -a terms;
 
   # Each whitespace-separated term becomes a literal LIKE fragment. The
@@ -138,36 +138,41 @@ __battape_query_commands() {
   done
 
   # Search before ranking duplicates, then retain the newest row for each
-  # command. Results are always newest first; prefix matches and successful
-  # commands only break ties. "git log" matches "git status && git log",
+  # command. Commands from the current TTY take precedence at both ranking
+  # stages, followed by recency. "git log" matches "git status && git log",
   # while only commands beginning with "git" receive the prefix-match
   # priority.
   if [ -z "$prefix" ]; then
     sql="select start, end, exit_status, display_command as command from (
-      select start, end, exit_status, display_command,
-        row_number() over (partition by display_command order by end desc) as display_row_number
+      select start, end, exit_status, tty, display_command,
+        row_number() over (partition by display_command order by
+          case when tty = '$BATTAPE_CURRENT_TTY' then 0 else 1 end, end desc) as display_row_number
       from (
-        select start, command, end, exit_status,
+        select start, command, end, exit_status, tty,
           case when command like 'cd %' then 'cd ' || pwd else command end as display_command,
-          row_number() over (partition by command order by end desc) as command_row_number
+          row_number() over (partition by command order by
+            case when tty = '$BATTAPE_CURRENT_TTY' then 0 else 1 end, end desc) as command_row_number
         from history
       ) where command_row_number = 1
     ) where display_row_number = 1
-      order by end desc
+      order by case when tty = '$BATTAPE_CURRENT_TTY' then 0 else 1 end, end desc
       limit $limit";
   else
     sql="select start, end, exit_status, display_command as command from (
-      select start, command, end, exit_status, display_command,
-        row_number() over (partition by display_command order by end desc) as display_row_number
+      select start, command, end, exit_status, tty, display_command,
+        row_number() over (partition by display_command order by
+          case when tty = '$BATTAPE_CURRENT_TTY' then 0 else 1 end, end desc) as display_row_number
       from (
-        select start, command, end, exit_status,
+        select start, command, end, exit_status, tty,
           case when command like 'cd %' then 'cd ' || pwd else command end as display_command,
-          row_number() over (partition by command order by end desc) as command_row_number
+          row_number() over (partition by command order by
+            case when tty = '$BATTAPE_CURRENT_TTY' then 0 else 1 end, end desc) as command_row_number
         from history
         where command like '$q' escape '\\' collate nocase
       ) where command_row_number = 1
     ) where display_row_number = 1
       order by
+        case when tty = '$BATTAPE_CURRENT_TTY' then 0 else 1 end,
         end desc,
         case when command like '$prefix' escape '\\' collate nocase then 0 else 1 end,
         case when exit_status = 0 then 0 else 1 end
@@ -370,7 +375,7 @@ insert into history (start, end, hostname, tty, pwd, command, exit_status) value
   strftime('%s', 'now') - $(( SECONDS - LAST_INTERACTIVE_COMMAND_START )),
   strftime('%s', 'now'),
   '${HOSTNAME//\'/\'\'}',
-  '$(tty)',
+  '$BATTAPE_CURRENT_TTY',
   '${PWD//\'/\'\'}',
   '$(fc -ln -1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e "s/'/\\'\\'/g")',
   $1
