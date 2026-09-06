@@ -381,6 +381,120 @@ create index if not exists idx_time_tracker_id on time_tracker(id);
 HERE
 }
 
+__battape_tt_sync_sql() {
+  local incoming="${1//\'/\'\'}";
+  cat <<HERE
+.timeout 5000
+begin immediate;
+attach '$incoming' as incoming;
+create temp table sync_conflicts (
+  table_name text not null,
+  id text not null
+);
+insert into sync_conflicts
+select 'history', source.id
+from incoming.history as source
+join main.history as destination using (id)
+where destination.start != source.start
+   or destination.end != source.end
+   or destination.hostname != source.hostname
+   or destination.tty != source.tty
+   or destination.pwd != source.pwd
+   or destination.command != source.command
+   or destination.exit_status != source.exit_status;
+insert into main.history (id, start, end, hostname, tty, pwd, command, exit_status)
+select id, start, end, hostname, tty, pwd, command, exit_status
+from incoming.history as source
+where not exists (select 1 from main.history where id = source.id);
+insert into sync_conflicts
+select 'time_tracker', source.id
+from incoming.time_tracker as source
+join main.time_tracker as destination using (id)
+where destination.start != source.start
+   or destination.end != source.end
+   or destination.hostname != source.hostname
+   or destination.user != source.user
+   or destination.account != source.account
+   or destination.description != source.description
+   or destination.tags != source.tags;
+insert into main.time_tracker (id, start, end, hostname, user, account, description, tags)
+select id, start, end, hostname, user, account, description, tags
+from incoming.time_tracker as source
+where not exists (select 1 from main.time_tracker where id = source.id);
+commit;
+select 'conflict|' || table_name || '|' || id
+from sync_conflicts
+order by table_name, id;
+select 'conflict-count|' || count(*) from sync_conflicts;
+detach incoming;
+HERE
+}
+
+__battape_tt_sync() {
+  local pull=0 destination remote_host remote_database remote_snapshot local_snapshot remote_command output status;
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --pull) pull=1; shift ;;
+      -*) abort 2 "ERR! Unknown option: $1" ;;
+      *) destination="$1"; shift ;;
+    esac
+  done
+
+  [ -n "$destination" ] || abort 2 "Usage: tt sync [--pull] HOST[:REMOTE_DB]";
+  [ "$#" -eq 0 ] || abort 2 "Usage: tt sync [--pull] HOST[:REMOTE_DB]";
+  remote_host="${destination%%:*}";
+  remote_database="${destination#*:}";
+  [ "$remote_host" != "$destination" ] || remote_database="";
+  [ -n "$remote_host" ] || abort 2 "ERR! A remote host is required.";
+
+  local_snapshot="$(mktemp "${TMPDIR:-/tmp}/tt-sync.XXXXXX.sqlite")" || return;
+  remote_snapshot="/tmp/tt-sync-$(__battape_tt_id).sqlite";
+
+  if [ "$pull" -eq 1 ]; then
+    remote_command='set -e; database="${1:-$HOME/.local/share/battape/battape.sqlite}"; snapshot="$2"; trap '"'"'rm -f "$snapshot"'"'"' EXIT; sqlite3 -batch -bail "$database" ".backup $snapshot"; cat "$snapshot"';
+    ssh -- "$remote_host" "bash -c $(printf '%q' "$remote_command") -- $(printf '%q' "$remote_database") $(printf '%q' "$remote_snapshot")" >"$local_snapshot" || {
+      rm -f "$local_snapshot";
+      return;
+    }
+    output="$(__battape_tt_sync_sql "$local_snapshot" | sqlite3 -batch -bail "$BATTAPE_DB")";
+    status=$?;
+    rm -f "$local_snapshot";
+    [ "$status" -eq 0 ] || return "$status";
+
+    while IFS= read -r line; do
+      case "$line" in
+        conflict-count\|*) [ "${line#conflict-count|}" -eq 0 ] || status=1 ;;
+        conflict\|*) echo "tt sync: ${line/conflict|/conflict: }" >&2 ;;
+        *) [ -z "$line" ] || echo "$line" ;;
+      esac
+    done <<< "$output";
+    return "$status";
+  else
+    sqlite3 -batch -bail "$BATTAPE_DB" ".backup '$local_snapshot'" || {
+      rm -f "$local_snapshot";
+      return;
+    }
+    scp -q "$local_snapshot" "$remote_host:$remote_snapshot" || {
+      rm -f "$local_snapshot";
+      return;
+    }
+    remote_command='database="${1:-$HOME/.local/share/battape/battape.sqlite}"; sqlite3 -batch -bail "$database"; status=$?; rm -f "$2"; exit "$status"';
+    output="$(__battape_tt_sync_sql "$remote_snapshot" | ssh -- "$remote_host" "bash -c $(printf '%q' "$remote_command") -- $(printf '%q' "$remote_database") $(printf '%q' "$remote_snapshot")")";
+    status=$?;
+    rm -f "$local_snapshot";
+    [ "$status" -eq 0 ] || return "$status";
+
+    while IFS= read -r line; do
+      case "$line" in
+        conflict-count\|*) [ "${line#conflict-count|}" -eq 0 ] || status=1 ;;
+        conflict\|*) echo "tt sync: ${line/conflict|/conflict: }" >&2 ;;
+        *) [ -z "$line" ] || echo "$line" ;;
+      esac
+    done <<< "$output";
+    return "$status";
+  fi
+}
+
 __battape_tt_start() {
   local active; active="$(__battape_tt_query -b , "select id from time_tracker where end = 0 limit 1")";
   [ -z "$active" ] || abort 1 "Did you mean to edit the active entry? Use 'tt edit $*' instead.";
@@ -438,6 +552,7 @@ Commands:
   report [options]          List matching entries.
   commands [options]        List commands run during matching entries.
   drop <id>                 Interactively delete an entry by its report ID.
+  sync [--pull] HOST[:DB]   Sync history and time entries with a remote host.
 
 Options:
   -h, --help                Show this help text.
@@ -493,6 +608,7 @@ __battape_tt() {
     report) __battape_tt_report "$@" ;;
     commands) __battape_tt_commands "$@" ;;
     status) __battape_tt_report --no-footer --start -1d "$@" ;;
+    sync) "__battape_tt_$cmd" "$@" ;; # for testing
     epoch|normalize_tags|id) "__battape_tt_$cmd" "$@" ;; # for testing
     *) echo "Unknown command: $cmd" >&2; return 2 ;;
   esac
