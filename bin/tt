@@ -115,7 +115,7 @@ HERE
 }
 
 __battape_tt_report() {
-  local start=0 end=0 account tag id limit=1000 footer=1 events total_seconds stats;
+  local start=0 end=0 account tag id group limit=1000 footer=1 events total_seconds stats group_by;
   [ -n "$*" ] || start="$(__battape_tt_epoch "-1m")";
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -123,6 +123,7 @@ __battape_tt_report() {
       -t|--tag) tag="${2//\'/\'\'}"; shift 2 ;;
       -s|--start) start="$(__battape_tt_epoch "$2")"; shift 2 ;;
       -e|--end) end="$(__battape_tt_epoch "$2")"; shift 2 ;;
+      -g|--group) group="$2"; shift 2 ;;
       -l|--limit) limit="$2"; shift 2 ;;
       --id) id="$2"; shift 2 ;;
       --no-footer) footer=""; shift ;;
@@ -134,9 +135,37 @@ __battape_tt_report() {
   [[ "$end" =~ ^[0-9]+$ ]] || abort 3 "ERR! Invalid --end argument: $end";
   [[ "$limit" =~ ^[0-9]+$ ]] || abort 3 "ERR! Expected a non-negative integer for --limit, got: $limit";
   [[ -z "$id" || "$id" =~ ^[A-HJ-NP-Za-km-z2-9]{10}$ ]] || abort 3 "ERR! Invalid --id argument: $id";
+  [[ -z "$group" || "$group" = "day" || "$group" = "month" ]] || abort 3 "ERR! Expected day or month for --group, got: $group";
   [ "$end" = 0 ] && end="$(date +"%s")";
 
-  __battape_tt_query <<HERE
+  if [ "$group" = "day" ]; then
+    group_by="date(start, 'unixepoch', 'localtime')";
+  elif [ "$group" = "month" ]; then
+    group_by="strftime('%Y-%m', start, 'unixepoch', 'localtime')";
+  fi
+
+  if [ -n "$group_by" ]; then
+    __battape_tt_query <<HERE
+select
+  $group_by as Period,
+  group_concat(distinct account) as Accounts,
+  format('%sh %sm',
+    sum(if(end > 0, end, strftime('%s')) - start) / 3600,
+    (sum(if(end > 0, end, strftime('%s')) - start) / 60) % 60
+  ) as Duration,
+  group_concat(distinct nullif(trim(tags, ','), '')) as Tags
+  from time_tracker
+  where (start >= $start)
+    and (start <= $end)
+    and (length('$account') = 0 or account = '$account')
+    and (length('$tag') = 0 or tags glob '*,$tag,*')
+    and (length('$id') = 0 or id = '$id')
+  group by $group_by
+  order by min(start) desc
+  limit $limit;
+HERE
+  else
+    __battape_tt_query <<HERE
 select
   id as ID,
   date(start, 'unixepoch', 'localtime') as Date,
@@ -157,6 +186,7 @@ select
   order by time_tracker.start desc
   limit $limit;
 HERE
+  fi
 
   if [ -n "$footer"  ]; then
     stats=$(__battape_tt_query -b " " "
@@ -426,6 +456,7 @@ Report options:
   -t, --tag <tag>           Filter by tag.
   -s, --start <time>        Include entries starting on or before this time.
   -e, --end <time>          Include entries ending on or after this time.
+  -g, --group <day|month>   Group matching entries by their start date.
   -l, --limit <number>      Maximum entries to show (default: 1000).
 
 Commands options:
