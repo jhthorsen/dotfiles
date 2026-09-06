@@ -1,4 +1,5 @@
 #!/bin/bash
+COLUMNS=$(tput cols 2>/dev/null || echo 80);
 BATTAPE_DB="${BATTAPE_DB:-"$HOME/.local/share/battape/battape.sqlite"}";
 
 abort() {
@@ -37,7 +38,17 @@ __battape_tt_query() {
     shift 2;
     sqlite3 -batch -noheader -separator "$sep" "$BATTAPE_DB" "$@";
   elif [ -t 1 ]; then
-    sqlite3 -header -column "$BATTAPE_DB" "$@";
+    echo;
+    sqlite3 -header -tabs "$BATTAPE_DB" "$@" | sed 's/"//g' | column -t -s $'\t' | {
+      read -r header;
+      printf '  %s\n' "$header";
+      printf '  ';
+      awk -v cols="$(( COLUMNS - 2 - 2 ))" 'BEGIN { for (i=1; i<=cols; i++) printf "—" }';
+      printf '\n';
+      while IFS= read -r line; do
+        printf '  %s\n' "$line";
+      done;
+    };
   else
     sqlite3 "$BATTAPE_DB" "$@";
   fi
@@ -188,7 +199,9 @@ select
 HERE
   fi
 
-  if [ -n "$footer"  ]; then
+  if [ -z "$footer"  ]; then
+    [ -t 1 ] && echo;
+  else
     stats=$(__battape_tt_query -b " " "
 select count(*), coalesce(sum(if(end > 0, end, strftime('%s')) - start), 0)
   from time_tracker
