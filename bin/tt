@@ -13,13 +13,51 @@ __battape_tt_epoch() {
   if [ -z "$1" ]; then
     date +%s || exit "$?";
   elif [[ "$1" = *T* ]]; then
-    date -j -f "%FT%T" "$1" +%s || exit "$?";
+    if [ "$(uname)" = Darwin ]; then
+      date -j -f "%FT%T" "$1" +%s || exit "$?";
+    else
+      date -d "$1" +%s || exit "$?";
+    fi
   elif [[ "$1" = *:* ]]; then
-    date -j -f "%H:%M" "$1" +%s || exit "$?";
+    if [ "$(uname)" = Darwin ]; then
+      date -j -f "%H:%M" "$1" +%s || exit "$?";
+    else
+      date -d "today $1" +%s || exit "$?";
+    fi
   elif [[ "$1" -ge 0 ]] 2>/dev/null; then
     echo "$1";
   else
-    date -v 0H -v 0M -v 0S -v "${1:-"+0S"}" +%s || exit "$?";
+    if [ "$(uname)" = Darwin ]; then
+      date -v 0H -v 0M -v 0S -v "$1" +%s || exit "$?";
+    elif [[ "$1" =~ ^([+-]?[0-9]+)([ymwdHMS])$ ]]; then
+      local amount="${BASH_REMATCH[1]}" relative unit="${BASH_REMATCH[2]}";
+      case "$unit" in
+        y) unit=year ;;
+        m) unit=month ;;
+        w) unit=week ;;
+        d) unit=day ;;
+        H) unit=hour ;;
+        M) unit=minute ;;
+        S) unit=second ;;
+      esac
+      case "$amount" in
+        -*) relative="${amount#-} $unit ago" ;;
+        +*) relative="${amount#+} $unit" ;;
+        *) relative="$amount $unit" ;;
+      esac
+      date -d "today 00:00:00 $relative" +%s || exit "$?";
+    else
+      echo "Invalid date offset: $1" >&2;
+      exit 1;
+    fi
+  fi
+}
+
+__battape_tt_date() {
+  if [ "$(uname)" = Darwin ]; then
+    date -r "$1" +"$2";
+  else
+    date -d "@$1" +"$2";
   fi
 }
 
@@ -161,8 +199,8 @@ select
   $group_by as Period,
   group_concat(distinct account) as Accounts,
   format('%sh %sm',
-    sum(if(end > 0, end, strftime('%s')) - start) / 3600,
-    (sum(if(end > 0, end, strftime('%s')) - start) / 60) % 60
+    sum(case when end > 0 then end else strftime('%s') end - start) / 3600,
+    (sum(case when end > 0 then end else strftime('%s') end - start) / 60) % 60
   ) as Duration,
   group_concat(distinct nullif(trim(tags, ','), '')) as Tags
   from time_tracker
@@ -182,10 +220,10 @@ select
   date(start, 'unixepoch', 'localtime') as Date,
   account as Account,
   strftime('%H:%M', start, 'unixepoch', 'localtime') as Start,
-  if(end > 0, strftime('%H:%M', end, 'unixepoch', 'localtime'), '-') as Stop,
+  case when end > 0 then strftime('%H:%M', end, 'unixepoch', 'localtime') else '-' end as Stop,
   format('%sh %sm',
-    (if(end > 0, end, strftime('%s')) - start) / 3600,
-    ((if(end > 0, end, strftime('%s')) - start) / 60) % 60
+    (case when end > 0 then end else strftime('%s') end - start) / 3600,
+    ((case when end > 0 then end else strftime('%s') end - start) / 60) % 60
   ) as Duration,
   trim(tags, ',') as Tags
   from time_tracker
@@ -203,7 +241,7 @@ HERE
     [ -t 1 ] && echo;
   else
     stats=$(__battape_tt_query -b " " "
-select count(*), coalesce(sum(if(end > 0, end, strftime('%s')) - start), 0)
+select count(*), coalesce(sum(case when end > 0 then end else strftime('%s') end - start), 0)
   from time_tracker
   where (start >= $start)
     and (start <= $end)
@@ -215,7 +253,7 @@ select count(*), coalesce(sum(if(end > 0, end, strftime('%s')) - start), 0)
     read -r events total_seconds <<< "$stats";
     cat <<HERE
 
-  Period:   $(date -r "$start" +%F) -> $(date -r "$end" +%F)
+  Period:   $(__battape_tt_date "$start" %F) -> $(__battape_tt_date "$end" %F)
   Account:  ${account:-any}
   Tag:      ${tag:-any}
   Events:   $events
@@ -352,7 +390,7 @@ HERE
     event_end="${event_end:-$end}";
     cat <<HERE
 
-  Period:    $(date -r "$event_start" +%F) -> $(date -r "$event_end" +%F)
+  Period:    $(__battape_tt_date "$event_start" %F) -> $(__battape_tt_date "$event_end" %F)
   Account:   ${account:-any}
   Tag:       ${tag:-any}
   Commands:  $commands
