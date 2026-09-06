@@ -371,7 +371,8 @@ __battape_render_history_ui_start() {
 
 __battape_record() {
   sqlite3 -cmd '.timeout 1000' "$BATTAPE_DB" <<HERE
-insert into history (start, end, hostname, tty, pwd, command, exit_status) values (
+insert into history (id, start, end, hostname, tty, pwd, command, exit_status) values (
+  '$(__battape_id)',
   strftime('%s', 'now') - $(( SECONDS - LAST_INTERACTIVE_COMMAND_START )),
   strftime('%s', 'now'),
   '${HOSTNAME//\'/\'\'}',
@@ -384,6 +385,10 @@ HERE
   return "$1";
 }
 
+__battape_id() {
+  LC_ALL=C tr -dc 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789' </dev/urandom | head -c 10;
+}
+
 if [[ -z "${__battape_loaded:-}" ]] \
   && ((BASH_VERSINFO[0] > 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 4))) \
   && command -v sqlite3 >/dev/null \
@@ -391,6 +396,7 @@ if [[ -z "${__battape_loaded:-}" ]] \
   mkdir -p "$(dirname "$BATTAPE_DB")" 2>/dev/null || :;
   sqlite3 -batch -cmd '.timeout 1000' "$BATTAPE_DB" <<'HERE' || return
 create table if not exists history (
+  id text primary key not null,
   start integer not null,
   end integer not null,
   hostname text not null,
@@ -400,11 +406,14 @@ create table if not exists history (
   exit_status integer not null
 );
 create index if not exists idx_history_end on history(end);
+create index if not exists idx_history_start on history(start);
+create index if not exists idx_history_hostname on history(hostname);
+create index if not exists idx_history_pwd on history(pwd);
 HERE
 
   schema_columns="$(sqlite3 -batch -noheader "$BATTAPE_DB" \
-    "select group_concat(name, ',') from pragma_table_info('history') where name in ('start', 'end', 'hostname', 'tty', 'pwd', 'command', 'exit_status');")";
-  if [[ "$schema_columns" != 'start,end,hostname,tty,pwd,command,exit_status' ]]; then
+    "select group_concat(name, ',') from pragma_table_info('history') where name in ('id', 'start', 'end', 'hostname', 'tty', 'pwd', 'command', 'exit_status');")";
+  if [[ "$schema_columns" != 'id,start,end,hostname,tty,pwd,command,exit_status' ]]; then
     printf 'battape: history table has an unsupported schema; command tracking disabled\n' >&2;
     return;
   fi
