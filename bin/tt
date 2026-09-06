@@ -420,7 +420,7 @@ HERE
 }
 
 __battape_tt_sync_sql() {
-  local incoming="${1//\'/\'\'}";
+  local incoming="${1//\'/\'\'}" sender_hostname="${2//\'/\'\'}";
   cat <<HERE
 .timeout 5000
 begin immediate;
@@ -433,13 +433,33 @@ insert into sync_conflicts
 select 'history', source.id
 from incoming.history as source
 join main.history as destination using (id)
-where destination.start != source.start
-   or destination.end != source.end
-   or destination.hostname != source.hostname
-   or destination.tty != source.tty
-   or destination.pwd != source.pwd
-   or destination.command != source.command
-   or destination.exit_status != source.exit_status;
+where (destination.start != source.start
+    or destination.end != source.end
+    or destination.hostname != source.hostname
+    or destination.tty != source.tty
+    or destination.pwd != source.pwd
+    or destination.command != source.command
+    or destination.exit_status != source.exit_status)
+  and source.hostname != '$sender_hostname';
+update main.history as destination
+set (start, end, hostname, tty, pwd, command, exit_status) = (
+  select source.start, source.end, source.hostname, source.tty, source.pwd, source.command, source.exit_status
+  from incoming.history as source
+  where source.id = destination.id
+)
+where exists (
+  select 1
+  from incoming.history as source
+  where source.id = destination.id
+    and source.hostname = '$sender_hostname'
+    and (destination.start != source.start
+      or destination.end != source.end
+      or destination.hostname != source.hostname
+      or destination.tty != source.tty
+      or destination.pwd != source.pwd
+      or destination.command != source.command
+      or destination.exit_status != source.exit_status)
+);
 insert into main.history (id, start, end, hostname, tty, pwd, command, exit_status)
 select id, start, end, hostname, tty, pwd, command, exit_status
 from incoming.history as source
@@ -448,13 +468,33 @@ insert into sync_conflicts
 select 'time_tracker', source.id
 from incoming.time_tracker as source
 join main.time_tracker as destination using (id)
-where destination.start != source.start
-   or destination.end != source.end
-   or destination.hostname != source.hostname
-   or destination.user != source.user
-   or destination.account != source.account
-   or destination.description != source.description
-   or destination.tags != source.tags;
+where (destination.start != source.start
+    or destination.end != source.end
+    or destination.hostname != source.hostname
+    or destination.user != source.user
+    or destination.account != source.account
+    or destination.description != source.description
+    or destination.tags != source.tags)
+  and source.hostname != '$sender_hostname';
+update main.time_tracker as destination
+set (start, end, hostname, user, account, description, tags) = (
+  select source.start, source.end, source.hostname, source.user, source.account, source.description, source.tags
+  from incoming.time_tracker as source
+  where source.id = destination.id
+)
+where exists (
+  select 1
+  from incoming.time_tracker as source
+  where source.id = destination.id
+    and source.hostname = '$sender_hostname'
+    and (destination.start != source.start
+      or destination.end != source.end
+      or destination.hostname != source.hostname
+      or destination.user != source.user
+      or destination.account != source.account
+      or destination.description != source.description
+      or destination.tags != source.tags)
+);
 insert into main.time_tracker (id, start, end, hostname, user, account, description, tags)
 select id, start, end, hostname, user, account, description, tags
 from incoming.time_tracker as source
@@ -469,7 +509,7 @@ HERE
 }
 
 __battape_tt_sync() {
-  local pull=0 destination remote_host remote_database remote_snapshot local_snapshot remote_command output status;
+  local pull=0 destination remote_host remote_database remote_snapshot local_snapshot remote_command output status sender_hostname;
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --pull) pull=1; shift ;;
@@ -489,12 +529,13 @@ __battape_tt_sync() {
   remote_snapshot="/tmp/tt-sync-$(__battape_tt_id).sqlite";
 
   if [ "$pull" -eq 1 ]; then
+    sender_hostname="$(ssh -- "$remote_host" hostname)" || return;
     remote_command='set -e; database="${1:-$HOME/.local/share/battape/battape.sqlite}"; snapshot="$2"; trap '"'"'rm -f "$snapshot"'"'"' EXIT; sqlite3 -batch -bail "$database" ".backup $snapshot"; cat "$snapshot"';
     ssh -- "$remote_host" "bash -c $(printf '%q' "$remote_command") -- $(printf '%q' "$remote_database") $(printf '%q' "$remote_snapshot")" >"$local_snapshot" || {
       rm -f "$local_snapshot";
       return;
     }
-    output="$(__battape_tt_sync_sql "$local_snapshot" | sqlite3 -batch -bail "$BATTAPE_DB")";
+    output="$(__battape_tt_sync_sql "$local_snapshot" "$sender_hostname" | sqlite3 -batch -bail "$BATTAPE_DB")";
     status=$?;
     rm -f "$local_snapshot";
     [ "$status" -eq 0 ] || return "$status";
@@ -508,6 +549,7 @@ __battape_tt_sync() {
     done <<< "$output";
     return "$status";
   else
+    sender_hostname="${HOSTNAME:-$(hostname)}";
     sqlite3 -batch -bail "$BATTAPE_DB" ".backup '$local_snapshot'" || {
       rm -f "$local_snapshot";
       return;
@@ -517,7 +559,7 @@ __battape_tt_sync() {
       return;
     }
     remote_command='database="${1:-$HOME/.local/share/battape/battape.sqlite}"; sqlite3 -batch -bail "$database"; status=$?; rm -f "$2"; exit "$status"';
-    output="$(__battape_tt_sync_sql "$remote_snapshot" | ssh -- "$remote_host" "bash -c $(printf '%q' "$remote_command") -- $(printf '%q' "$remote_database") $(printf '%q' "$remote_snapshot")")";
+    output="$(__battape_tt_sync_sql "$remote_snapshot" "$sender_hostname" | ssh -- "$remote_host" "bash -c $(printf '%q' "$remote_command") -- $(printf '%q' "$remote_database") $(printf '%q' "$remote_snapshot")")";
     status=$?;
     rm -f "$local_snapshot";
     [ "$status" -eq 0 ] || return "$status";
