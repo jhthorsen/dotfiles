@@ -132,8 +132,8 @@ __battape_tt_report() {
     case "$1" in
       -a|--account) account="${2//\'/\'\'}"; shift 2 ;;
       -t|--tag) tag="${2//\'/\'\'}"; shift 2 ;;
-      -s|--start) start="$(__battape_tt_epoch "$2")"; shift 2 ;;
-      -e|--end) end="$(__battape_tt_epoch "$2")"; shift 2 ;;
+      -s|--start) [ -z "$2" ] || start="$(__battape_tt_epoch "$2")"; shift 2 ;;
+      -e|--end) [ -z "$2" ] || end="$(__battape_tt_epoch "$2")"; shift 2 ;;
       -g|--group) group="$2"; shift 2 ;;
       -l|--limit) limit="$2"; shift 2 ;;
       --id) id="$2"; shift 2 ;;
@@ -388,8 +388,8 @@ __battape_tt_start() {
   local start=0 end=0 account description tags quiet;
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      -s|--start) start="$(__battape_tt_epoch "$2")"; shift 2 ;;
-      -e|--end) end="$(__battape_tt_epoch "$2")"; shift 2 ;;
+      -s|--start) [ -z "$2" ] || start="$(__battape_tt_epoch "$2")"; shift 2 ;;
+      -e|--end) [ -z "$2" ] || end="$(__battape_tt_epoch "$2")"; shift 2 ;;
       -a|--account) account="${2//\'/\'\'}"; shift 2 ;;
       -d|--description) description="${2//\'/\'\'}"; shift 2 ;;
       -t|--tags) tags="$(__battape_tt_normalize_tags "$2")"; shift 2 ;;
