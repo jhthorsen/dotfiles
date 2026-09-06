@@ -72,7 +72,7 @@ __battape_tt_drop() {
   [ -n "$quiet" ] || __battape_tt_report --no-footer --id "$id";
   [ -n "$answer" ] || read -r -p "Do you want to drop entry $id? [y/N] " answer;
   [[ "$answer" != y* ]] && [[ "$answer" != Y* ]] && return 0;
-  __battape_tt_query "delete from time_tracker where id = '$id'";
+  __battape_tt_query -b , "delete from time_tracker where id = '$id'";
 }
 
 __battape_tt_edit() {
@@ -112,7 +112,7 @@ __battape_tt_edit() {
   [ -n "$add_tags" ] && tags="$tags,$add_tags";
   tags="$(__battape_tt_normalize_tags "$tags")";
 
-  __battape_tt_query <<HERE || return
+  __battape_tt_query -b , <<HERE || return
 update time_tracker set
   start = case when $has_start then $start else start end,
   end = case when $has_end then $end else end end,
@@ -408,7 +408,7 @@ __battape_tt_start() {
   [ "$end" -ne 0 ] && [ "$end" -lt "$start" ] && abort 2 "ERR! End time cannot be before start time";
 
   local id; id="$(__battape_tt_id)" || return
-  __battape_tt_query <<HERE
+  __battape_tt_query -b , <<HERE
 insert into time_tracker (id, start, end, hostname, user, account, description, tags) values (
   '$id',
   $start,
