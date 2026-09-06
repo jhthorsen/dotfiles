@@ -121,27 +121,29 @@ __battape_truncate_display() {
 }
 
 __battape_query_commands() {
-  local limit="${2:-12}";
+  local limit="${2:-12}" q="" prefix="" term;
   local -a terms;
 
-  # Each whitespace-separated term becomes a literal LIKE fragment. The
-  # surrounding percent signs allow other text between terms, but preserve
-  # their order: "git log" matches "git status && git log", not "log git".
+  # Each whitespace-separated term becomes a literal LIKE fragment. Percent
+  # signs around every term allow matches anywhere in the command, while
+  # preserving their order: "git log" matches "git status && git log", not
+  # "log git".
   read -r -a terms < <(printf "%s" "$1")
   for term in "${terms[@]}"; do
     term="${term//\\/\\\\}";
     term="${term//%/\\%}";
     term="${term//_/\\_}";
     term="${term//\'/\'\'}";
-    q+="$term%";
-    prefix+="$term%";
+    q+="%$term%";
+    # Commands beginning with the first search word rank ahead of other
+    # matches. The general query above still permits that word in the middle.
+    [ -n "$prefix" ] || prefix="$term%";
   done
 
   # Search before ranking duplicates, then retain the newest row for each
   # command. Commands from the current TTY take precedence at both ranking
-  # stages, followed by recency. "git log" matches "git status && git log",
-  # while only commands beginning with "git" receive the prefix-match
-  # priority.
+  # stages. For a nonempty query, a command beginning with the first word
+  # ranks ahead of other matches, then recency breaks ties.
   if [ -z "$prefix" ]; then
     sql="select start, end, exit_status, display_command as command from (
       select start, end, exit_status, tty, display_command,
@@ -173,8 +175,8 @@ __battape_query_commands() {
     ) where display_row_number = 1
       order by
         case when tty = '$BATTAPE_CURRENT_TTY' then 0 else 1 end,
-        end desc,
         case when command like '$prefix' escape '\\' collate nocase then 0 else 1 end,
+        end desc,
         case when exit_status = 0 then 0 else 1 end
       limit $limit";
   fi
