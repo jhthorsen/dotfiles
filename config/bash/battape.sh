@@ -38,14 +38,6 @@ __battape_cleanup() {
   tput cnorm 2>/dev/null || :;
 }
 
-__battape_cursor_position() {
-  local delimiter=R response pattern=$'\e''\[([0-9]+);([0-9]+)R';
-  printf '\e[6n' > /dev/tty 2>/dev/null || return;
-  IFS= read -rs -t 0.1 -d "$delimiter" response < /dev/tty 2>/dev/null || return;
-  response+="R";
-  [[ "$response" =~ $pattern ]] && printf '%s %s' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}";
-}
-
 __battape_id() {
   LC_ALL=C tr -dc 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789' </dev/urandom | head -c 10;
 }
@@ -266,7 +258,7 @@ __battape_render_history_ui() {
 battape_render_history_ui() {
   __battape_initialize || return;
 
-  local active_signal_traps cmd col key now pos row rows cols lines;
+  local active_signal_traps cmd key now rows cols lines;
   local fs=$'\037' rs=$'\036';
   local query="$READLINE_LINE";
   local query_point="$READLINE_POINT";
@@ -297,16 +289,13 @@ battape_render_history_ui() {
     trap - EXIT HUP INT QUIT TERM TSTP;
     return 1;
   fi
-  pos="$(__battape_cursor_position)";
-  read -r row col < <(printf "%s" "$pos")
-
-  # reserve space
-  if [ -n "$row" ] && [ -n "$col" ]; then
-    local scroll_rows=$((row + rows - lines));
-    if [ "$scroll_rows" -gt 0 ]; then
-      printf '\e[%sS\e[%s;%sH' "$scroll_rows" "$((row - scroll_rows))" "$col";
-    fi
-  fi
+  # Reserve the menu's rows before saving the cursor.  Using line feeds lets
+  # the terminal scroll if necessary, without a cursor-position query whose
+  # reply can leak into Readline on Bash 5.1.
+  for ((i = 0; i < rows; i++)); do
+    printf '\n';
+  done
+  printf '\e[%sA' "$rows";
 
   printf '\e7\e[s'; # save cursor
   while :; do
