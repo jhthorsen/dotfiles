@@ -1,13 +1,30 @@
-BATTAPE_DB="${BATTAPE_DB:-"$HOME/.local/share/battape/battape.sqlite"}";
-BATTAPE_MAX_ROWS="${BATTAPE_MAX_ROWS:-12}";
-BATTAPE_CURRENT_TTY="$(tty 2>/dev/null || echo '/dev/tty')";
-BATTAPE_COLOR_FAIL=$'\e[31m';
-BATTAPE_COLOR_OLD=$'\e[37m';
-BATTAPE_COLOR_OLDEST=$'\e[90m';
-BATTAPE_COLOR_RECENT=$'\e[97m';
-BATTAPE_COLOR_RESET="$(tput sgr0 2>/dev/null || printf '\e[0m')";
-BATTAPE_COLOR_SELECTED=$'\e[1;97m';
-BATTAPE_COLOR_SUCCESS=$'\e[32m';
+BATTAPE_DATA_HOME="${BATTAPE_DATA_HOME:-"${XDG_DATA_HOME:-"$HOME/.local/share"}/battape"}";
+BATTAPE_DB="${BATTAPE_DB:-"$BATTAPE_DATA_HOME/battape.sqlite"}";
+
+BATTAPE_HISTORY_MAX_ROWS="${BATTAPE_HISTORY_MAX_ROWS:-12}";
+BATTAPE_HISTORY_COLOR_FAIL="${BATTAPE_HISTORY_COLOR_FAIL:-$'\e[31m'}";
+BATTAPE_HISTORY_COLOR_OLD="${BATTAPE_HISTORY_COLOR_OLD:-$'\e[37m'}";
+BATTAPE_HISTORY_COLOR_OLDEST="${BATTAPE_HISTORY_COLOR_OLDEST:-$'\e[90m'}";
+BATTAPE_HISTORY_COLOR_RECENT="${BATTAPE_HISTORY_COLOR_RECENT:-$'\e[97m'}";
+BATTAPE_HISTORY_COLOR_RESET="${BATTAPE_HISTORY_COLOR_RESET:-$(tput sgr0 2>/dev/null || printf '\e[0m')}";
+BATTAPE_HISTORY_COLOR_SELECTED="${BATTAPE_HISTORY_COLOR_SELECTED:-$'\e[1;97m'}";
+BATTAPE_HISTORY_COLOR_SUCCESS="${BATTAPE_HISTORY_COLOR_SUCCESS:-$'\e[32m'}";
+
+BATTAPE_PROMPT_COLOR_BG=${BATTAPE_PROMPT_COLOR_BG:-'\[\e[48;2;48;48;48m\]'};
+BATTAPE_PROMPT_COLOR_BG_RESET=${BATTAPE_PROMPT_COLOR_BG_RESET:-'\[\e[49m\]'};
+BATTAPE_PROMPT_COLOR_MAGENTA=${BATTAPE_PROMPT_COLOR_MAGENTA:-'\[\e[35m\]'};
+BATTAPE_PROMPT_COLOR_SEPARATOR=${BATTAPE_PROMPT_COLOR_SEPARATOR:-'\[\e[38;2;48;48;48m\]'};
+BATTAPE_PROMPT_COLOR_RED=${BATTAPE_PROMPT_COLOR_RED:-'\[\e[31m\]'};
+BATTAPE_PROMPT_COLOR_RESET=${BATTAPE_PROMPT_COLOR_RESET:-'\[\e[0m\]'};
+BATTAPE_PROMPT_COLOR_FG=${BATTAPE_PROMPT_COLOR_FG:-'\[\e[38;2;2;175;215m\]'};
+BATTAPE_PROMPT_HOST=${BATTAPE_PROMPT_HOST:-auto};
+BATTAPE_PROMPT_PATH_DEPTH=${BATTAPE_PROMPT_PATH_DEPTH:-3};
+BATTAPE_PROMPT_GIT=${BATTAPE_PROMPT_GIT:-1};
+BATTAPE_PROMPT_SUCCESS=${BATTAPE_PROMPT_SUCCESS:-✓};
+BATTAPE_PROMPT_FAILURE=${BATTAPE_PROMPT_FAILURE:-✗};
+BATTAPE_PROMPT_SEPARATOR=${BATTAPE_PROMPT_SEPARATOR:-};
+BATTAPE_CD_OSC7=${BATTAPE_CD_OSC7:-auto};
+BATTAPE_CD_RECENCY_DAYS=${BATTAPE_CD_RECENCY_DAYS:-14};
 
 __battape_cleanup() {
   stty "$stty_settings" 2>/dev/null || :;
@@ -27,6 +44,10 @@ __battape_cursor_position() {
   IFS= read -rs -t 0.1 -d "$delimiter" response < /dev/tty 2>/dev/null || return;
   response+="R";
   [[ "$response" =~ $pattern ]] && printf '%s %s' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}";
+}
+
+__battape_id() {
+  LC_ALL=C tr -dc 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789' </dev/urandom | head -c 10;
 }
 
 __battape_match_command() {
@@ -92,7 +113,7 @@ __battape_truncate_display() {
 
   if [[ "$text" != *$'\e'* && "$text" != *[!\ -~]* ]]; then
     printf '%s' "${text:0:limit}";
-    [ "${#text}" -le "$limit" ] || printf '%s' "$BATTAPE_COLOR_RESET";
+    [ "${#text}" -le "$limit" ] || printf '%s' "$BATTAPE_HISTORY_COLOR_RESET";
     return;
   fi
 
@@ -117,7 +138,7 @@ __battape_truncate_display() {
   done
 
   printf '%s' "$output";
-  [ -z "$text" ] || printf '%s' "$BATTAPE_COLOR_RESET";
+  [ -z "$text" ] || printf '%s' "$BATTAPE_HISTORY_COLOR_RESET";
 }
 
 __battape_query_commands() {
@@ -216,22 +237,22 @@ __battape_render_history_ui() {
       cmd="${cmd//$'\n'/\\n}";
       cmd="${cmd//$'\r'/\\r}";
       cmd="${cmd//$'\t'/\\t}";
-      text_color="$BATTAPE_COLOR_SELECTED";
+      text_color="$BATTAPE_HISTORY_COLOR_SELECTED";
       if [ "$i" -eq "$selected" ]; then
-        arrow_color="$BATTAPE_COLOR_SUCCESS";
-        [ "$exit_status" != 0 ] && arrow_color="$BATTAPE_COLOR_FAIL";
-        printf '%s>%s %s' "$arrow_color" "$BATTAPE_COLOR_RESET" "$text_color";
+        arrow_color="$BATTAPE_HISTORY_COLOR_SUCCESS";
+        [ "$exit_status" != 0 ] && arrow_color="$BATTAPE_HISTORY_COLOR_FAIL";
+        printf '%s>%s %s' "$arrow_color" "$BATTAPE_HISTORY_COLOR_RESET" "$text_color";
         __battape_truncate_display "$cmd" "$((cols - 3))";
-        printf '%s' "$BATTAPE_COLOR_RESET";
+        printf '%s' "$BATTAPE_HISTORY_COLOR_RESET";
       else
         age="$((now - end))";
-        if [ -z "$end" ] || [ "$age" -gt 86400 ]; then text_color="$BATTAPE_COLOR_OLDEST";
-        elif [ "$age" -lt 3600 ]; then text_color="$BATTAPE_COLOR_RECENT";
-        else text_color="$BATTAPE_COLOR_OLD";
+        if [ -z "$end" ] || [ "$age" -gt 86400 ]; then text_color="$BATTAPE_HISTORY_COLOR_OLDEST";
+        elif [ "$age" -lt 3600 ]; then text_color="$BATTAPE_HISTORY_COLOR_RECENT";
+        else text_color="$BATTAPE_HISTORY_COLOR_OLD";
         fi
         printf '  %s' "$text_color";
         __battape_truncate_display "$cmd" "$((cols - 3))";
-        printf '%s' "$BATTAPE_COLOR_RESET";
+        printf '%s' "$BATTAPE_HISTORY_COLOR_RESET";
       fi
     fi
 
@@ -242,7 +263,9 @@ __battape_render_history_ui() {
   printf '\e8\e[u\e[%sC' "$((query_cursor_width + 2))"; # restore cursor to query
 }
 
-__battape_render_history_ui_start() {
+battape_render_history_ui() {
+  __battape_initialize || return;
+
   local active_signal_traps cmd col key now pos row rows cols lines;
   local fs=$'\037' rs=$'\036';
   local query="$READLINE_LINE";
@@ -256,9 +279,9 @@ __battape_render_history_ui_start() {
 
   stty_settings="$(stty -g)" || return;
   [ "$query_point" -le "${#query}" ] || query_point="${#query}";
-  [[ "$BATTAPE_MAX_ROWS" =~ ^[1-9][0-9]*$ ]] || BATTAPE_MAX_ROWS=12;
+  [[ "$BATTAPE_HISTORY_MAX_ROWS" =~ ^[1-9][0-9]*$ ]] || BATTAPE_HISTORY_MAX_ROWS=12;
   rows="$((lines - 2))";
-  [ "$rows" -gt "$BATTAPE_MAX_ROWS" ] && rows="$BATTAPE_MAX_ROWS";
+  [ "$rows" -gt "$BATTAPE_HISTORY_MAX_ROWS" ] && rows="$BATTAPE_HISTORY_MAX_ROWS";
   [ "$rows" -gt 0 ] || rows=1;
 
   active_signal_traps="$(trap -p EXIT HUP INT QUIT TERM TSTP)";
@@ -387,14 +410,148 @@ HERE
   return "$1";
 }
 
-__battape_id() {
-  LC_ALL=C tr -dc 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789' </dev/urandom | head -c 10;
+__battape_cd_osc7() {
+  case "$BATTAPE_CD_OSC7" in
+    never|0|no) return ;;
+    auto) [ -t 1 ] && [ "${TERM:-dumb}" != dumb ] || return ;;
+  esac
+  printf '\e]7;file://%s%s\a' "$HOSTNAME" "$PWD";
 }
 
-if [[ -z "${__battape_loaded:-}" ]] \
-  && ((BASH_VERSINFO[0] > 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 4))) \
-  && command -v sqlite3 >/dev/null \
-  && [[ -z "$(trap -p DEBUG)" ]]; then
+__battape_cd_find() {
+  local query="$1" q="%" term sql recency_days recency_seconds;
+  local query_glob="${query//\'/\'\'}";
+  local -a terms;
+
+  recency_days="$BATTAPE_CD_RECENCY_DAYS";
+  [[ "$recency_days" =~ ^[1-9][0-9]*$ ]] || recency_days=14;
+  recency_seconds=$((recency_days * 86400));
+
+  # Terms match in order, as they do in battape's command search.  Quote both
+  # SQL and LIKE metacharacters because the query comes from the command line.
+  read -r -a terms < <(printf '%s' "$query");
+  for term in "${terms[@]}"; do
+    term="${term//\\/\\\\}";
+    term="${term//%/\\%}";
+    term="${term//_/\\_}";
+    term="${term//\'/\'\'}";
+    q+="$term%";
+  done
+  [ "$q" = '%' ] && return;
+
+  # A command run in a directory counts as a visit.  Its score combines
+  # frequency with a modest recency boost, while a final shell-side -d check
+  # skips directories that have since disappeared.
+  sql="select pwd from history
+    where pwd like '$q' escape '\\' collate nocase
+    group by pwd
+    order by case when pwd glob '*/${query_glob}*'
+                   and pwd not glob '*/${query_glob}*/*' then 0 else 1 end,
+      count(*) * (1.0 + 1.0 / (1.0 +
+      (strftime('%s', 'now') - max(end)) / ${recency_seconds}.0)) desc,
+      max(end) desc
+    limit 20";
+
+  while IFS= read -r directory; do
+    [ -d "$directory" ] && {
+      printf '%s' "$directory";
+      return;
+    }
+  done < <(sqlite3 -readonly -batch -cmd '.timeout 1000' -noheader "$BATTAPE_DB" "$sql" 2>/dev/null);
+}
+
+__battape_prompt_git() {
+  local branch state ahead behind counts color="";
+
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return;
+  branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null)";
+  [ -n "$branch" ] || return;
+
+  state="$(git status --porcelain 2>/dev/null)";
+  if [ -n "$state" ]; then
+    color="$BATTAPE_PROMPT_COLOR_RED";
+  fi
+
+  if counts="$(git rev-list --left-right --count '@{upstream}...HEAD' 2>/dev/null)"; then
+    read -r behind ahead < <(printf "%s" "$counts");
+  fi
+  if [ "${ahead:-0}" -gt 0 ] || [ "${behind:-0}" -gt 0 ]; then
+    printf '%s' "$BATTAPE_PROMPT_COLOR_MAGENTA";
+  fi
+  printf '%s (%s)' "$color" "$branch";
+}
+
+__battape_prompt_path() {
+  local path="$PWD" relative depth="$BATTAPE_PROMPT_PATH_DEPTH";
+  local -a parts;
+
+  [[ "$depth" =~ ^[1-9][0-9]*$ ]] || depth=3;
+
+  if [ "$path" = "$HOME" ]; then
+    printf '~';
+    return;
+  elif [[ "$path" == "$HOME"/* ]]; then
+    relative="${path#"$HOME"/}";
+    IFS=/ read -r -a parts < <(printf "%s" "$relative");
+    if [ "${#parts[@]}" -gt "$depth" ]; then
+      parts=("…" "${parts[@]: -depth}");
+    fi
+    printf '~/%s' "$(IFS=/; printf '%s' "${parts[*]}")";
+    return;
+  fi
+
+  [ "$path" = / ] && { printf '/'; return; }
+  IFS=/ read -r -a parts < <(printf "%s" "${path#/}");
+  if [ "${#parts[@]}" -gt "$depth" ]; then
+    parts=("…" "${parts[@]: -depth}");
+  fi
+  printf '/%s' "$(IFS=/; printf '%s' "${parts[*]}")";
+}
+
+__battape_prompt_command() {
+  local status="$1" elapsed=0 started="$LAST_INTERACTIVE_COMMAND_START" duration="" host="" git_prompt;
+
+  # battape normally installs itself through PROMPT_COMMAND.  Calling it here
+  # keeps its history recording while leaving this prompt entirely native Bash.
+  declare -F __battape_record >/dev/null && __battape_record "$status";
+
+  # The DEBUG hook records the start of the command, whereas the previous
+  # value here was set when the prior prompt was drawn (and therefore included
+  # however long we sat idle at that prompt).
+  started="${LAST_INTERACTIVE_COMMAND_START:-$started}";
+  elapsed=$((SECONDS - started));
+  [ "$elapsed" -ge 1 ] && duration=" ${elapsed}s";
+  case "$BATTAPE_PROMPT_HOST" in
+    always) host="${SHORTHOST:-$(hostname -s)} " ;;
+    auto) [ -z "${SSH_CONNECTION:-}${SSH_TTY:-}" ] || host="${SHORTHOST:-$(hostname -s)} " ;;
+  esac
+  [ "$BATTAPE_PROMPT_GIT" = 0 ] || git_prompt="$(__battape_prompt_git)";
+
+  PS1="${BATTAPE_PROMPT_COLOR_BG}${BATTAPE_PROMPT_COLOR_FG}${host}$(__battape_prompt_path)${git_prompt}${BATTAPE_PROMPT_COLOR_FG}${duration} ";
+  if [ "$status" -eq 0 ]; then
+    PS1+="${BATTAPE_PROMPT_SUCCESS} ";
+  else
+    PS1+="${BATTAPE_PROMPT_COLOR_RED}${BATTAPE_PROMPT_FAILURE} ";
+  fi
+  PS1+="${BATTAPE_PROMPT_COLOR_BG_RESET}${BATTAPE_PROMPT_COLOR_SEPARATOR}${BATTAPE_PROMPT_SEPARATOR}${BATTAPE_PROMPT_COLOR_RESET} ";
+  LAST_INTERACTIVE_COMMAND_START=$SECONDS;
+}
+
+__battape_requirements() {
+  if ((BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 4))); then
+    printf 'battape: Bash 4.4 or later is required\n' >&2;
+    return 1;
+  fi
+  if ! command -v sqlite3 >/dev/null 2>&1; then
+    printf 'battape: sqlite3 is required\n' >&2;
+    return 1;
+  fi
+}
+
+__battape_initialize() {
+  [ -n "${__battape_initialized:-}" ] && return;
+  __battape_requirements || return;
+
   mkdir -p "$(dirname "$BATTAPE_DB")" 2>/dev/null || :;
   sqlite3 -batch -cmd '.timeout 1000' "$BATTAPE_DB" <<'HERE' || return
 create table if not exists history (
@@ -413,26 +570,80 @@ create index if not exists idx_history_hostname on history(hostname);
 create index if not exists idx_history_pwd on history(pwd);
 HERE
 
+  local schema_columns;
   schema_columns="$(sqlite3 -batch -noheader "$BATTAPE_DB" \
     "select group_concat(name, ',') from pragma_table_info('history') where name in ('id', 'start', 'end', 'hostname', 'tty', 'pwd', 'command', 'exit_status');")";
   if [[ "$schema_columns" != 'id,start,end,hostname,tty,pwd,command,exit_status' ]]; then
     printf 'battape: history table has an unsupported schema; command tracking disabled\n' >&2;
-    return;
+    return 1;
   fi
 
-  __battape_loaded=1;
-  bind -m emacs -x '"\C-r":__battape_render_history_ui_start';
-  bind -m vi-insert -x '"\C-r":__battape_render_history_ui_start';
-  bind -m vi-command -x '"\C-r":__battape_render_history_ui_start';
+  BATTAPE_CURRENT_TTY="$(tty 2>/dev/null || echo '/dev/tty')";
+  __battape_initialized=1;
+}
 
+battape_recorder_enable() {
+  __battape_initialize || return;
+  [ -n "${__battape_recorder_enabled:-}" ] && return;
+  if [ -n "$(trap -p DEBUG)" ]; then
+    printf 'battape: DEBUG trap already set; command tracking disabled\n' >&2;
+    return 1;
+  fi
+
+  LAST_INTERACTIVE_COMMAND_START=$SECONDS;
+  trap '[[ "$BASH_COMMAND" == __* ]] || LAST_INTERACTIVE_COMMAND_START="$SECONDS"' DEBUG;
+  __battape_recorder_enabled=1;
+
+  # The prompt renderer records directly when enabled, so do not add a second
+  # recorder hook when it already owns PROMPT_COMMAND.
+  [ -n "${__battape_prompt_enabled:-}" ] && return;
   if [[ "$(declare -p PROMPT_COMMAND 2>/dev/null)" == 'declare -a '* ]]; then
     PROMPT_COMMAND=("__battape_record \$?" "${PROMPT_COMMAND[@]}");
   else
     PROMPT_COMMAND="__battape_record \$?;${PROMPT_COMMAND%;}";
   fi
-elif [[ -z "${__battape_loaded:-}" && -n "$(trap -p DEBUG)" ]]; then
-  printf 'battape: DEBUG trap already set; command tracking disabled\n' >&2;
-elif [[ -z "${__battape_loaded:-}" ]] \
-  && ((BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 4))); then
-  printf 'battape: Bash 4.4 or later is required; command tracking disabled\n' >&2;
-fi
+}
+# A traced function inherits a caller's DEBUG trap. Without this attribute,
+# Bash temporarily hides that trap while this function runs, making the guard
+# above unable to protect it.
+declare -ft battape_recorder_enable;
+
+battape_prompt_enable() {
+  battape_recorder_enable || return;
+
+  # Keep escape sequences inside \[...\] so readline calculates the cursor
+  # position correctly. The prompt function records the completed command.
+  PROMPT_COMMAND='__battape_prompt_command "$?"';
+  __battape_prompt_enabled=1;
+}
+
+battape_cd() {
+  local directory;
+
+  # Directory history is optional: preserve normal cd behaviour when battape
+  # cannot be initialized (for example, without a supported Bash or SQLite).
+  __battape_initialize || {
+    builtin cd "$@";
+    return;
+  }
+
+  # Let Bash handle a real path first. Suppressing its failure lets an absent
+  # path such as `cd dotfiles` be resolved from battape instead.
+  if builtin cd "$@" 2>/dev/null; then
+    __battape_cd_osc7;
+    return;
+  fi
+
+  # Options and a literal `-` have Bash-specific meanings and should not be
+  # interpreted as a battape search.
+  if [ "$#" -eq 1 ] && [[ "$1" != - && "$1" != -* ]]; then
+    directory="$(__battape_cd_find "$1")";
+    if [ -n "$directory" ] && builtin cd -- "$directory"; then
+      __battape_cd_osc7;
+      return;
+    fi
+  fi
+
+  # Re-run the builtin to display its normal diagnostic and status.
+  builtin cd "$@" || return;
+}

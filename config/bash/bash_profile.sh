@@ -32,6 +32,9 @@ stty -echoctl;
 
 [ -e "$HOME/.bash_profile_local" ] && source "$HOME/.bash_profile_local";
 
-[ -f "$DOTFILES_HOME/config/bash/ps1.sh" ] && source "$DOTFILES_HOME/config/bash/ps1.sh";
-[ -f "$DOTFILES_HOME/config/bash/battape.sh" ] && source "$DOTFILES_HOME/config/bash/battape.sh";
-[ -f "$DOTFILES_HOME/config/bash/cd.sh" ] && source "$DOTFILES_HOME/config/bash/cd.sh";
+source "$DOTFILES_HOME/config/bash/battape.sh";
+battape_prompt_enable;
+bind -m emacs -x '"\C-r":battape_render_history_ui';
+bind -m vi-insert -x '"\C-r":battape_render_history_ui';
+bind -m vi-command -x '"\C-r":battape_render_history_ui';
+cd() { battape_cd "$@"; }

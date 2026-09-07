@@ -1,6 +1,8 @@
 #!/bin/bash
 COLUMNS=$(tput cols 2>/dev/null || echo 80);
-BATTAPE_DB="${BATTAPE_DB:-"$HOME/.local/share/battape/battape.sqlite"}";
+BATTAPE_DATA_HOME="${BATTAPE_DATA_HOME:-"${XDG_DATA_HOME:-"$HOME/.local/share"}/battape"}";
+BATTAPE_DB="${BATTAPE_DB:-"$BATTAPE_DATA_HOME/battape.sqlite"}";
+BATTAPE_REPORT_LIMIT="${BATTAPE_REPORT_LIMIT:-1000}";
 
 abort() {
   local code="$1";
@@ -164,7 +166,7 @@ HERE
 }
 
 __battape_tt_report() {
-  local start=0 end=0 account tag id group limit=1000 footer=1 events total_seconds stats group_by;
+  local start=0 end=0 account tag id group limit="$BATTAPE_REPORT_LIMIT" footer=1 events total_seconds stats group_by;
   [ -n "$*" ] || start="$(__battape_tt_epoch "-1m")";
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -264,7 +266,7 @@ HERE
 }
 
 __battape_tt_commands() {
-  local start=0 end=0 account tag id limit=1000 full=0 footer=1 stats event_start event_end commands total_seconds;
+  local start=0 end=0 account tag id limit="$BATTAPE_REPORT_LIMIT" full=0 footer=1 stats event_start event_end commands total_seconds;
   [ -n "$*" ] || id="$(__battape_tt_query -b , "select id from time_tracker order by start desc limit 1")";
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -593,6 +595,7 @@ __battape_tt_start() {
   done
 
   [ -z "$tags" ] && [ -d ".git" ] && tags="$(basename "${PWD//\'/\'\'}")";
+  [ -n "$account" ] || account="${BATTAPE_DEFAULT_ACCOUNT:-}";
   [ -n "$account" ] || account="$(__battape_tt_query -b , "select account from time_tracker where (length('$tags') = 0 or tags glob '*$tags*') or (length('$tags') = 0 and end = 0) order by start desc limit 1")";
   [ -n "$account" ] || abort 1 "Unable to guess --acount from tags '$tags'. Please specify an account with --account.";
   [[ "$start" -gt 0 ]] || start="$(date +%s)";
@@ -677,7 +680,7 @@ __battape_tt() {
   local cmd="status";
   [ -n "$1" ] && [[ "$1" != -* ]] && cmd="$1" && shift;
   [ -n "$1" ] && [[ "$1" = *-h* ]] && cmd="help" && shift;
-  [ -s "$BATTAPE_DB" ] || __battape_tt_setup;
+  __battape_tt_setup || return;
 
   case "$cmd" in
     help) __battape_tt_help ;;

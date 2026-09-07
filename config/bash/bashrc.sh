@@ -17,13 +17,11 @@ export LESS="XFR";
 export LS_COLORS="";
 export TT_HOURS_PER_MONTH="150";
 
+[ "$SHORTHOST" = "macbat2" ] || BATTAPE_PROMPT_COLOR_FG='\[\e[38;2;221;130;20m\]';
+
 command -v nvim >/dev/null 2>&1 && export EDITOR="nvim"; # INLINE
 
 [ -e "/etc/profile.d/bash_completion.sh" ] && source "/etc/profile.d/bash_completion.sh"; # INLINE
 [ -e "/opt/homebrew/etc/profile.d/bash_completion.sh" ] && source "/opt/homebrew/etc/profile.d/bash_completion.sh"; # INLINE
-
-# Required by battape.sh and ps1.sh
-LAST_INTERACTIVE_COMMAND_START=$SECONDS;
-trap '[[ "$BASH_COMMAND" == __* ]] || LAST_INTERACTIVE_COMMAND_START="$SECONDS"' DEBUG;
 
 # read:generate_gpg_config
