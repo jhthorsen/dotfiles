@@ -44,6 +44,7 @@ vim.opt.cmdheight = 0                         -- hide command line when not used
 vim.opt.expandtab = true                      -- convert tabs to spaces
 vim.opt.foldenable = false                    -- disable code folding
 vim.opt.hlsearch = false                      -- don't highlight search matches
+vim.opt.ignorecase = true                     -- ignore case when searching
 vim.opt.isfname:append("@-@")                 -- treat @-@ as filename characters
 vim.opt.lazyredraw = true                     -- redraw only when needed (faster macros)
 vim.opt.linebreak = true                      -- wrap lines at word boundaries
@@ -53,6 +54,7 @@ vim.opt.scrolloff = 8                         -- keep 8 lines visible above/belo
 vim.opt.shiftwidth = 2                        -- indent width for << and >>
 vim.opt.showcmd = false                       -- don't show command in statusline
 vim.opt.signcolumn = "yes"                    -- always show sign column
+vim.opt.smartcase = true                      -- match case when the search contains uppercase letters
 vim.opt.smartindent = true                    -- smarter auto-indentation
 vim.opt.softtabstop = 2                       -- number of spaces per tab in insert mode
 vim.opt.splitbelow = true                     -- open horizontal splits below
