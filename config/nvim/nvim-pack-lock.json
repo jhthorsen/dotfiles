@@ -29,10 +29,6 @@
       "rev": "6cd7280adead7f586db6fccbd15d2cac7e2188b9",
       "src": "https://github.com/rafamadriz/friendly-snippets"
     },
-    "mcphub.nvim": {
-      "rev": "7cd5db330f41b7bae02b2d6202218a061c3ebc1f",
-      "src": "https://github.com/ravitemer/mcphub.nvim"
-    },
     "mini.nvim": {
       "rev": "e58ad4b0c9e9376096b9704f98fc00d4c9448870",
       "src": "https://github.com/echasnovski/mini.nvim"

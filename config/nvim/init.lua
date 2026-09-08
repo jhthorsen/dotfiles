@@ -6,7 +6,6 @@ vim.pack.add({
   { src = "https://github.com/ravitemer/codecompanion-history.nvim" },
   { src = "https://github.com/zbirenbaum/copilot.lua" },
   { src = "https://github.com/rafamadriz/friendly-snippets" },
-  { src = "https://github.com/ravitemer/mcphub.nvim" },
   { src = "https://github.com/echasnovski/mini.nvim" },
   { src = "https://github.com/jake-stewart/multicursor.nvim" },
   { src = "https://github.com/nvim-treesitter/nvim-treesitter",     version = "main" },
@@ -458,8 +457,6 @@ require("codecompanion").setup({
     inline = { adapter = codecompanion_adapter },
   },
 })
-
-require("mcphub").setup({})
 
 vim.api.nvim_create_autocmd({ "BufNewFile", "BufReadPost", "VimResized" }, {
   callback = function()
