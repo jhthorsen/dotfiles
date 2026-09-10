@@ -39,10 +39,6 @@ __battape_cleanup() {
   tput cnorm 2>/dev/null || :;
 }
 
-__battape_id() {
-  LC_ALL=C tr -dc 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789' </dev/urandom | head -c 10;
-}
-
 __battape_match_command() {
   local record="$1" i;
   for ((i = 0; i < 3; i++));
@@ -385,15 +381,19 @@ battape_render_history_ui() {
 }
 
 __battape_record() {
+  local command;
+
+  command="$(fc -ln -1)";
+  command="${command//\'/\'\'}";
   sqlite3 -cmd '.timeout 1000' "$BATTAPE_DB" <<HERE
 insert into history (id, start, end, hostname, tty, pwd, command, exit_status) values (
-  '$(__battape_id)',
+  lower(hex(randomblob(10))),
   strftime('%s', 'now') - $(( SECONDS - LAST_INTERACTIVE_COMMAND_START )),
   strftime('%s', 'now'),
   '${HOSTNAME//\'/\'\'}',
   '$BATTAPE_CURRENT_TTY',
   '${PWD//\'/\'\'}',
-  '$(fc -ln -1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e "s/'/\\'\\'/g")',
+  trim('$command', char(9, 10, 11, 12, 13, 32)),
   $1
 )
 HERE
@@ -451,34 +451,39 @@ __battape_cd_find() {
 }
 
 __battape_prompt_git() {
-  local branch state ahead behind counts color="";
+  local variable="$1" branch="" oid="" ahead=0 behind=0 color="" line;
 
-  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return;
-  branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null)";
-  [ -n "$branch" ] || return;
-
-  state="$(git status --porcelain 2>/dev/null)";
-  if [ -n "$state" ]; then
-    color="$BATTAPE_PROMPT_COLOR_RED";
-  fi
-
-  if counts="$(git rev-list --left-right --count '@{upstream}...HEAD' 2>/dev/null)"; then
-    read -r behind ahead < <(printf "%s" "$counts");
-  fi
+  while IFS= read -r line; do
+    case "$line" in
+      '# branch.head '*) branch="${line#\# branch.head }" ;;
+      '# branch.oid '*) oid="${line#\# branch.oid }" ;;
+      '# branch.ab '*) read -r ahead behind <<< "${line#\# branch.ab }" ;;
+      '# '*) ;;
+      *) color="$BATTAPE_PROMPT_COLOR_RED" ;;
+    esac
+  done < <(git status --porcelain=v2 --branch 2>/dev/null);
+  [ "$branch" = '(detached)' ] && branch="${oid:0:7}";
+  [ -n "$branch" ] || {
+    printf -v "$variable" '';
+    return;
+  }
+  ahead="${ahead#+}";
+  behind="${behind#-}";
   if [ "${ahead:-0}" -gt 0 ] || [ "${behind:-0}" -gt 0 ]; then
-    printf '%s' "$BATTAPE_PROMPT_COLOR_MAGENTA";
+    printf -v "$variable" '%s%s (%s)' "$BATTAPE_PROMPT_COLOR_MAGENTA" "$color" "$branch";
+  else
+    printf -v "$variable" '%s (%s)' "$color" "$branch";
   fi
-  printf '%s (%s)' "$color" "$branch";
 }
 
 __battape_prompt_path() {
-  local path="$PWD" relative depth="$BATTAPE_PROMPT_PATH_DEPTH";
+  local variable="$1" path="$PWD" relative depth="$BATTAPE_PROMPT_PATH_DEPTH" IFS=/;
   local -a parts;
 
   [[ "$depth" =~ ^[1-9][0-9]*$ ]] || depth=3;
 
   if [ "$path" = "$HOME" ]; then
-    printf '~';
+    printf -v "$variable" '~';
     return;
   elif [[ "$path" == "$HOME"/* ]]; then
     relative="${path#"$HOME"/}";
@@ -486,20 +491,20 @@ __battape_prompt_path() {
     if [ "${#parts[@]}" -gt "$depth" ]; then
       parts=("…" "${parts[@]: -depth}");
     fi
-    printf '~/%s' "$(IFS=/; printf '%s' "${parts[*]}")";
+    printf -v "$variable" '~/%s' "${parts[*]}";
     return;
   fi
 
-  [ "$path" = / ] && { printf '/'; return; }
+  [ "$path" = / ] && { printf -v "$variable" '/'; return; }
   IFS=/ read -r -a parts < <(printf "%s" "${path#/}");
   if [ "${#parts[@]}" -gt "$depth" ]; then
     parts=("…" "${parts[@]: -depth}");
   fi
-  printf '/%s' "$(IFS=/; printf '%s' "${parts[*]}")";
+  printf -v "$variable" '/%s' "${parts[*]}";
 }
 
 __battape_prompt_command() {
-  local status="$1" elapsed=0 started="$LAST_INTERACTIVE_COMMAND_START" duration="" host="" git_prompt;
+  local status="$1" elapsed=0 started="$LAST_INTERACTIVE_COMMAND_START" duration="" host="" git_prompt path_prompt;
 
   # battape normally installs itself through PROMPT_COMMAND.  Calling it here
   # keeps its history recording while leaving this prompt entirely native Bash.
@@ -515,9 +520,10 @@ __battape_prompt_command() {
     always) host="${SHORTHOST:-$(hostname -s)} " ;;
     auto) [ -z "${SSH_CONNECTION:-}${SSH_TTY:-}" ] || host="${SHORTHOST:-$(hostname -s)} " ;;
   esac
-  [ "$BATTAPE_PROMPT_GIT" = 0 ] || git_prompt="$(__battape_prompt_git)";
+  __battape_prompt_path path_prompt;
+  [ "$BATTAPE_PROMPT_GIT" = 0 ] || __battape_prompt_git git_prompt;
 
-  PS1="${BATTAPE_PROMPT_COLOR_BG}${BATTAPE_PROMPT_COLOR_HOST}${host}${BATTAPE_PROMPT_COLOR_FG}$(__battape_prompt_path)${git_prompt}${BATTAPE_PROMPT_COLOR_FG}${duration} ";
+  PS1="${BATTAPE_PROMPT_COLOR_BG}${BATTAPE_PROMPT_COLOR_HOST}${host}${BATTAPE_PROMPT_COLOR_FG}${path_prompt}${git_prompt}${BATTAPE_PROMPT_COLOR_FG}${duration} ";
   if [ "$status" -eq 0 ]; then
     PS1+="${BATTAPE_PROMPT_SUCCESS} ";
   else
