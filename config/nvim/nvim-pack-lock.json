@@ -50,6 +50,10 @@
       "rev": "b25d186481624964523fee34f44c529b101c7435",
       "src": "https://github.com/mrcjkb/rustaceanvim"
     },
+    "tiny-inline-diagnostic.nvim": {
+      "rev": "6264451f14119d63a52580e5198d6baf8518b0b2",
+      "src": "https://github.com/rachartier/tiny-inline-diagnostic.nvim"
+    },
     "venn.nvim": {
       "rev": "b09c2f36ddf70b498281845109bedcf08a7e0de0",
       "src": "https://github.com/jbyuki/venn.nvim"

@@ -11,6 +11,7 @@ vim.pack.add({
   { src = "https://github.com/nvim-treesitter/nvim-treesitter",     version = "main" },
   { src = "https://github.com/nvim-lua/plenary.nvim" },
   { src = "https://github.com/mrcjkb/rustaceanvim" },
+  { src = "https://github.com/rachartier/tiny-inline-diagnostic.nvim" },
   { src = "https://github.com/jbyuki/venn.nvim" },
   { src = "https://github.com/folke/which-key.nvim" },
 })
@@ -203,13 +204,7 @@ vim.keymap.set("n", "<leader>nn", function()
 end, { desc = "Notification History" })
 
 toggle({
-  key = "<leader>nl",
-  desc = { enabled = "Absolute Line Numbers", disabled = "Relative Line Numbers" },
-  option = "relativenumber",
-})
-
-toggle({
-  key = "<leader>nq",
+  key = "<leader>dq",
   desc = { enabled = "Hide quickfixlist", disabled = "Show quickfixlist" },
   is_enabled = function()
     for _, win in ipairs(vim.fn.getwininfo()) do
@@ -419,7 +414,7 @@ vim.keymap.set("n", "<leader>nI", function()
       end,
     },
   })
-end, { desc = "Pick Icon" })
+end, { desc = "Icon Picker" })
 
 ----------------------------------------------------------------------------------------------------
 -- LLM - Codecompanion, Copilot and MCP client
@@ -482,13 +477,29 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufReadPost", "VimResized" }, {
 -- LSP Setup
 ----------------------------------------------------------------------------------------------------
 vim.diagnostic.config({
-  virtual_text = true,
+  virtual_text = false,
   signs = {
     text = {
-      [vim.diagnostic.severity.HINT] = ">",
-      [vim.diagnostic.severity.INFO] = "",
+      [vim.diagnostic.severity.HINT] = "●",
+      [vim.diagnostic.severity.INFO] = "●",
       [vim.diagnostic.severity.WARN] = "⚠️",
-      [vim.diagnostic.severity.ERROR] = "‼️",
+      [vim.diagnostic.severity.ERROR] = "‼",
+    },
+  },
+})
+
+require("tiny-inline-diagnostic").setup({
+  options = {
+    override_open_float = true,
+    throttle = 750,
+    use_icons_from_diagnostic = true,
+    add_messages = {
+      display_count = true,
+      messages = false,
+    },
+    multilines = {
+      enabled = true,
+      always_show = false,
     },
   },
 })
@@ -501,7 +512,7 @@ vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, { desc = "Got
 vim.keymap.set("n", "gr", function() vim.lsp.buf.references() end, { desc = "Goto References" })
 
 toggle({
-  key = "<leader>ng",
+  key = "<leader>dg",
   desc = { enabled = "Disable Grammar LSP", disabled = "Enable Grammar LSP" },
   is_enabled = function() return get_lsp_client("harper_ls") and true or false end,
   set = function(enabled) vim.lsp.enable("harper_ls", not enabled) end
@@ -516,9 +527,12 @@ toggle({
 
 toggle({
   key = "<leader>dV",
-  desc = { enabled = "Hide Virtual Text", disabled = "Show Virtual Text" },
-  is_enabled = function() return vim.diagnostic.config().virtual_lines and true or false end,
-  set = function(enabled) vim.diagnostic.config({ virtual_text = not enabled }) end
+  desc = { enabled = "Hide Diagnostics", disabled = "Show Diagnostics" },
+  is_enabled = function() return require("tiny-inline-diagnostic.state").user_toggle_state or false end,
+  set = function(enabled)
+    local d = require("tiny-inline-diagnostic")
+    if enabled then d.disable() else d.enable() end
+  end
 })
 
 vim.api.nvim_create_autocmd("LspAttach", {
@@ -654,7 +668,7 @@ require("nvim-treesitter").install({
 -- Theme, Colorscheme
 ----------------------------------------------------------------------------------------------------
 vim.keymap.set("n", "<leader>nC", function() require("mini.extra").pickers.colorschemes() end,
-  { desc = "Search Colorschemes" })
+  { desc = "Color Scheme Picker" })
 
 vim.cmd.colorscheme("catppuccin")
 vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
