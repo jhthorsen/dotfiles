@@ -5,6 +5,7 @@ vim.pack.add({
   { src = "https://github.com/olimorris/codecompanion.nvim" },
   { src = "https://github.com/ravitemer/codecompanion-history.nvim" },
   { src = "https://github.com/zbirenbaum/copilot.lua" },
+  { src = "https://github.com/j-hui/fidget.nvim" },
   { src = "https://github.com/rafamadriz/friendly-snippets" },
   { src = "https://github.com/echasnovski/mini.nvim" },
   { src = "https://github.com/jake-stewart/multicursor.nvim" },
@@ -18,6 +19,14 @@ vim.pack.add({
 
 require("vim._core.ui2").enable({})
 require("plenary")              -- Used by CodeCompanion
+require("fidget").setup({
+  progress = {
+    suppress_on_insert = true,
+    display = {
+      render_limit = 4,
+    },
+  },
+})
 require("mini.align").setup({}) -- ga, gA
 require("mini.colors").setup({})
 require("mini.comment").setup({})

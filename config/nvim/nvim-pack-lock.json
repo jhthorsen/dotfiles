@@ -18,19 +18,23 @@
       "src": "https://github.com/ravitemer/codecompanion-history.nvim"
     },
     "codecompanion.nvim": {
-      "rev": "9a8e8602a7c72d10a827880fbb6fcd8bfa3830c7",
+      "rev": "b9d31246b0646a775fa75e8a73d47698eba26129",
       "src": "https://github.com/olimorris/codecompanion.nvim"
     },
     "copilot.lua": {
-      "rev": "7e6723aabea044519462958ffcea68d7985c5ed0",
+      "rev": "69fa45f8bcde5aaf436b43ff208c36d7c6ee5b42",
       "src": "https://github.com/zbirenbaum/copilot.lua"
     },
+    "fidget.nvim": {
+      "rev": "9e0201673e08e997e7cf52afca5565c70bd117f3",
+      "src": "https://github.com/j-hui/fidget.nvim"
+    },
     "friendly-snippets": {
-      "rev": "6cd7280adead7f586db6fccbd15d2cac7e2188b9",
+      "rev": "a5a73e586521fe5c12d751ad81a0db67649a94ed",
       "src": "https://github.com/rafamadriz/friendly-snippets"
     },
     "mini.nvim": {
-      "rev": "e58ad4b0c9e9376096b9704f98fc00d4c9448870",
+      "rev": "25f25d3e6661d942323e56711096de1850d814ec",
       "src": "https://github.com/echasnovski/mini.nvim"
     },
     "multicursor.nvim": {
@@ -38,7 +42,7 @@
       "src": "https://github.com/jake-stewart/multicursor.nvim"
     },
     "nvim-treesitter": {
-      "rev": "074aa4422bf029908338e855d0c0f71470a971bb",
+      "rev": "5cb0114e6242625db56dd6440e945ed1ece10bc7",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter",
       "version": "'main'"
     },
@@ -49,6 +53,10 @@
     "rustaceanvim": {
       "rev": "b25d186481624964523fee34f44c529b101c7435",
       "src": "https://github.com/mrcjkb/rustaceanvim"
+    },
+    "tiny-cmdline.nvim": {
+      "rev": "e247d9ee4c980734f8f8bf616d31e0ab7c27485d",
+      "src": "https://github.com/rachartier/tiny-cmdline.nvim"
     },
     "tiny-inline-diagnostic.nvim": {
       "rev": "6264451f14119d63a52580e5198d6baf8518b0b2",
