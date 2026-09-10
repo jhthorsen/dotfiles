@@ -14,6 +14,7 @@ vim.pack.add({
   { src = "https://github.com/mrcjkb/rustaceanvim" },
   { src = "https://github.com/rachartier/tiny-inline-diagnostic.nvim" },
   { src = "https://github.com/jbyuki/venn.nvim" },
+  { src = "https://github.com/martindur/zdiff.nvim" },
   { src = "https://github.com/folke/which-key.nvim" },
 })
 
@@ -426,7 +427,7 @@ vim.keymap.set("n", "<leader>nI", function()
 end, { desc = "Icon Picker" })
 
 ----------------------------------------------------------------------------------------------------
--- LLM - Codecompanion, Copilot and MCP client
+-- LLM - Codecompanion, Copilot and diff
 ----------------------------------------------------------------------------------------------------
 local codecompanion_adapter = {
   name = string.match(vim.api.nvim_buf_get_name(0) or "", "([^/]+)%.ai$") or vim.env.CODECOMPANION_ADAPTER or "copilot",
@@ -440,6 +441,12 @@ vim.keymap.set("v", "<leader>ce", "<cmd>CodeCompanion /explain<cr>", { desc = "E
 vim.keymap.set("v", "<leader>cf", "<cmd>CodeCompanion /fix<cr>", { desc = "Fix Code" })
 vim.keymap.set("n", "<leader>cl", "<cmd>CodeCompanion /lsp<cr>", { desc = "Explain The LSP Diagnostics" })
 vim.keymap.set("v", "<leader>ct", "<cmd>CodeCompanion /tests<cr>", { desc = "Generte Tests" })
+vim.keymap.set("n", "<leader>dd", function() require("zdiff").open("HEAD^") end, { desc = "Zdiff HEAD^" })
+vim.keymap.set("n", "<leader>dm", function() require("zdiff").open("origin/main") end, { desc = "Zdiff origin/main" })
+
+require("zdiff").setup({
+  default_expanded = true,
+})
 
 require("copilot").setup({
   suggestion = { debounce = 350 },
