@@ -676,11 +676,37 @@ Commands options:
 HERE
 }
 
+__battape_tt_welcome() {
+  cat <<'HERE'
+Welcome to tt, a simple time tracker.
+
+No time entries yet. Start tracking your first task with:
+
+  tt start --account <account> --description "What you're working on"
+
+When you're done, run:
+
+  tt stop
+
+Useful commands:
+  tt report --group day   Show a daily summary
+  tt commands              Show commands run during tracked time
+  tt --help                Show all options
+HERE
+}
+
 __battape_tt() {
-  local cmd="status";
+  local cmd="status" bare=0;
+  [ "$#" -eq 0 ] && bare=1;
   [ -n "$1" ] && [[ "$1" != -* ]] && cmd="$1" && shift;
   [ -n "$1" ] && [[ "$1" = *-h* ]] && cmd="help" && shift;
   __battape_tt_setup || return;
+
+  if [ "$bare" = 1 ]; then
+    local entry_count; entry_count="$(__battape_tt_query -b , "select count(*) from time_tracker")" || return;
+    [ "$entry_count" -gt 0 ] || __battape_tt_welcome;
+    [ "$entry_count" -gt 0 ] || return;
+  fi
 
   case "$cmd" in
     help) __battape_tt_help ;;
