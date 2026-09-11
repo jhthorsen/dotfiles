@@ -200,6 +200,37 @@ __battape_query_commands() {
   sqlite3 -batch -cmd '.timeout 1000' -noheader -separator "$fs" -newline "$rs" "$BATTAPE_DB" "$sql";
 }
 
+__battape_sanitize_display() {
+  local text="$1" char sanitized="" hex;
+
+  # History is untrusted input.  Make every terminal control character
+  # visible before it reaches printf.
+  while [ -n "$text" ]; do
+    char="${text:0:1}";
+    text="${text:1}";
+    if [[ "$char" =~ [[:cntrl:]] ]]; then
+      case "$char" in
+        $'\a') sanitized+='\\a' ;;
+        $'\b') sanitized+='\\b' ;;
+        $'\e') sanitized+='\\e' ;;
+        $'\f') sanitized+='\\f' ;;
+        $'\n') sanitized+='\\n' ;;
+        $'\r') sanitized+='\\r' ;;
+        $'\t') sanitized+='\\t' ;;
+        $'\v') sanitized+='\\v' ;;
+        $'\x7f') sanitized+='\\x7f' ;;
+        *)
+          printf -v hex '%02X' "'${char}";
+          sanitized+="\\x$hex";
+          ;;
+      esac
+    else
+      sanitized+="$char";
+    fi
+  done
+  printf '%s' "$sanitized";
+}
+
 __battape_render_history_ui() {
   local age i record cmd char char_width end exit_status arrow_color text_color query_cursor_width query_start;
   [ "$cols" -gt 3 ] || cols=4;
@@ -228,10 +259,7 @@ __battape_render_history_ui() {
     if [ "$i" -lt "${#matches[@]}" ]; then
       record="${matches[i]}";
       IFS="$fs" read -r _ end exit_status cmd < <(printf "%s" "$record");
-      cmd="${cmd//$'\e'/\\e}";
-      cmd="${cmd//$'\n'/\\n}";
-      cmd="${cmd//$'\r'/\\r}";
-      cmd="${cmd//$'\t'/\\t}";
+      cmd="$(__battape_sanitize_display "$cmd")";
       text_color="$BATTAPE_HISTORY_COLOR_SELECTED";
       if [ "$i" -eq "$selected" ]; then
         arrow_color="$BATTAPE_HISTORY_COLOR_SUCCESS";
