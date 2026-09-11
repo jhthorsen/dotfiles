@@ -200,7 +200,7 @@ __battape_tt_report() {
 select
   $group_by as Period,
   group_concat(distinct account) as Accounts,
-  format('%sh %sm',
+  printf('%sh %sm',
     sum(case when end > 0 then end else strftime('%s') end - start) / 3600,
     (sum(case when end > 0 then end else strftime('%s') end - start) / 60) % 60
   ) as Duration,
@@ -223,7 +223,7 @@ select
   account as Account,
   strftime('%H:%M', start, 'unixepoch', 'localtime') as Start,
   case when end > 0 then strftime('%H:%M', end, 'unixepoch', 'localtime') else '-' end as Stop,
-  format('%sh %sm',
+  printf('%sh %sm',
     (case when end > 0 then end else strftime('%s') end - start) / 3600,
     ((case when end > 0 then end else strftime('%s') end - start) / 60) % 60
   ) as Duration,
@@ -292,7 +292,7 @@ __battape_tt_commands() {
   # also handles a command which starts before an entry or ends after it.
   if [ "$full" = 1 ]; then
     __battape_tt_query <<HERE
-with matching_entries as materialized (
+with matching_entries as (
   select start, case when end > 0 then end else strftime('%s') end as end
   from time_tracker
   where start >= $start
@@ -311,8 +311,8 @@ select
   date(start, 'unixepoch', 'localtime') as Date,
   strftime('%H:%M', start, 'unixepoch', 'localtime') as Start,
   command as Command,
-  case when end - start < 60 then format('%ss', end - start)
-       else format('%sh %sm', (end - start) / 3600, ((end - start) / 60) % 60) end as Duration,
+  case when end - start < 60 then printf('%ss', end - start)
+       else printf('%sh %sm', (end - start) / 3600, ((end - start) / 60) % 60) end as Duration,
   exit_status as Exit
 from matching_commands
 order by start asc
@@ -320,7 +320,7 @@ limit $limit;
 HERE
   else
     __battape_tt_query <<HERE
-with matching_entries as materialized (
+with matching_entries as (
   select start, case when end > 0 then end else strftime('%s') end as end
   from time_tracker
   where start >= $start
@@ -353,8 +353,8 @@ with matching_entries as materialized (
 )
 select
   count(*) as Runs,
-  case when sum(duration) < 60 then format('%ss', sum(duration))
-       else format('%sh %sm', sum(duration) / 3600, (sum(duration) / 60) % 60) end as Time,
+  case when sum(duration) < 60 then printf('%ss', sum(duration))
+       else printf('%sh %sm', sum(duration) / 3600, (sum(duration) / 60) % 60) end as Time,
   command as Command
 from command_labels
 group by command
@@ -365,7 +365,7 @@ HERE
 
   if [ -n "$footer" ]; then
     stats=$(__battape_tt_query -b " " <<HERE
-with matching_entries as materialized (
+with matching_entries as (
   select start, case when end > 0 then end else strftime('%s') end as end
   from time_tracker
   where start >= $start
