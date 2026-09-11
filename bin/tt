@@ -300,6 +300,10 @@ with matching_entries as (
     and (length('$account') = 0 or account = '$account')
     and (length('$tag') = 0 or tags glob '*,$tag,*')
     and (length('$id') = 0 or id = '$id')
+  union all
+  -- With no tracked entries, let this command inspect history directly.
+  select $start, $end
+  where not exists (select 1 from time_tracker)
 ), matching_commands as (
   select distinct h.rowid as history_id, h.start, h.end,
     rtrim(case when instr(h.command, '|') > 0 then substr(h.command, 1, instr(h.command, '|') - 1) else h.command end) as command,
@@ -328,6 +332,10 @@ with matching_entries as (
     and (length('$account') = 0 or account = '$account')
     and (length('$tag') = 0 or tags glob '*,$tag,*')
     and (length('$id') = 0 or id = '$id')
+  union all
+  -- With no tracked entries, let this command inspect history directly.
+  select $start, $end
+  where not exists (select 1 from time_tracker)
 ), matching_commands as (
   select distinct h.rowid as history_id, h.start, h.end,
     rtrim(case when instr(h.command, '|') > 0 then substr(h.command, 1, instr(h.command, '|') - 1) else h.command end) as command
@@ -373,6 +381,10 @@ with matching_entries as (
     and (length('$account') = 0 or account = '$account')
     and (length('$tag') = 0 or tags glob '*,$tag,*')
     and (length('$id') = 0 or id = '$id')
+  union all
+  -- With no tracked entries, let this command inspect history directly.
+  select $start, $end
+  where not exists (select 1 from time_tracker)
 ), matching_commands as (
   select distinct h.rowid as history_id, h.start, h.end
   from matching_entries t
