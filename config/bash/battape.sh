@@ -27,6 +27,12 @@ BATTAPE_PROMPT_SEPARATOR=${BATTAPE_PROMPT_SEPARATOR:-};
 BATTAPE_CD_OSC7=${BATTAPE_CD_OSC7:-auto};
 BATTAPE_CD_RECENCY_DAYS=${BATTAPE_CD_RECENCY_DAYS:-14};
 
+# Bash before 5.3 can occasionally leave readline's terminal mode in raw,
+# no-echo state.  Newer Bash releases do not need this prompt-time check.
+if ((BASH_VERSINFO[0] < 5 || (BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] < 3))); then
+  BATTAPE_TTY_FIX="${BATTAPE_TTY_FIX:-icanon echo isig icrnl opost}";
+fi
+
 __battape_cleanup() {
   stty "$stty_settings" 2>/dev/null || :;
   local i;
@@ -505,6 +511,9 @@ __battape_prompt_path() {
 
 __battape_prompt_command() {
   local status="$1" elapsed=0 started="$LAST_INTERACTIVE_COMMAND_START" duration="" host="" git_prompt path_prompt;
+
+  # Fix readdline bugs in Bash before 5.3 that can leave the terminal in raw, no-echo mode
+  [ -z "$BATTAPE_TTY_FIX" ] || stty $BATTAPE_TTY_FIX;
 
   # battape normally installs itself through PROMPT_COMMAND.  Calling it here
   # keeps its history recording while leaving this prompt entirely native Bash.
