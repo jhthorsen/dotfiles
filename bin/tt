@@ -78,7 +78,11 @@ __battape_tt_query() {
     shift 2;
     sqlite3 -batch -noheader -separator "$sep" "$BATTAPE_DB" "$@";
   elif [ -t 1 ]; then
-    echo;
+    local q; q="$*";
+    if [[ "$q" = *select* ]]; then
+      local n; n="$(sqlite3 "$BATTAPE_DB" "$q" | wc -l)";
+      [ "$n" -gt 0 ] || { echo "No rows found."; return 0; }
+    fi
     sqlite3 -header -tabs "$BATTAPE_DB" "$@" | sed 's/"//g' | column -t -s $'\t' | {
       read -r header;
       printf '  %s\n' "$header";
@@ -196,6 +200,7 @@ __battape_tt_report() {
   fi
 
   if [ -n "$group_by" ]; then
+    echo;
     __battape_tt_query <<HERE
 select
   $group_by as Period,
@@ -216,6 +221,7 @@ select
   limit $limit;
 HERE
   else
+    echo;
     __battape_tt_query <<HERE
 select
   id as ID,
@@ -715,7 +721,7 @@ __battape_tt() {
   __battape_tt_setup || return;
 
   if [ "$bare" = 1 ]; then
-    local entry_count; entry_count="$(__battape_tt_query -b , "select count(*) from time_tracker")" || return;
+    local entry_count; entry_count="$(__battape_tt_query -b , "select count(*) from time_tracker limit 1")" || return;
     [ "$entry_count" -gt 0 ] || __battape_tt_welcome;
     [ "$entry_count" -gt 0 ] || return;
   fi
@@ -728,7 +734,7 @@ __battape_tt() {
     drop) __battape_tt_drop "$@" ;;
     report) __battape_tt_report "$@" ;;
     commands) __battape_tt_commands "$@" ;;
-    status) __battape_tt_report --no-footer --start -1d "$@" ;;
+    status) __battape_tt_report --no-footer --limit 3 "$@" ;;
     sync) "__battape_tt_$cmd" "$@" ;; # for testing
     epoch|normalize_tags|id) "__battape_tt_$cmd" "$@" ;; # for testing
     *) echo "Unknown command: $cmd" >&2; return 2 ;;
