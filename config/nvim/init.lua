@@ -441,8 +441,7 @@ vim.keymap.set("v", "<leader>ce", "<cmd>CodeCompanion /explain<cr>", { desc = "E
 vim.keymap.set("v", "<leader>cf", "<cmd>CodeCompanion /fix<cr>", { desc = "Fix Code" })
 vim.keymap.set("n", "<leader>cl", "<cmd>CodeCompanion /lsp<cr>", { desc = "Explain The LSP Diagnostics" })
 vim.keymap.set("v", "<leader>ct", "<cmd>CodeCompanion /tests<cr>", { desc = "Generte Tests" })
-vim.keymap.set("n", "<leader>dd", function() require("zdiff").open("HEAD^") end, { desc = "Zdiff HEAD^" })
-vim.keymap.set("n", "<leader>dm", function() require("zdiff").open("origin/main") end, { desc = "Zdiff origin/main" })
+vim.keymap.set("n", "<leader>fz", function() require("zdiff").open("HEAD^") end, { desc = "Zdiff HEAD^" })
 
 require("zdiff").setup({
   default_expanded = true,
