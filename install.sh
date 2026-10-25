@@ -101,8 +101,11 @@ install_apps() {
   install_brew_package "cpanm";
   install_brew_package "csvprintf";
   install_brew_package "ctags";
+  install_brew_package "droast"
   install_brew_package "exiftool";
   install_brew_package "eza";
+  install_brew_package "croc";
+  install_brew_package "dnsglobe";
   install_brew_package "fd";
   install_brew_package "ffmpeg";
   install_brew_package "figlet";
@@ -122,6 +125,7 @@ install_apps() {
   install_brew_package "jpeg";
   install_brew_package "jpegoptim";
   install_brew_package "less";
+  install_brew_package "AlexsJones/llmfit/llmfit";
   install_brew_package "macdown";
   install_brew_package "mkcert";
   install_brew_package "mysql";
@@ -157,8 +161,10 @@ install_apps() {
   install_brew_package "tree-sitter-cli";
   install_brew_package "tree-sitter";
   install_brew_package "ukelele" "/Applications/Ukelele.app";
+  install_brew_package "visidata";
   install_brew_package "wezterm";
   install_brew_package "wget";
+  install_brew_package "whatcable";
   install_brew_package "ykman";
   install_brew_package "yubico-authenticator" "/Applications/Yubico Authenticator.app";
   install_brew_package "yubico-piv-tool";
