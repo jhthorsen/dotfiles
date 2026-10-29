@@ -120,13 +120,13 @@ __battape_tt_drop() {
 }
 
 __battape_tt_edit() {
-  local id start end account description or_start add_tags delete_tags tags quiet;
+  local id start end bare_end account description or_start add_tags delete_tags tags quiet;
   local has_start=0 has_end=0 has_account=0 has_description=0;
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
       -s|--start) start="$(__battape_tt_epoch "$2")"; has_start=1; shift 2 ;;
-      -e|--end) end="$(__battape_tt_epoch "$2")"; has_end=1; shift 2 ;;
+      -e|--end) end="$(__battape_tt_epoch "$2")"; bare_end=""; has_end=1; shift 2 ;;
       -a|--account) account="$2"; has_account=1; shift 2 ;;
       -d|--description) description="$2"; has_description=1; shift 2 ;;
       -t|--tags) tags="$2"; shift 2 ;;
@@ -134,6 +134,7 @@ __battape_tt_edit() {
       -D|--delete-tag) delete_tags="${delete_tags:+$delete_tags,}$2"; shift 2 ;;
       -q|--quiet) quiet="$1"; shift ;;
       --or-start) or_start="$1"; shift ;;
+      [0-9][0-9]:[0-9][0-9]) end="$(__battape_tt_epoch "$1")"; bare_end="$1"; has_end=1; shift ;;
       -*) abort 2 "ERR! Unknown option: $1" ;;
       *) id="$1"; shift ;;
     esac
@@ -149,6 +150,9 @@ __battape_tt_edit() {
   [[ "$id" =~ ^[A-HJ-NP-Za-km-z2-9]{10}$ ]] || abort 1 "Usage: tt edit [id] [options]";
   [ -n "$start" ] || start="$(__battape_tt_query -b , "select start from time_tracker where id = '$id'")";
   [ -n "$end" ] || end="$(__battape_tt_query -b , "select end from time_tracker where id = '$id'")";
+  if [ -n "$bare_end" ] && [ "$end" -gt "$(date +%s)" ]; then
+    end="$(__battape_tt_epoch "$(__battape_tt_date "$start" %F)T$bare_end:00")";
+  fi
   [ "$end" -ne 0 ] && [ "$end" -lt "$start" ] && abort 2 "ERR! End time cannot be before start time";
 
   [ -n "$tags" ] || tags="$(__battape_tt_query -b , "select tags from time_tracker where id = '$id'")";
@@ -608,6 +612,7 @@ __battape_tt_start() {
       -d|--description) description="${2//\'/\'\'}"; shift 2 ;;
       -t|--tags) tags="$(__battape_tt_normalize_tags "$2")"; shift 2 ;;
       -q|--quiet) quiet=1; shift ;;
+      [0-9][0-9]:[0-9][0-9]) start="$(__battape_tt_epoch "$1")"; shift ;;
       *) abort 2 "ERR! Unknown option: $1" ;;
     esac
   done
@@ -659,6 +664,7 @@ Options:
   -h, --help                Show this help text.
 
 Start and stop options:
+  HH:MM                    Bare time anywhere: --start for start, --end for stop.
   -s, --start <time>        Start time (epoch, HH:MM, ISO timestamp, or date offset).
   -e, --end <time>          End time (same formats as --start).
   -a, --account <name>      Account name.
@@ -667,6 +673,8 @@ Start and stop options:
   -q, --quiet               Do not print the resulting entry.
 
 Edit options:
+  HH:MM                    Bare end time anywhere in the argument list.
+                            Uses the start date if today's time is in the future.
   -s, --start <time>        Start time (epoch, HH:MM, ISO timestamp, or date offset).
   -e, --end <time>          End time (same formats as --start).
   -a, --account <name>      Account name.
