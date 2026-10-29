@@ -22,6 +22,10 @@
   ds = diff --shortstat --numstat HEAD^
   st = diff --numstat --ignore-all-space --shortstat
 
+  wa = worktree add
+  wl = worktree list
+  wr = worktree remove
+
   fzf = !git show $(git log --color --pretty=format:'%Cred%h%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset %C(yellow)%d%Creset' | fzf --reverse --ansi --preview='git show {1} | head -n100' | cut -d' ' -f1)
   lg = log --pretty='format:%Cblue%h%Creset %s (%Cgreen%ar%Creset)'
   lgg = lg --graph
