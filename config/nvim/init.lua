@@ -701,8 +701,12 @@ require("mini.statusline").setup({
       local lsp           = MiniStatusline.section_lsp({ trunc_width = 75 })
       local filename      = MiniStatusline.section_filename({ trunc_width = 500 })
       local fileinfo      = MiniStatusline.section_fileinfo({ trunc_width = 120 })
-      local location      = MiniStatusline.section_location({ trunc_width = 500 })
       local search        = MiniStatusline.section_searchcount({ trunc_width = 75 })
+
+      local location      = MiniStatusline.section_location({ trunc_width = 500 })
+      if vim.fn.mode(1):match("^[vVsS\22]") then
+        location = string.format("%d|%s", math.abs(vim.fn.line(".") - vim.fn.line("v")) + 1, location)
+      end
 
       return MiniStatusline.combine_groups({
         { hl = mode_hl,                  strings = { mode } },
