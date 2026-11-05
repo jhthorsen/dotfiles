@@ -46,6 +46,7 @@ generate_paths() {
     && echo "export HOMEBREW_PREFIX=\"$HOMEBREW_PREFIX\";";
   echo "export DOTFILES_HOME=\"$DOTFILES_HOME\";";
   echo "export PATH=\"$PATH\";";
+  echo 'export PATH="$HOME/.bun/bin:$PATH";';
 }
 
 while read -r line; do

@@ -7,7 +7,6 @@
 .vim/bundle
 .vscode
 .vstags
-jsconfig.json
 coverage
 node_modules
 build

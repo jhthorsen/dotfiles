@@ -96,6 +96,7 @@ install_apps() {
   install_brew_package "bat";
   install_brew_package "blender";
   install_brew_package "btop";
+  install_brew_package "oven-sh/bun/bun" "${HOMEBREW_PREFIX:-/opt/homebrew}/bin/bun";
   install_brew_package "cloc";
   install_brew_package "coreutils";
   install_brew_package "cpanm";
@@ -269,29 +270,27 @@ HERE
 
 install_lsp_servers() {
   # sudo xcodebuild -license accept
-  install_brew_package pnpm;
-  install_brew_package deno;
+  install_brew_package "oven-sh/bun/bun" "${HOMEBREW_PREFIX:-/opt/homebrew}/bin/bun";
   install_brew_package gopls;
   install_brew_package harper;
   install_brew_package lua-language-server;
   install_brew_package marksman;
   install_brew_package shellcheck;
-  install_brew_package yaml-language-server;
 
-  $MAYBE_SUDO pnpm install -g bash-language-server;
-  $MAYBE_SUDO pnpm install -g css-variable-ls;
-  $MAYBE_SUDO pnpm install -g cssmodules-language-server;
-  $MAYBE_SUDO pnpm install -g emmet-language-server;
-  $MAYBE_SUDO pnpm install -g perlnavigator-server;
-  $MAYBE_SUDO pnpm install -g sql-language-server;
-  $MAYBE_SUDO pnpm install -g svelte-language-server;
-  $MAYBE_SUDO pnpm install -g systemd-language-server;
-  $MAYBE_SUDO pnpm install -g vscode-langservers-extracted;
-  $MAYBE_SUDO pnpm install -g typescript-language-server;
-  $MAYBE_SUDO pnpm install -g yaml-language-server;
+  bun install --global bash-language-server;
+  bun install --global css-variables-language-server;
+  bun install --global cssmodules-language-server;
+  bun install --global @olrtg/emmet-language-server;
+  bun install --global perlnavigator-server;
+  bun install --global sql-language-server;
+  bun install --global svelte-language-server;
+  bun install --global vscode-langservers-extracted;
+  bun install --global 'typescript@^7';
+  bun install --global yaml-language-server;
 
   cargo install dprint
   cargo install jinja-lsp
+  cargo install systemd-lsp
 }
 
 install_macos() {
