@@ -43,6 +43,7 @@ return {
         contentUnformatted = "pre,code,textarea",
         unformatted = "pre",
         enable = true,
+        templating = { "django" },
       },
     },
   },
