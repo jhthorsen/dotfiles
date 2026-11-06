@@ -50,6 +50,10 @@
       "rev": "74b06c6c75e4eeb3108ec01852001636d85a932b",
       "src": "https://github.com/nvim-lua/plenary.nvim"
     },
+    "rex-navigator.nvim": {
+      "rev": "6995a9adcbb293d1b8201e567b605c75056aaf49",
+      "src": "https://github.com/wassimk/rex-navigator.nvim"
+    },
     "rustaceanvim": {
       "rev": "b25d186481624964523fee34f44c529b101c7435",
       "src": "https://github.com/mrcjkb/rustaceanvim"

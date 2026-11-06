@@ -11,6 +11,7 @@ vim.pack.add({
   { src = "https://github.com/jake-stewart/multicursor.nvim" },
   { src = "https://github.com/nvim-treesitter/nvim-treesitter",     version = "main" },
   { src = "https://github.com/nvim-lua/plenary.nvim" },
+  { src = "https://github.com/wassimk/rex-navigator.nvim" },
   { src = "https://github.com/mrcjkb/rustaceanvim" },
   { src = "https://github.com/rachartier/tiny-inline-diagnostic.nvim" },
   { src = "https://github.com/jbyuki/venn.nvim" },
@@ -181,10 +182,10 @@ vim.keymap.set("n", "<leader>qs", "<cmd>wa!<cr>", { desc = "Save all open buffer
 vim.keymap.set({ "n", "t" }, "<leader>qq", smart_close, { desc = "Close Buffer" })
 vim.keymap.set({ "n", "t" }, "<leader>qw", "<cmd>close!<cr>", { desc = "Close window" })
 
-vim.keymap.set("n", "<c-h>", ":wincmd h<CR>", { silent = true, desc = "Move to left split" })
-vim.keymap.set("n", "<c-j>", ":wincmd j<CR>", { silent = true, desc = "Move to below split" })
-vim.keymap.set("n", "<c-k>", ":wincmd k<CR>", { silent = true, desc = "Move to above split" })
-vim.keymap.set("n", "<c-l>", ":wincmd l<CR>", { silent = true, desc = "Move to right split" })
+vim.keymap.set("n", "<c-h>", require("rex-navigator").left, { desc = "Move to left split" })
+vim.keymap.set("n", "<c-j>", require("rex-navigator").down, { desc = "Move to below split" })
+vim.keymap.set("n", "<c-k>", require("rex-navigator").up, { desc = "Move to above split" })
+vim.keymap.set("n", "<c-l>", require("rex-navigator").right, { desc = "Move to right split" })
 vim.keymap.set("n", "<leader>nz", function() require("mini.misc").zoom() end, { desc = "Zoom Window" })
 
 vim.keymap.set("x", "V", function() vim.treesitter.select("child", vim.v.count1) end, { desc = "Select child" })
